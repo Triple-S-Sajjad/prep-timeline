@@ -1,0 +1,42 @@
+# 1. Repository tooling
+
+Date: 2026-10-10
+
+## Context
+
+The spec's guardrails (Step 1) need lint, type, duplicate-code, prose and security checks in place before the first feature. Work is solo and pushed straight to `main`, so pull-request-only tools don't apply.
+
+## Decision
+
+Checks run in a pre-push hook (`.githooks/pre-push`) so nothing failing reaches GitHub. CI on push to `main` runs that same hook script, so a push made with `--no-verify` is still caught and the two can't drift apart. GitHub dependency review is not used because it only runs on pull requests.
+
+CI installs gitleaks, OSV-Scanner and Vale from their release pages and checks each download against a pinned SHA-256, rather than using third-party actions that would run the same binaries.
+
+Language checks are gated on files existing, so the repo doesn't need every toolchain before it has code in that language.
+
+GitHub Actions are pinned by commit SHA, and npm packages by exact version, each at least two weeks old when added. The Flutter SDK is exempt from the two-week rule: it comes from Flutter's official stable channel, not a package registry.
+
+## Packages and tools
+
+| Package or tool | Version | Why |
+| --- | --- | --- |
+| `eslint` | 10.11.0 | Lint TypeScript; enforces no-console, no-empty, no-useless-catch |
+| `@eslint/js` | 10.0.1 | ESLint's base recommended rules |
+| `typescript-eslint` | 8.70.1 | Type-aware rules: no `any`, no-unsafe-*, described `@ts-expect-error` |
+| `typescript` | 6.0.3 | Type checker for the portal. Not 7.x: typescript-eslint 8 supports TypeScript below 6.1 |
+| `jscpd` | 5.3.2 | Duplicate-code detection across TS, Dart and Python |
+| gitleaks | 8.30.1 in CI | Blocks committed secrets |
+| OSV-Scanner | 2.6.0 in CI | Flags dependencies with known vulnerabilities |
+| Vale | 3.22.0 in CI | Prose linter for the banned-word and emoji-bullet rules |
+| `ruff` | 0.16.9 | Python lint: no print, no empty or useless except, coded type-ignores |
+| `mypy` | 2.3.1 | Python type checker, strict mode |
+| `pytest` | 9.1.1 | Python test runner |
+| `actions/checkout` | v7.0.1 | Check out the repo in CI |
+| `actions/setup-node` | v7.0.0 | Node for npm tools in CI |
+| `actions/setup-python` | v7.0.0 | Python in CI, only once `.py` files exist |
+| `subosito/flutter-action` | v2.23.0 | Flutter and Dart in CI, only once a `pubspec.yaml` exists. Pinned to Flutter 3.47.7 (Dart 3.13.5) to match the local SDK |
+
+## Deferred
+
+- axe-core accessibility checks: added with the portal's end-to-end tests, since there are no pages to test yet.
+- Design-system tokens file: written before the first screen.

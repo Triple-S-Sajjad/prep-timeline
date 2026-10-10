@@ -1,0 +1,17 @@
+# Python dev tools. Every package, transitive ones included, is pinned so
+# OSV-Scanner checks exactly what gets installed. To update, resolve with
+#   pip install --uploaded-prior-to <date two weeks ago> ruff mypy pytest
+# in a fresh venv and copy `pip freeze` here.
+ruff==0.16.9
+mypy==2.3.1
+pytest==9.1.1
+ast_serialize==0.11.2
+colorama==0.4.6 ; sys_platform == "win32"
+iniconfig==2.3.0
+librt==0.15.0
+mypy_extensions==1.1.0
+packaging==26.3
+pathspec==1.1.1
+pluggy==1.6.0
+Pygments==2.21.0
+typing_extensions==4.16.0

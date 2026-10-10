@@ -1,0 +1,41 @@
+#!/bin/sh
+# Runs every lint, type and test check; any failure blocks the push.
+# Language checks start once that language has tracked files, so a missing
+# toolchain only blocks a push that needs it.
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+
+fail() { echo "pre-push: $*" >&2; exit 1; }
+run() { echo "> $*"; "$@" || fail "failed: $*"; }
+has() { [ -n "$(git ls-files -- "$@" | head -n 1)" ]; }
+
+# The checks read the working tree, so it must match what is committed.
+[ -z "$(git status --porcelain)" ] || fail "commit or stash your changes first"
+
+run gitleaks git --redact --no-banner
+run osv-scanner scan source --recursive .
+run npx --no-install jscpd .
+run vale docs README.md CONTRIBUTING.md
+
+if has '*.ts' '*.tsx'; then
+  for cfg in $(git ls-files -- '*tsconfig.json'); do
+    run npx --no-install tsc --noEmit -p "$cfg"
+  done
+  run npx --no-install eslint --max-warnings 0 .
+fi
+
+if has '*.py'; then
+  run ruff check .
+  # shellcheck disable=SC2046 # word splitting is intended; paths have no spaces
+  run mypy $(git ls-files -- '*.py')
+  if has '*test_*.py' '*_test.py'; then run pytest; fi
+fi
+
+for pubspec in $(git ls-files -- 'pubspec.yaml' '*/pubspec.yaml'); do
+  dir=$(dirname "$pubspec")
+  if grep -q 'sdk: flutter' "$pubspec"; then tool=flutter; else tool=dart; fi
+  (cd "$dir" && run "$tool" pub get && run "$tool" analyze --fatal-infos)
+  if [ -d "$dir/test" ]; then (cd "$dir" && run "$tool" test); fi
+done
+
+echo "pre-push: all checks passed"

@@ -1,0 +1,8 @@
+{
+  "threshold": 0,
+  "minTokens": 50,
+  "format": ["typescript", "tsx", "javascript", "dart", "python"],
+  "gitignore": true,
+  "ignore": ["**/*.g.dart", "**/*.freezed.dart"],
+  "reporters": ["console"]
+}

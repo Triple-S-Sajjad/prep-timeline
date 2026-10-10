@@ -1,0 +1,7 @@
+extends: existence
+message: "Use a plain list marker, not an emoji."
+level: error
+scope: raw
+nonword: true
+tokens:
+  - '(?m)^[ \t]*(?:[-*+][ \t]+)?[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{2B50}\x{2705}]'

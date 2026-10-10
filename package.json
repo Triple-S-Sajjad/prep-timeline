@@ -1,0 +1,12 @@
+{
+  "name": "prep-timeline",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.11.0",
+    "jscpd": "5.3.2",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.1"
+  }
+}

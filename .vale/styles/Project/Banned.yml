@@ -1,0 +1,10 @@
+extends: existence
+message: "Replace '%s' with a plain word that says what you mean."
+level: error
+ignorecase: true
+tokens:
+  - delv(?:e|es|ed|ing)
+  - leverag(?:e|es|ed|ing)
+  - robust(?:ly|ness)?
+  - seamless(?:ly)?
+  - unlock(?:s|ed|ing)?

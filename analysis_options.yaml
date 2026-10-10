@@ -1,0 +1,15 @@
+# Applies to every Dart package below this directory. A package that adds its
+# own analysis_options.yaml must start with `include: ../analysis_options.yaml`
+# (adjust the path), or it silently drops these rules.
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  exclude:
+    - "**/*.g.dart"
+
+linter:
+  rules:
+    - avoid_print # guardrail #12
+    - empty_catches # guardrail #13

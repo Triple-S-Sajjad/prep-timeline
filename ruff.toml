@@ -1,0 +1,7 @@
+[lint]
+# E/F: pycodestyle and pyflakes basics
+# T20: no print (guardrail #12)
+# S110: no try/except/pass (guardrail #13)
+# TRY: no useless or overly broad try/except (guardrail #6)
+# PGH003: type-ignore must name the error code (guardrail #11)
+select = ["E", "F", "T20", "S110", "TRY", "PGH003"]
