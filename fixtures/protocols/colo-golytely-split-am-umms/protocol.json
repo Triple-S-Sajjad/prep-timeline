@@ -13,13 +13,13 @@
   "baseModule": {
     "moduleId": "colo-golytely-split-am-umms-base",
     "version": 1,
-    "sha256": "90258b1fb8ed8719eaeb5f189c80dcea5dad47deebbfcceaba87692fdfd505db"
+    "sha256": "5ae43e00dad5adea286b23ca99c1e5d4ee5fbb934151844c10f79fc63f3b853d"
   },
   "optionalModules": [
     {
       "moduleId": "colo-golytely-split-am-umms-iron-hold",
       "version": 1,
-      "sha256": "a8ee922937069fa9efcbb399114f5517170fb35dc827afe6e7d0e6c30f48ca64",
+      "sha256": "c34c767ace665e590d44255193a4fce7514a3d8c8be4b8a7a4f11c2cc6f9d2e7",
       "selectedAt": "scheduling"
     }
   ],

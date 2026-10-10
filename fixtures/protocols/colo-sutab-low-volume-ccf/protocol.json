@@ -13,25 +13,25 @@
   "baseModule": {
     "moduleId": "colo-sutab-low-volume-ccf-base",
     "version": 1,
-    "sha256": "44806ac15089abd77144f229f3c2d45eab50aa9786ed1041bc31a094ffe8c306"
+    "sha256": "b74203944c428a6935c3d41f9272cd82e4eb660436067e3901940fa44da80aa1"
   },
   "optionalModules": [
     {
       "moduleId": "colo-sutab-low-volume-ccf-iron-hold",
       "version": 1,
-      "sha256": "5c219101b263097def4ac25d64a626e073a1731635760cc6202a9078bcb2549a",
+      "sha256": "068cf0a2e021fdbe814407ec9d7d0cc7c63d90c533269d57bcc9dffb9be5e7ba",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-sutab-low-volume-ccf-insulin-half-dose",
       "version": 1,
-      "sha256": "33bf61c075ace0ea323a5ff4eb4505abd169fbddec2977c6b59912b0dd22f36d",
+      "sha256": "f6c49ecd71a03be3a33dc2413c986a76c2addb3bf7c028d0838bd0e718870549",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-sutab-low-volume-ccf-diabetes-pills",
       "version": 1,
-      "sha256": "1778b7bade1aaef1947737bf470a07cdafc2f7830fe92d6850934ab5a501d61f",
+      "sha256": "fd6627e93b588293b75e7564ee83ee2c331e50ae32d80620c871ee78dba01b87",
       "selectedAt": "scheduling"
     }
   ],

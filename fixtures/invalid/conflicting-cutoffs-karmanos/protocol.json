@@ -13,13 +13,13 @@
   "baseModule": {
     "moduleId": "conflicting-cutoffs-karmanos-base",
     "version": 1,
-    "sha256": "482658c1366878c3163e676c9bd360f551cba2507a6e965e3c77010476949ec1"
+    "sha256": "53d6ed28e61bef80c4474da814590a30f46ca028c33cce67d7479c92404a2258"
   },
   "optionalModules": [
     {
       "moduleId": "conflicting-cutoffs-karmanos-regular-pills",
       "version": 1,
-      "sha256": "04eade120e3be13cbf432447ed71b5bc256239abcfb89aa6025917d4bc60ee15",
+      "sha256": "2ee392c127dbad2901e10144eaf965282cc28ebf024039b7fb05c908f93c0553",
       "selectedAt": "scheduling"
     }
   ],

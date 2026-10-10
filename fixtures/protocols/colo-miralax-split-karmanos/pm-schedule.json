@@ -4,7 +4,6 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
-  "timezone": "America/Detroit",
   "appliesWhen": {
     "appointmentTime": {
       "fromInclusive": "12:00",

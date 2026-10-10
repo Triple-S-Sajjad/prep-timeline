@@ -13,31 +13,31 @@
   "baseModule": {
     "moduleId": "cardiac-cath-uw-base",
     "version": 1,
-    "sha256": "715a33f6c0d74e94056e4588722a10167e4e136271f0911d202d3126626513fb"
+    "sha256": "f18ada88846f71e6f48a28f6d3f95b73134213aacc3e6549c76698076a016d4d"
   },
   "optionalModules": [
     {
       "moduleId": "cardiac-cath-uw-sedation",
       "version": 1,
-      "sha256": "3c22683c5600a79c8aacbf5a8c30311a696ace4f269e1cedd108089de9ea7054",
+      "sha256": "026aea751f78f09ed1ec83a6384597284ceed6b7d66de1922739274f8e74d818",
       "selectedAt": "discharge"
     },
     {
       "moduleId": "cardiac-cath-uw-groin-site",
       "version": 1,
-      "sha256": "1aa3ed3f9f101a091360b3cadb8ea108947bc6af9afaed5059096d0e4fa8638c",
+      "sha256": "9f330cdf6e8660a51121d0ea8f695be6bc28c4e309f974bbf91889ab39bc2818",
       "selectedAt": "discharge"
     },
     {
       "moduleId": "cardiac-cath-uw-arm-site",
       "version": 1,
-      "sha256": "fb483459ed3034e23e7f42fb3cdeedcaeac16e6bdb2967fd18e51808cadcb51f",
+      "sha256": "715c9ab0bebb80348b94ec52cb620eb3754f537be1d98f106789bdafb8868047",
       "selectedAt": "discharge"
     },
     {
       "moduleId": "cardiac-cath-uw-stent",
       "version": 1,
-      "sha256": "05874de025a33efd0ebd0ff1dbc67f32948b8bc24b210f67cba095b9e2b64343",
+      "sha256": "f146830201b3f1ae17d16a5d7f71dd511a4cf90737f5a971af5c47f7afb3168b",
       "selectedAt": "discharge"
     }
   ],

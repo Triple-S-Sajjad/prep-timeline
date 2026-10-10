@@ -13,85 +13,85 @@
   "baseModule": {
     "moduleId": "colo-golytely-split-bmc-base",
     "version": 1,
-    "sha256": "12a1ace87c04859979ebc4568cd940d5a5c4d836e737b46174a9773573ce1af1"
+    "sha256": "2422831c61bcc1ad7e7f49ab4199acf9d4342435bfcbd93e9cc94304b2e044c3"
   },
   "optionalModules": [
     {
       "moduleId": "colo-golytely-split-bmc-iron-hold",
       "version": 1,
-      "sha256": "da165d2f20091268ca3882a5e2a77dcb30fafef731d829354c680ef4dcfdc9f2",
+      "sha256": "91dbe13cd0da78db9db6676e14a3b585676126ca90c5eef8ca19fd4fc4bd1191",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-warfarin-hold",
       "version": 1,
-      "sha256": "7f89dc53ffe15ed2d6fed6be68a76c12b24e8173afddd830fea6caa0690a5829",
+      "sha256": "9a914aabdff7e8b82a5eabe7b5b2e8368d4f2a8464c87ad99e839e5e6754058f",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-doac-hold",
       "version": 1,
-      "sha256": "e37f2e6e60cba647018ae11e9569ad820781cd735b4951a67505a24a236f0a3b",
+      "sha256": "e81d4162e6e1998a453e607c41feea188c707f4959ffd62a12a167bcef60e6fe",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-lmwh-hold",
       "version": 1,
-      "sha256": "afa2c4863bdd9bb556abeece8d0083995d100f13561c667a9a3feb34f5c0ce73",
+      "sha256": "9cc2b9fa3f7a82cf15174c0b68586540d446d3c49b6bff4d9ec4f28e863a7418",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-p2y12-hold",
       "version": 1,
-      "sha256": "da129537ddcef04ce05c3aa5a08477f26bef1b29d3dd4db99dc4c7eaf3fc4b94",
+      "sha256": "b43e6ef1a4fd503bf2aa513e71defd62947c72470d583ba27896caf314b4c972",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-ticlid-hold",
       "version": 1,
-      "sha256": "89836e839d66e8ba3c1418243b3207ec49f0bbc9f233d8d6bba2c89cd04c3b7c",
+      "sha256": "0edaff6bae02cc3dc78ba1add356b63ccdb1845be60ea7533c5e6bfd176d1b20",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-continue-medicines",
       "version": 1,
-      "sha256": "c11123694cfcb3d830c61b774ad27da35498c623d29657286aff839f2d33264d",
+      "sha256": "0520ed5736123b9f86b1620f166a14aa330bd10f92a0ed5df29b3353f73fb0a2",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-insulin-half-dose",
       "version": 1,
-      "sha256": "92135884653e1b93aa838e8b45b355efdb958247e4d2b352f529fa61d9cc337d",
+      "sha256": "2c40465cb9c3766cc87e10d16d1646b83a8b1f80af2452247a41f3f7ab14e4af",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-diabetes-pills",
       "version": 1,
-      "sha256": "1294f807815349a7e9091809bcb7321313348cc38f209dfd16540a2af03993c2",
+      "sha256": "d6a5c6aa167f2824e03b4abd9a4bc41a58cb7d1715c273fb70a3a2552556a919",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-insulin-pump",
       "version": 1,
-      "sha256": "b6d27f09bc72e1514a50d31404480b64cfd6ea7edc23db6cb18046fbeba2d9cb",
+      "sha256": "e3bc9e53c75996fce917c27f81f7927bd2255036e5cf2c65cb03603807161440",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-sglt2-hold",
       "version": 1,
-      "sha256": "601dd4cf7715be6769b5df73a2d63beff8559bd4186cb9ad1054799cfa9eb9a5",
+      "sha256": "cf2012572ba82bd26b6bffe8fa58e252983ab5751184bfae8d2321fdc139bd82",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-glp1-weekly-hold",
       "version": 1,
-      "sha256": "bf4e9249ced80f895f8af9858d6d4560ceec63cc08216412fbac5bd709d7e216",
+      "sha256": "2beed92257354e055ba9acf2eef8c3ee66dd65e692b2b8e57157f48a6e58a42b",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-glp1-daily-hold",
       "version": 1,
-      "sha256": "d37202bd2c325f1c35a2722460d5d7e3dc7c241d01b949adf450405f38f3e82d",
+      "sha256": "e369d5420d70c282c19ec749de06e3e7fb31b086dac7db1fb2f4e1dc41331314",
       "selectedAt": "scheduling"
     }
   ],

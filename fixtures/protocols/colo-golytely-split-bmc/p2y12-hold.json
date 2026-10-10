@@ -4,7 +4,6 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
-  "timezone": "America/New_York",
   "parameters": {
     "holdDays": {
       "min": 5,
@@ -26,7 +25,6 @@
         "kind": "day",
         "day": {
           "param": "holdDays",
-          "unit": "days",
           "before": true
         }
       },
@@ -34,7 +32,6 @@
         "kind": "dayAt",
         "day": {
           "param": "holdDays",
-          "unit": "days",
           "before": true
         },
         "time": "07:00",
