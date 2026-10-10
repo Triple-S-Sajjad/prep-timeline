@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "surgery-anesthesia-msk",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "surgery-anesthesia-msk-base",
+    "version": 1,
+    "sha256": "592bf75c42be50a67748fba78f0f9eaa96cae48cbe28b50e7f0431fb7836aaaa"
+  },
+  "optionalModules": [
+    {
+      "moduleId": "surgery-anesthesia-msk-supplements-hold",
+      "version": 1,
+      "sha256": "b6ef58a561f025d555db6b7040aa76e2003fc7b1e9aee7733028f3e759743692",
+      "selectedAt": "scheduling"
+    },
+    {
+      "moduleId": "surgery-anesthesia-msk-nsaid-hold",
+      "version": 1,
+      "sha256": "a5eca525deb746c06021699d5737ff1c548aceebd579a2388cbe8cffbdbfea28",
+      "selectedAt": "scheduling"
+    }
+  ],
+  "allowedCombinations": {
+    "rule": "anySubset"
+  },
+  "source": [
+    "https://www.mskcc.org/cancer-care/patient-education/instructions-before-your-procedure-or-surgery"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-golytely-split-am-umms-iron-hold",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "steps": [
+    {
+      "id": "iron",
+      "type": "medication_hold",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -5
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -5,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "Stop taking iron pills."
+    }
+  ],
+  "source": "https://www.umms.org/ummc/-/media/files/ummc/health-services/digestive-health/colonos-prep-instr-golytely-split-dose.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

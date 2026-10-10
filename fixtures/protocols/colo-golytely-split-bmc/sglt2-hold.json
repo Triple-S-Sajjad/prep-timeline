@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-golytely-split-bmc-sglt2-hold",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "parameters": {
+    "holdDays": {
+      "min": 3,
+      "max": 4,
+      "unit": "days"
+    }
+  },
+  "steps": [
+    {
+      "id": "ask",
+      "type": "checklist",
+      "text": "Talk to your diabetes doctor or primary care provider about stopping this medicine."
+    },
+    {
+      "id": "sglt2",
+      "type": "medication_hold",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": {
+          "param": "holdDays",
+          "unit": "days",
+          "before": true
+        }
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": {
+          "param": "holdDays",
+          "unit": "days",
+          "before": true
+        },
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "critical",
+      "text": "Stop taking your SGLT2 medicine (the name ends in -flozin, like Invokana, Farxiga or Jardiance) today."
+    }
+  ],
+  "source": "https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

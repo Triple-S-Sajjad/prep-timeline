@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "conflicting-cutoffs-karmanos-base",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/Detroit",
+  "steps": [
+    {
+      "id": "npo",
+      "type": "npo",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "offset",
+        "offset": "-PT4H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT4H"
+      },
+      "allowNight": true,
+      "headsUp": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "20:00",
+        "defaulted": true
+      },
+      "pastDue": "critical",
+      "text": "Stop eating and drinking now, including clear liquids."
+    }
+  ],
+  "source": "https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "surgery-anesthesia-msk-supplements-hold",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "steps": [
+    {
+      "id": "supplements",
+      "type": "medication_hold",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -7
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -7,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "Stop taking vitamins, supplements and herbal remedies."
+    }
+  ],
+  "source": "https://www.mskcc.org/cancer-care/patient-education/instructions-before-your-procedure-or-surgery",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

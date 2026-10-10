@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "conflicting-cutoffs-karmanos",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/Detroit",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "conflicting-cutoffs-karmanos-base",
+    "version": 1,
+    "sha256": "482658c1366878c3163e676c9bd360f551cba2507a6e965e3c77010476949ec1"
+  },
+  "optionalModules": [
+    {
+      "moduleId": "conflicting-cutoffs-karmanos-regular-pills",
+      "version": 1,
+      "sha256": "04eade120e3be13cbf432447ed71b5bc256239abcfb89aa6025917d4bc60ee15",
+      "selectedAt": "scheduling"
+    }
+  ],
+  "allowedCombinations": {
+    "rule": "anySubset"
+  },
+  "expectedFailure": "conflictingCutoffs",
+  "source": [
+    "https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

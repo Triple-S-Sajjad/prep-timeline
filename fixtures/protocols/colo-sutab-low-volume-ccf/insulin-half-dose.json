@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-sutab-low-volume-ccf-insulin-half-dose",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "steps": [
+    {
+      "id": "ask",
+      "type": "checklist",
+      "text": "Ask the provider who prescribes your insulin and diabetes medicines how to change your doses before the colonoscopy."
+    },
+    {
+      "id": "half-dose",
+      "type": "medication_change",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -1
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "Take half your usual insulin dose today (for example Lantus, Humalog, Humulin N, Novolin N, ReliOn, or 70/30 insulin)."
+    }
+  ],
+  "source": "https://my.clevelandclinic.org/health/articles/sutab-bowel-preparation-instructions",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

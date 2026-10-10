@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-golytely-split-bmc-warfarin-hold",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "steps": [
+    {
+      "id": "check-first",
+      "type": "checklist",
+      "text": "Before stopping it, check with your primary care or heart doctor that it's safe. If an anticoagulation clinic manages it, ask them."
+    },
+    {
+      "id": "warfarin",
+      "type": "medication_hold",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -5
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -5,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "critical",
+      "text": "Stop taking warfarin (Coumadin) today."
+    }
+  ],
+  "source": "https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

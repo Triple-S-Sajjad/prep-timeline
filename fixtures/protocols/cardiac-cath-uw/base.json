@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "cardiac-cath-uw-base",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/Los_Angeles",
+  "steps": [
+    {
+      "id": "nurse-call",
+      "type": "reference",
+      "text": "A Cardiac Procedures nurse will call you 3 to 7 days before to go over your medicines and allergies."
+    },
+    {
+      "id": "no-call",
+      "type": "checklist",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -3
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -3,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "If the Cardiac Procedures nurse hasn't called you yet, call the nurse coordinator at 206.598.8435 or 206.597.3609 (8 AM to 5 PM)."
+    },
+    {
+      "id": "reschedule",
+      "type": "reference",
+      "text": "To reschedule or cancel, call 206.598.8200 right away."
+    },
+    {
+      "id": "bag",
+      "type": "checklist",
+      "text": "Pack a small overnight bag in case you need to stay."
+    },
+    {
+      "id": "ride",
+      "type": "checklist",
+      "text": "Arrange a responsible adult to drive you home. They must be with you in the Cardiac Procedures Unit before you leave. You can't take a bus, taxi or shuttle alone."
+    },
+    {
+      "id": "hotel",
+      "type": "checklist",
+      "text": "If you live out of town, think about booking a hotel nearby. Plan to spend most of the day at the hospital."
+    },
+    {
+      "id": "warfarin",
+      "type": "checklist",
+      "text": "If you take warfarin (Coumadin), ask the provider who referred you whether and when to stop it."
+    },
+    {
+      "id": "other-thinners",
+      "type": "reference",
+      "text": "If you take another blood thinner, the nurse will tell you whether it's OK to take."
+    },
+    {
+      "id": "diabetes",
+      "type": "reference",
+      "text": "If you take diabetes medicine, the dose may need to change. Ask the nurse."
+    },
+    {
+      "id": "bring",
+      "type": "checklist",
+      "text": "Bring a list of all your medicines with doses (including vitamins and supplements), anything else you took in the last 2 days, the name and phone number of your contact person and your driver, your CPAP machine if you use one, and images from any earlier catheterization."
+    },
+    {
+      "id": "no-caffeine",
+      "type": "restriction",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "window",
+        "start": "-PT24H",
+        "duration": "PT24H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT24H"
+      },
+      "pastDue": "doNow",
+      "text": "No caffeine: no coffee, tea, energy drinks, or supplements with caffeine."
+    },
+    {
+      "id": "no-high-fat",
+      "type": "restriction",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "window",
+        "start": "-PT8H",
+        "duration": "PT8H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT8H"
+      },
+      "allowNight": true,
+      "headsUp": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "20:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "No high-fat foods like bacon, sausage or eggs."
+    },
+    {
+      "id": "npo",
+      "type": "npo",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "offset",
+        "offset": "-PT6H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT6H"
+      },
+      "allowNight": true,
+      "headsUp": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "20:00",
+        "defaulted": true
+      },
+      "pastDue": "critical",
+      "text": "Stop eating and drinking now."
+    },
+    {
+      "id": "snack",
+      "type": "reference",
+      "text": "If you finish eating at least 6 hours before check-in, a light snack like tea and toast is fine. For a small meal, set an alarm for more than 8 hours before your procedure."
+    },
+    {
+      "id": "morning-meds",
+      "type": "reference",
+      "text": "If you don't need any medicine changes, take your usual morning medicines with small sips of water. If your doctor prescribed aspirin for your heart, take it as usual that morning."
+    },
+    {
+      "id": "arrive",
+      "type": "arrive",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "offset",
+        "offset": "PT0S"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "PT0S"
+      },
+      "pastDue": "critical",
+      "text": "Check in at the Heart Institute, A-Wing, 1st floor."
+    },
+    {
+      "id": "recovery",
+      "type": "reference",
+      "text": "After the procedure you'll rest in bed for 2 to 6 hours. You can eat as usual."
+    },
+    {
+      "id": "no-nsaids",
+      "type": "restriction",
+      "anchor": "discharge",
+      "timing": {
+        "kind": "window",
+        "start": "PT0H",
+        "duration": "P5D"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "PT0H"
+      },
+      "pastDue": "doNow",
+      "text": "Don't take ibuprofen (Advil, Motrin) or naproxen (Aleve, Naprosyn). They can cause bleeding. You can take acetaminophen (Tylenol)."
+    },
+    {
+      "id": "tylenol",
+      "type": "reference",
+      "text": "For minor pain you can take Tylenol, 325 mg or 500 mg. Don't take more than 4,000 mg in 24 hours."
+    },
+    {
+      "id": "aspirin",
+      "type": "reference",
+      "text": "If your doctor prescribed aspirin for your heart, keep taking it as usual, but don't take extra aspirin for pain."
+    },
+    {
+      "id": "resume-meds",
+      "type": "reference",
+      "text": "Restart all the heart medicines you took before. Keep taking your other medicines unless your doctor says otherwise."
+    },
+    {
+      "id": "diet-after",
+      "type": "reference",
+      "text": "Go back to your usual foods unless your doctor or nurse told you to change your diet."
+    },
+    {
+      "id": "dressing",
+      "type": "reference",
+      "text": "You can take off the bandage 24 hours after your procedure. Then clean the site gently with mild soap and water and pat it dry."
+    },
+    {
+      "id": "infection",
+      "type": "reference",
+      "text": "For 3 days, watch the site. Call the cardiologist who did your procedure if you have redness, drainage, a fever over 101.5 F, a change in the bruise or lump, numbness in your arm or wrist (if the catheter went in your wrist), or bad pain that Tylenol doesn't help."
+    },
+    {
+      "id": "soreness",
+      "type": "reference",
+      "text": "The site will likely be sore for 1 to 2 days. A bruise can take 2 to 3 weeks to fade, and after a groin site it may spread down your leg."
+    },
+    {
+      "id": "bleeding",
+      "type": "reference",
+      "text": "Sudden heavy bleeding or swelling you can't control: press firmly on the site and call 911. Light or moderate bleeding: press with clean fingers for 10 minutes; if it doesn't stop, call 911 and keep pressing. For an arm site, if the bleeding stops, sit quietly for 2 hours without bending the wrist and call the cardiologist."
+    },
+    {
+      "id": "follow-up",
+      "type": "checklist",
+      "text": "Book a follow-up visit with your cardiologist or primary care provider, usually 2 to 4 weeks after you leave the hospital."
+    },
+    {
+      "id": "contacts",
+      "type": "reference",
+      "text": "Weekdays 8 AM-5 PM, general questions: 206.598.8435 or 206.597.3609. Weekdays 6:30 AM-5 PM, questions about your procedure: 206.668.1085 (ask for a nurse). Urgent, after hours, weekends or holidays: 206.598.6190, ask to page the interventional cardiologist."
+    }
+  ],
+  "source": "https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "unmapped": [
+    {
+      "text": "For 24 hours before your procedure, no caffeine.",
+      "reason": "The sheet counts from the procedure, which isn't an anchor and whose time the patient isn't told. Re-anchored to check-in (the appointment anchor). At least as restrictive: the window starts earlier than the sheet says, and from check-in to the procedure the patient is in hospital care."
+    },
+    {
+      "text": "For 5 days after your procedure, no ibuprofen or naproxen.",
+      "reason": "The sheet counts from the procedure, which isn't an anchor. Re-anchored to discharge. At least as restrictive: the window ends a few hours later than the sheet says, and between the procedure and discharge the patient is in hospital care."
+    }
+  ]
+}

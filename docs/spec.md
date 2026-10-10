@@ -92,7 +92,7 @@ A nurse should be able to create a correct protocol in under 10 minutes with no 
 - **Steps, not documents.** Each step is a structured row: time offset from the procedure ("7 days before", "6 hours before"), step type (stop medication, diet change, drink prep, stop all liquids, arrange ride, arrive), short instruction text and an optional pictogram.
 - **Start from a template.** Duplicate an approved protocol and change what differs. Nobody starts from a blank page.
 - **Live patient preview.** Pick a sample appointment (7:30 AM vs 2:00 PM) and see the exact timeline the patient will get. This catches errors like a second prep dose landing at 2 AM.
-- **Safety checks while typing.** Warnings for steps between 11 PM and 5 AM, missing "stop liquids" step, overlapping steps, or a fasting window shorter than the department's minimum. Each department configures its own rules.
+- **Safety checks while typing.** Warnings for reminders between 11 PM and 5 AM, missing "stop liquids" step, overlapping steps, or a fasting window shorter than the department's minimum. Each department configures its own rules.
 - **Reading-level meter.** Shows the grade level of each instruction as it is typed, with a target of 6th grade or lower.
 - **Approver sees a diff.** The approving clinician sees exactly what changed from the last version, highlighted, and approves with one action.
 - **Handouts generated automatically.** Every published protocol produces a printable one-page timeline and a QR code for the scheduler to hand over.
@@ -113,33 +113,88 @@ A nurse should be able to create a correct protocol in under 10 minutes with no 
 
 Most future changes should be content edits done by clinicians in minutes, not code releases done by developers in weeks. That only works if content and logic are separated from day one.
 
-**1. Protocols are versioned data.** A protocol is a JSON document validated against a published schema. Clinical changes never touch code. (The values below are illustrative, not clinical guidance.)
+**1. Protocols are versioned data, built from modules.** A protocol is a base module plus optional modules such as "warfarin hold", "diabetes", "afternoon schedule" or "stent". Each module is a JSON document validated against a published schema and written once per institution, so one hospital's warfarin module serves its colonoscopy, surgery and cardiac cath protocols. Modules are never shared across institutions. Each protocol has a manifest, protocol.json, listing the base module, the allowed optional modules and the allowed combinations; the manifest is versioned and signed as one unit with its modules. It records each module's version and the SHA-256 hash of its file, and the single signature covers those hashes. When creating the patient's QR code at scheduling, the clinician ticks which optional modules apply and fills any parameters. After-procedure modules (stent, insertion site, sedation) are ticked by the discharge nurse on a second QR code; the manifest marks each optional module with selectedAt: scheduling or discharge. Each code carries only protocol and module IDs and those values, never identity. The app never decides which modules apply. Clinical changes never touch code. (Values below are illustrative, not clinical guidance.)
+
+- **Anchors.** Steps count from an event: appointment (known at scheduling), arrival (entered by the patient after the nurse's call), or discharge (the patient taps "I'm home"). Steps whose anchor isn't known yet show as pending. Every step must use one of these three. When a source counts from the procedure itself, the author re-anchors the step to the nearest of these and records the conversion. A re-anchored step must be at least as restrictive as the source: it starts earlier or ends later, never the reverse. Time between check-in and discharge counts as covered, because the patient is in hospital care.
+- **Effect and reminder.** Every timed step has a timing (when it takes effect) and a remind (when the patient is notified). The quiet-hours check applies to reminders only, so a midnight fasting cutoff is allowed when its reminder comes earlier. A step that must happen in quiet hours, such as a prep dose at 3 AM before an early appointment, sets "allowNight": true and also gets a headsUp reminder the evening before. The heads-up is sent only for appointments where that step's reminder actually falls in quiet hours. No reminder may fire after its step takes effect; day steps before the procedure day are exempt, since they are reminded on the morning of that day. Reminders on the procedure day count back from the anchor and never come from a defaulted clock time; a clock time the source gives is kept. Day steps on the procedure day itself are reminded the evening before.
+- **Five timing kinds.** offset (a duration from the anchor), dayAt (a calendar day relative to the anchor plus a local clock time), day (a whole calendar day relative to the anchor, reminded in the morning), window (a start plus a duration, for restrictions like "no driving for 24 hours"), and deadline (must be done by a time; its remind sets the lead time).
+- **Department defaults.** The manifest declares department defaults, such as the morning reminder time, the evening reminder time (for heads-ups and procedure-day day steps) and the reminder lead time. Where a source gives a vague time ("the morning of") or no lead time, the value comes from these defaults and is marked "defaulted": true until a clinician confirms it.
+- **Variants with explicit boundaries.** A module can apply only for some appointment times, with the boundary spelled out so a 12:00 appointment falls on exactly one side.
+- **Parameters for ranges.** Where a source gives a range ("stop 5–7 days before"), the module declares the allowed range and the clinician picks one value at QR creation. The app never picks. A parameter is structured, never a string template: { "param": "holdDays", "unit": "days", "before": true } stands in for a fixed duration or day number.
+- **Checklist and reference items.** checklist items (arrange a ride, pack a bag) are untimed unless the source gives a time ("if no one has called by 7 PM, call us"); then they carry timing and remind like any step. Reference items (when to call 911, contacts by time of day, daily dose limits) are displayed, never computed. Business-day rules ("on Friday if your surgery is on Monday") are deferred.
+- **Past-due steps.** Each timed step has a pastDue level, set by the clinician, for when its effect time has already passed at QR creation:
+  - critical (the default): the scheduler gets a warning at QR creation, and the patient app shows "This step should already have started. Call your care team before your procedure." Required for all blood-thinner holds and for anything whose miss can cancel the procedure (prep doses, fasting cutoffs, arrival, holds the source ties to procedure safety).
+  - doNow: the patient app shows the step as due today ("Do this today"). For buying or mixing prep, diet changes, reading instructions and holds that can start late.
+  - ignore: nothing is shown.
+- **Out of scope.** Per-patient drug lists and time shifts the patient chooses ("start 2 to 3 hours earlier if you need to") appear only as reference text.
+- **No step chaining.** "Third cup after the second" is one window step with plain text. This keeps the calculator small and keeps the app out of clinical decision-making.
+- **Conflict check at publish.** Every allowed combination of modules is computed for sample appointment times. Publishing fails if two modules give conflicting cutoffs (stop-drinking steps from modules that can be selected together, at different times for the same appointment), a reminder lands in quiet hours on a step without allowNight, or a reminder fires after its step takes effect. Contradictions inside a source sheet go to the clinical owner as open questions before the module is written.
+
+A manifest:
 
 ```json
 {
-  "schemaVersion": 1,
-  "protocolId": "colo-peg-split-am",
-  "version": 7,
+  "schemaVersion": 2,
+  "protocolId": "colo-split",
+  "version": 1,
   "owner": "GI Endoscopy",
   "reviewBy": "2027-04-01",
   "timezone": "America/New_York",
-  "steps": [
-    { "offset": "-P7D", "type": "medication_hold", "text": "Stop iron pills." },
-    { "offset": "-P1D", "type": "diet", "text": "Clear liquids only today." },
-    { "offset": "-PT6H", "type": "prep_dose", "text": "Drink the second half of your prep." },
-    { "offset": "-PT2H", "type": "npo", "text": "Stop all liquids now." }
+  "departmentDefaults": { "morningReminder": "07:00", "reminderLead": "PT2H" },
+  "baseModule": { "moduleId": "colo-split-base", "version": 3, "sha256": "…" },
+  "optionalModules": [
+    { "moduleId": "colo-split-am", "version": 1, "sha256": "…", "selectedAt": "scheduling" },
+    { "moduleId": "colo-split-pm", "version": 1, "sha256": "…", "selectedAt": "scheduling" },
+    { "moduleId": "warfarin-hold", "version": 2, "sha256": "…", "selectedAt": "scheduling" },
+    { "moduleId": "sedation", "version": 1, "sha256": "…", "selectedAt": "discharge" }
   ],
+  "allowedCombinations": { "rule": "anySubset", "exactlyOneOf": [["colo-split-am", "colo-split-pm"]] },
   "signature": "…"
+}
+```
+
+A module:
+
+```json
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-split-pm",
+  "version": 1,
+  "owner": "GI Endoscopy",
+  "reviewBy": "2027-04-01",
+  "timezone": "America/New_York",
+  "appliesWhen": { "appointmentTime": { "fromInclusive": "12:00", "toExclusive": "24:00" } },
+  "steps": [
+    { "id": "clear-liquids", "type": "diet", "anchor": "appointment",
+      "timing": { "kind": "day", "day": -1 },
+      "remind": { "kind": "dayAt", "day": -1, "time": "07:00", "defaulted": true },
+      "text": "Clear liquids only today." },
+    { "id": "dose1", "type": "prep_dose", "anchor": "appointment",
+      "timing": { "kind": "dayAt", "day": -1, "time": "17:00" },
+      "remind": { "kind": "dayAt", "day": -1, "time": "17:00" },
+      "text": "Drink the first half of your prep." },
+    { "id": "dose2", "type": "prep_dose", "anchor": "appointment",
+      "timing": { "kind": "deadline", "by": "-PT4H" },
+      "remind": { "kind": "offset", "offset": "-PT6H" },
+      "pastDue": "critical",
+      "text": "Finish the second half of your prep by this time." },
+    { "id": "no-driving", "type": "restriction", "anchor": "discharge",
+      "timing": { "kind": "window", "start": "PT0H", "duration": "PT24H" },
+      "remind": { "kind": "offset", "offset": "PT0H" },
+      "text": "Do not drive." },
+    { "id": "ride", "type": "checklist",
+      "text": "Arrange an adult to take you home." }
+  ]
 }
 ```
 
 **2. Published versions are immutable.** Edits create a new version; old ones are kept forever for audit. When publishing, the approver marks the change as either *wording only* or *safety-relevant*. Safety-relevant changes notify patients holding the old version on their next app open.
 
-**3. One small, heavily tested core.** The timeline calculator (offsets + appointment time + time zone → dated steps) is the only clinical logic. It exists exactly once: a pure Dart package used by the patient app and compiled to JavaScript for the portal's preview, so the preview can never disagree with what patients receive. It gets the most tests:
+**3. One small, heavily tested core.** The timeline calculator (selected modules + anchor times + time zone → dated steps and reminders) is the only clinical logic. It exists exactly once: a pure Dart package used by the patient app and compiled to JavaScript for the portal's preview, so the preview can never disagree with what patients receive. It gets the most tests:
 
 - Unit tests for each step type.
 - Property-based tests across daylight-saving transitions and every hour of the day.
-- Explicit safety-invariant tests: no step lands in quiet hours, liquids stop before the procedure, steps stay in order. These assert behavior directly. Stored golden timelines exist only as a regression net on top, never as the main test.
+- Explicit safety-invariant tests: no reminder lands in quiet hours unless its step allows night, no reminder fires after its step takes effect, liquids stop before the procedure, steps stay in order. These assert behavior directly. Stored golden timelines exist only as a regression net on top, never as the main test.
 
 **4. Clear module boundaries.** Start as one deployable service with four separate modules: authoring, approval and signing, bundle delivery, and the patient client. Split them only when there is a real reason.
 
@@ -174,7 +229,7 @@ Clinical content flows one way, from server to phone. The appointment date and r
 
 **Build phases** (each ends with a pass/fail check, not a date):
 
-1. **Discovery.** Interview 3–5 endoscopy nurses or schedulers; collect real prep sheets; list the top reasons for same-day cancellation. *Done when:* one real protocol is chosen to digitize.
+1. **Discovery.** Interview 3–5 endoscopy nurses or schedulers; collect real prep sheets; list the top reasons for same-day cancellation. *Done when:* one real protocol is chosen to digitize. Core can start before this, on synthetic test protocols modeled on publicly posted hospital prep sheets (source linked, labeled not clinical guidance); Discovery then checks the schema against real ones.
 2. **Core.** Protocol schema, timeline calculator with full tests, patient app showing one signed protocol with offline reminders. *Done when:* golden and daylight-saving tests pass.
 3. **Authoring.** Staff portal, two-person approval, signing, audit log, printable handout and QR. *Done when:* a nurse builds a correct protocol in under 10 minutes in a usability test.
 4. **Hardening.** ASVS Level 2 checklist, WCAG 2.1 AA audit, threat model, security scans in CI, backup-restore drill, independent penetration test. *Done when:* no high or critical findings are open.

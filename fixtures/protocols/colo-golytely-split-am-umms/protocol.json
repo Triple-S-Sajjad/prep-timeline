@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "colo-golytely-split-am-umms",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "colo-golytely-split-am-umms-base",
+    "version": 1,
+    "sha256": "90258b1fb8ed8719eaeb5f189c80dcea5dad47deebbfcceaba87692fdfd505db"
+  },
+  "optionalModules": [
+    {
+      "moduleId": "colo-golytely-split-am-umms-iron-hold",
+      "version": 1,
+      "sha256": "a8ee922937069fa9efcbb399114f5517170fb35dc827afe6e7d0e6c30f48ca64",
+      "selectedAt": "scheduling"
+    }
+  ],
+  "allowedCombinations": {
+    "rule": "anySubset"
+  },
+  "source": [
+    "https://www.umms.org/ummc/-/media/files/ummc/health-services/digestive-health/colonos-prep-instr-golytely-split-dose.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

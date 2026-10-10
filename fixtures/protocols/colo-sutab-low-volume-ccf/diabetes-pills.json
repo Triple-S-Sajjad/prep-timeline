@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-sutab-low-volume-ccf-diabetes-pills",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "steps": [
+    {
+      "id": "stop-pills",
+      "type": "medication_hold",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "dayAt",
+        "day": 0,
+        "time": "00:00"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "22:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "Don't take any diabetes pills after midnight tonight, until after your procedure."
+    }
+  ],
+  "source": "https://my.clevelandclinic.org/health/articles/sutab-bowel-preparation-instructions",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

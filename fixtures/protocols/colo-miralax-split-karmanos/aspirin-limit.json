@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-miralax-split-karmanos-aspirin-limit",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/Detroit",
+  "steps": [
+    {
+      "id": "aspirin",
+      "type": "medication_hold",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -7
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -7,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "critical",
+      "text": "From today until your procedure, take no more than 81 mg of aspirin a day. A daily 81 mg aspirin is fine."
+    }
+  ],
+  "source": "https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

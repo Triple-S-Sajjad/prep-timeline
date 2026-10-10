@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-golytely-split-am-umms-base",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "12:00"
+    }
+  },
+  "steps": [
+    {
+      "id": "buy-prep",
+      "type": "checklist",
+      "text": "Buy GoLytely, NuLytely or Colyte at a pharmacy. You need a prescription."
+    },
+    {
+      "id": "ask-pcp",
+      "type": "checklist",
+      "text": "If you take insulin, Coumadin, or blood pressure or heart medicine, ask your primary care provider whether to take it before the exam."
+    },
+    {
+      "id": "ride",
+      "type": "checklist",
+      "text": "Bring an adult to take you home. Without one, the procedure is cancelled."
+    },
+    {
+      "id": "bring",
+      "type": "checklist",
+      "text": "Bring your insurance cards, referrals and co-pay."
+    },
+    {
+      "id": "clear-liquids",
+      "type": "diet",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -1
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "You can have a small breakfast, like a slice of bread with coffee or juice. After that, drink only clear liquids for the rest of the day."
+    },
+    {
+      "id": "mix",
+      "type": "checklist",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -1
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "Fill the prep jug with water to the line today. You can keep it in the fridge."
+    },
+    {
+      "id": "dose1",
+      "type": "prep_dose",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "17:00"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "17:00"
+      },
+      "pastDue": "critical",
+      "text": "Start your prep. Drink one 8-ounce glass every 15 minutes until 3 liters are gone."
+    },
+    {
+      "id": "prep-only",
+      "type": "npo",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": 0
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "20:00",
+        "defaulted": true
+      },
+      "pastDue": "critical",
+      "text": "This morning, have nothing to eat or drink except your prep."
+    },
+    {
+      "id": "dose2",
+      "type": "prep_dose",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "offset",
+        "offset": "-PT4H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT4H"
+      },
+      "allowNight": true,
+      "headsUp": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "20:00",
+        "defaulted": true
+      },
+      "pastDue": "critical",
+      "text": "Drink the last liter of your prep, one 8-ounce glass at a time. It takes about an hour."
+    },
+    {
+      "id": "arrive",
+      "type": "arrive",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "offset",
+        "offset": "-PT1H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT1H"
+      },
+      "pastDue": "critical",
+      "text": "Check in at the GI Endoscopy Lab now, 1 hour before your procedure."
+    },
+    {
+      "id": "regular-meds",
+      "type": "reference",
+      "text": "On exam day, take your regular medicines with a sip of water unless your doctor told you not to."
+    },
+    {
+      "id": "contact",
+      "type": "reference",
+      "text": "Questions about your procedure or these instructions: call the gastroenterology division at (410) 328-8730."
+    }
+  ],
+  "source": "https://www.umms.org/ummc/-/media/files/ummc/health-services/digestive-health/colonos-prep-instr-golytely-split-dose.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

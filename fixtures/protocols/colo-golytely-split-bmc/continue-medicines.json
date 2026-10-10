@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-golytely-split-bmc-continue-medicines",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "steps": [
+    {
+      "id": "aspirin",
+      "type": "reference",
+      "text": "Don't stop taking aspirin."
+    },
+    {
+      "id": "blood-pressure",
+      "type": "reference",
+      "text": "Keep taking your usual blood pressure medicines, including the day before and the day of your procedure. If your blood pressure is very high that day, the procedure may be cancelled."
+    }
+  ],
+  "source": "https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

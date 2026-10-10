@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-golytely-split-bmc-diabetes-pills",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "steps": [
+    {
+      "id": "skip-pills",
+      "type": "medication_hold",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": 0
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "20:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "Don't take your diabetes pills (like glipizide or metformin) this morning."
+    }
+  ],
+  "source": "https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "colo-miralax-split-karmanos",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/Detroit",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "colo-miralax-split-karmanos-base",
+    "version": 1,
+    "sha256": "738394cbcae8ba6e3af0ce7342004056bb1ca99030169f103a57c4baedbd5a49"
+  },
+  "optionalModules": [
+    {
+      "moduleId": "colo-miralax-split-karmanos-am-schedule",
+      "version": 1,
+      "sha256": "f0d0a8c38d117194d29c68672df2adc5b44138cd387a832ee8d984fe695ef5c7",
+      "selectedAt": "scheduling"
+    },
+    {
+      "moduleId": "colo-miralax-split-karmanos-pm-schedule",
+      "version": 1,
+      "sha256": "2adeae37e450a9c69f1a0801adc6f214eac4d29861f30b9d5cd9c7ce3dd5998d",
+      "selectedAt": "scheduling"
+    },
+    {
+      "moduleId": "colo-miralax-split-karmanos-iron-hold",
+      "version": 1,
+      "sha256": "4da558b895bedea28cba2a1109c34c33380bb73ab5be90c688596ef2d78e449b",
+      "selectedAt": "scheduling"
+    },
+    {
+      "moduleId": "colo-miralax-split-karmanos-nsaid-hold",
+      "version": 1,
+      "sha256": "23b51f75761eb19d7b96dd6e6ecd49e7b5baf5110f11c363bf73989e00c5c410",
+      "selectedAt": "scheduling"
+    },
+    {
+      "moduleId": "colo-miralax-split-karmanos-aspirin-limit",
+      "version": 1,
+      "sha256": "f99f91c776d789333e72feb9b8338b827d0172f32c44e10fe15b9cca46f726e8",
+      "selectedAt": "scheduling"
+    }
+  ],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": [
+      [
+        "colo-miralax-split-karmanos-am-schedule",
+        "colo-miralax-split-karmanos-pm-schedule"
+      ]
+    ]
+  },
+  "source": [
+    "https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

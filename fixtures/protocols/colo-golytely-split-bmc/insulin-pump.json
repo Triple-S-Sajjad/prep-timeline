@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-golytely-split-bmc-insulin-pump",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "steps": [
+    {
+      "id": "pump",
+      "type": "reference",
+      "text": "If you use an insulin pump, ask your diabetes doctor what to do."
+    }
+  ],
+  "source": "https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

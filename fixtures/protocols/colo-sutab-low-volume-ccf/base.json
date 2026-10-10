@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-sutab-low-volume-ccf-base",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "steps": [
+    {
+      "id": "pickup",
+      "type": "checklist",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -5
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -5,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "Pick up your SUTAB kit by today, at least 5 days before your colonoscopy."
+    },
+    {
+      "id": "ride",
+      "type": "checklist",
+      "text": "An adult must check in with you, wait until you are discharged, and take you home. You can't drive for the rest of the day. A taxi or ride-share is fine only if that adult rides with you."
+    },
+    {
+      "id": "blood-thinners",
+      "type": "checklist",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -14
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -14,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "critical",
+      "text": "If you take a blood thinner (Plavix, Coumadin, Ticlid, Agrylin, Xarelto, Pradaxa, Eliquis, Effient), contact your provider by today about changing it."
+    },
+    {
+      "id": "weight-loss",
+      "type": "checklist",
+      "text": "If you take weight-loss medicine (Invokana, Farxiga, Trulicity, Jardiance, Steglatro, Byetta, Bydureon, Victoza, Saxenda, Adlyxin, Ozempic, Wegovy, Rybelsus, Mounjaro, Zepbound), ask your prescriber whether to change it or stop it. Stopping can be several days to a week before."
+    },
+    {
+      "id": "low-fiber",
+      "type": "diet",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -3
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -3,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "Stop eating high-fiber foods: popcorn, beans, seeds, nuts, multigrain bread, salad and vegetables, and fresh or dried fruit."
+    },
+    {
+      "id": "clear-liquids",
+      "type": "diet",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -1
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "No solid food today. Drink only clear liquids you can see through, like water, clear broth, and coffee or tea with no milk. Nothing red, purple or orange."
+    },
+    {
+      "id": "dose1",
+      "type": "prep_dose",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "18:00"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "18:00"
+      },
+      "pastDue": "critical",
+      "text": "Fill the cup to the line with cool water. Swallow each of the 12 tablets in the first bottle with a sip, then drink the rest of the water."
+    },
+    {
+      "id": "water",
+      "type": "prep_dose",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "21:00"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "21:00"
+      },
+      "pastDue": "critical",
+      "text": "Drink another full cup of cool water over 30 minutes. Then drink a third full cup."
+    },
+    {
+      "id": "dose2",
+      "type": "prep_dose",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "offset",
+        "offset": "-PT6H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT6H"
+      },
+      "allowNight": true,
+      "headsUp": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "20:00",
+        "defaulted": true
+      },
+      "pastDue": "critical",
+      "text": "Take the second bottle the same way as last night: fill the cup to the line with cool water, swallow each tablet with a sip, and drink the rest. Then drink two more full cups of water."
+    },
+    {
+      "id": "npo",
+      "type": "npo",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "offset",
+        "offset": "-PT3H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT3H"
+      },
+      "allowNight": true,
+      "headsUp": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "20:00",
+        "defaulted": true
+      },
+      "pastDue": "critical",
+      "text": "Stop drinking all liquids now."
+    },
+    {
+      "id": "extra-fluids",
+      "type": "reference",
+      "text": "Drink at least 12 extra servings (8-10 oz each) of clear liquids on top of the prep water, until 3 hours before."
+    },
+    {
+      "id": "start-earlier",
+      "type": "reference",
+      "text": "If you can't drink large amounts, you can start your prep 2 to 3 hours earlier."
+    },
+    {
+      "id": "meds-day-of",
+      "type": "reference",
+      "text": "Take aspirin, antibiotics or water pills with a sip of water on exam day."
+    },
+    {
+      "id": "constipation",
+      "type": "reference",
+      "text": "If you are constipated, you can take extra laxatives in the days before your prep."
+    },
+    {
+      "id": "cant-finish",
+      "type": "reference",
+      "text": "If you can't finish the prep, your colonoscopy will likely need to be rescheduled."
+    },
+    {
+      "id": "bariatric",
+      "type": "reference",
+      "text": "If you had gastric bypass surgery, you still need the whole prep. Drink smaller amounts more slowly; it will take longer."
+    }
+  ],
+  "source": "https://my.clevelandclinic.org/health/articles/sutab-bowel-preparation-instructions",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "unmapped": [
+    {
+      "text": "Ask for personal instructions if you need special accommodations, had a poor prep or trouble with anesthesia before, or have slow bowels (Parkinson's, MS, wheelchair use, narcotics, gabapentin, anticholinergics). On dialysis, talk to your kidney doctor before scheduling.",
+      "reason": "These are reasons to choose a different protocol before scheduling. Once the patient has the QR code, it's too late to act on them."
+    },
+    {
+      "text": "The page gives no arrival time.",
+      "reason": "Nothing to put in an arrive step."
+    },
+    {
+      "text": "The page serves Cleveland Clinic sites in Ohio, Florida, Nevada, Canada, London and Abu Dhabi.",
+      "reason": "One public page, several time zones. This fixture assumes Ohio."
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-golytely-split-bmc-insulin-half-dose",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "steps": [
+    {
+      "id": "half-dose",
+      "type": "medication_change",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -1
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "doNow",
+      "text": "Take half your usual dose of long-acting or premixed insulin today."
+    },
+    {
+      "id": "help",
+      "type": "reference",
+      "text": "If you need help adjusting your diabetes medicines, ask your primary care provider or diabetes doctor."
+    }
+  ],
+  "source": "https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

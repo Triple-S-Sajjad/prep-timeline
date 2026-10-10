@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "colo-golytely-split-bmc-glp1-weekly-hold",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "steps": [
+    {
+      "id": "glp1-weekly",
+      "type": "medication_hold",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -7
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -7,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "pastDue": "critical",
+      "text": "Don't take your weekly GLP-1 medicine (the name ends in -tide) from today until after your procedure."
+    }
+  ],
+  "source": "https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

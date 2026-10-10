@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "cardiac-cath-uw",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/Los_Angeles",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "cardiac-cath-uw-base",
+    "version": 1,
+    "sha256": "715a33f6c0d74e94056e4588722a10167e4e136271f0911d202d3126626513fb"
+  },
+  "optionalModules": [
+    {
+      "moduleId": "cardiac-cath-uw-sedation",
+      "version": 1,
+      "sha256": "3c22683c5600a79c8aacbf5a8c30311a696ace4f269e1cedd108089de9ea7054",
+      "selectedAt": "discharge"
+    },
+    {
+      "moduleId": "cardiac-cath-uw-groin-site",
+      "version": 1,
+      "sha256": "1aa3ed3f9f101a091360b3cadb8ea108947bc6af9afaed5059096d0e4fa8638c",
+      "selectedAt": "discharge"
+    },
+    {
+      "moduleId": "cardiac-cath-uw-arm-site",
+      "version": 1,
+      "sha256": "fb483459ed3034e23e7f42fb3cdeedcaeac16e6bdb2967fd18e51808cadcb51f",
+      "selectedAt": "discharge"
+    },
+    {
+      "moduleId": "cardiac-cath-uw-stent",
+      "version": 1,
+      "sha256": "05874de025a33efd0ebd0ff1dbc67f32948b8bc24b210f67cba095b9e2b64343",
+      "selectedAt": "discharge"
+    }
+  ],
+  "allowedCombinations": {
+    "rule": "anySubset"
+  },
+  "source": [
+    "https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}
