@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "calendar-offset-ccf",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "calendar-offset-ccf-base",
+    "version": 1,
+    "sha256": "a0aa12fbd738fce0ad5d9ddb35ff4a5840b75aebf0b41e873ed3507e99485d2f"
+  },
+  "optionalModules": [],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": []
+  },
+  "expectedFailure": "pattern:offset",
+  "source": [
+    "https://my.clevelandclinic.org/health/articles/sutab-bowel-preparation-instructions"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

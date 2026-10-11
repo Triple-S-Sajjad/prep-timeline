@@ -65,12 +65,14 @@
     "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "format": "date" },
     "clockTime": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
     "signedDuration": {
+      "description": "Elapsed hours and minutes from the anchor. Calendar days use day or dayAt, so a daylight-saving change can't move their clock time.",
       "type": "string",
-      "pattern": "^-?P(?=[0-9]|T[0-9])([0-9]+D)?(T(?=[0-9])([0-9]+H)?([0-9]+M)?([0-9]+S)?)?$"
+      "pattern": "^-?PT(?=[0-9])([0-9]+H)?([0-9]+M)?$"
     },
     "positiveDuration": {
+      "description": "Elapsed hours and minutes, like signedDuration.",
       "type": "string",
-      "pattern": "^P(?=[0-9]|T[0-9])([0-9]+D)?(T(?=[0-9])([0-9]+H)?([0-9]+M)?([0-9]+S)?)?$"
+      "pattern": "^PT(?=[0-9])([0-9]+H)?([0-9]+M)?$"
     },
     "paramRef": {
       "description": "Stands in for a number the clinician picks at QR creation. The unit comes from the parameter declaration.",
@@ -86,16 +88,6 @@
       "if": { "type": "object" },
       "then": { "$ref": "#/$defs/paramRef" },
       "else": { "type": "integer" }
-    },
-    "signedDurationOrParam": {
-      "if": { "type": "object" },
-      "then": { "$ref": "#/$defs/paramRef" },
-      "else": { "$ref": "#/$defs/signedDuration" }
-    },
-    "positiveDurationOrParam": {
-      "if": { "type": "object" },
-      "then": { "$ref": "#/$defs/paramRef" },
-      "else": { "$ref": "#/$defs/positiveDuration" }
     },
     "dayAt": {
       "type": "object",
@@ -119,7 +111,7 @@
           "then": {
             "required": ["kind", "offset"],
             "additionalProperties": false,
-            "properties": { "kind": true, "offset": { "$ref": "#/$defs/signedDurationOrParam" } }
+            "properties": { "kind": true, "offset": { "$ref": "#/$defs/signedDuration" } }
           }
         },
         {
@@ -149,8 +141,8 @@
             "additionalProperties": false,
             "properties": {
               "kind": true,
-              "start": { "$ref": "#/$defs/signedDurationOrParam" },
-              "duration": { "$ref": "#/$defs/positiveDurationOrParam" }
+              "start": { "$ref": "#/$defs/signedDuration" },
+              "duration": { "$ref": "#/$defs/positiveDuration" }
             }
           }
         },
@@ -159,7 +151,7 @@
           "then": {
             "required": ["kind", "by"],
             "additionalProperties": false,
-            "properties": { "kind": true, "by": { "$ref": "#/$defs/signedDurationOrParam" } }
+            "properties": { "kind": true, "by": { "$ref": "#/$defs/signedDuration" } }
           }
         }
       ]
@@ -177,7 +169,7 @@
             "additionalProperties": false,
             "properties": {
               "kind": true,
-              "offset": { "$ref": "#/$defs/signedDurationOrParam" },
+              "offset": { "$ref": "#/$defs/signedDuration" },
               "defaulted": { "type": "boolean" }
             }
           }

@@ -155,11 +155,11 @@
       "anchor": "appointment",
       "timing": {
         "kind": "offset",
-        "offset": "PT0S"
+        "offset": "PT0H"
       },
       "remind": {
         "kind": "offset",
-        "offset": "PT0S",
+        "offset": "PT0H",
         "defaulted": false
       },
       "allowNight": false,
@@ -178,7 +178,7 @@
       "timing": {
         "kind": "window",
         "start": "PT0H",
-        "duration": "P5D"
+        "duration": "PT120H"
       },
       "remind": {
         "kind": "offset",

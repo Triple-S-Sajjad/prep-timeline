@@ -36,8 +36,9 @@
         "morningReminder": { "$ref": "#/$defs/clockTime" },
         "eveningReminder": { "$ref": "#/$defs/clockTime" },
         "reminderLead": {
+          "description": "Elapsed hours and minutes, like the module schema's positiveDuration.",
           "type": "string",
-          "pattern": "^P(?=[0-9]|T[0-9])([0-9]+D)?(T(?=[0-9])([0-9]+H)?([0-9]+M)?([0-9]+S)?)?$"
+          "pattern": "^PT(?=[0-9])([0-9]+H)?([0-9]+M)?$"
         }
       }
     },

@@ -44,6 +44,7 @@ GitHub Actions are pinned by commit SHA, and npm packages by exact version, each
 ## Known limitations
 
 - The calculator's time zone data is IANA 2025c, from `timezone` 0.11.1. It misses the 2026 clock changes in Canada (America/Vancouver, America/Edmonton, America/Inuvik, America/Winnipeg) and Morocco, so times in those zones after the changes are wrong. Fix: move to `timezone` 0.11.2 (IANA 2026e) together with `tzdata` 2026.5 (IANA 2026e), once both pass the two-week rule, so the validator and the calculator stay on one release. Building our own database from IANA releases was rejected to avoid maintaining a custom build.
+- The calculator's time zone data ends in 2037: `timezone` compiles it with `zic -b fat`, and after the last transition it keeps the last offset, so summer times in 2038 or later would be an hour off. The calculator rejects any appointment or step time after 2037.
 
 ## Deferred
 

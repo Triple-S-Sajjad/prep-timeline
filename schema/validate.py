@@ -61,6 +61,8 @@ def schema_problems(
         elif error.validator == "additionalProperties":
             known = error.schema.get("properties", {})
             code += ":" + ",".join(sorted(set(error.instance) - set(known)))
+        elif error.validator == "pattern":
+            code += ":" + str(error.path[-1])
         problems.append(Problem(file, code, f"{error.json_path}: {error.message}"))
     return problems
 

@@ -35,7 +35,7 @@
       "timing": {
         "kind": "window",
         "start": "PT0H",
-        "duration": "P7D"
+        "duration": "PT168H"
       },
       "remind": {
         "kind": "offset",

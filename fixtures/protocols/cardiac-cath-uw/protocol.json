@@ -13,7 +13,7 @@
   "baseModule": {
     "moduleId": "cardiac-cath-uw-base",
     "version": 1,
-    "sha256": "c26f275da38a00f88994b05e2b8f92962349fa15ea405b88bb4bfa577df1d16c"
+    "sha256": "fb9f2b53f6190ba6e73b7f6fa20352fbfb218464236942617163869fbcd2aa3b"
   },
   "optionalModules": [
     {
@@ -25,13 +25,13 @@
     {
       "moduleId": "cardiac-cath-uw-groin-site",
       "version": 1,
-      "sha256": "ac05fa2355c59a13a08e4ded02204c50b529cbf024518eef7b5d5334489c091b",
+      "sha256": "f2fba698ef476c2442316f70da32aa7dec05983b12501dc8e0210daf2b5f79b9",
       "selectedAt": "discharge"
     },
     {
       "moduleId": "cardiac-cath-uw-arm-site",
       "version": 1,
-      "sha256": "2538ad7a0879f3c07e0e12ebf45d64d7d426e6cf17a4a11e6ab707972f04fbfe",
+      "sha256": "f6b8c92bcc110b793c467b63ee3fb8d22361b62f8d5d8af1d41f4e99af7d41d9",
       "selectedAt": "discharge"
     },
     {
