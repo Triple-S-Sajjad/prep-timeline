@@ -33,11 +33,17 @@ GitHub Actions are pinned by commit SHA, and npm packages by exact version, each
 | `pytest` | 9.1.1 | Python test runner |
 | `jsonschema` | 4.26.0 | Validates protocol bundles against the JSON Schema 2020-12 files in `schema/`. Python because the cross-file checks (hashes, parameter references) live in the same script. The `ajv` already in `node_modules` comes with ESLint and is version 6, which only supports draft-07 |
 | `types-jsonschema` | 4.26.0.20260518 | Type stubs from typeshed; `jsonschema` ships none, and mypy runs in strict mode |
-| `tzdata` | 2026.4, Windows only | IANA time zone database for `zoneinfo`, which the validator uses to reject unknown time zones. Windows has no system copy; Linux and macOS use their own |
+| `tzdata` | 2026.4, Windows only | IANA time zone database (release 2026d) for `zoneinfo`, which the validator uses to reject unknown time zones. Windows has no system copy; Linux and macOS use their own |
+| `test` | 1.32.0 | Dart test runner for the timeline calculator; dev only |
+| `timezone` | 0.11.1 | IANA time zones and `TZDateTime` for the calculator, since Dart's `DateTime` knows only UTC and the device's zone. Bundles IANA 2025c (stated in the generated headers of `lib/data/*.dart`); see Known limitations |
 | `actions/checkout` | v7.0.1 | Check out the repo in CI |
 | `actions/setup-node` | v7.0.0 | Node for npm tools in CI |
 | `actions/setup-python` | v7.0.0 | Python in CI, only once `.py` files exist |
 | `subosito/flutter-action` | v2.23.0 | Flutter and Dart in CI, only once a `pubspec.yaml` exists. Pinned to Flutter 3.47.7 (Dart 3.13.5) to match the local SDK |
+
+## Known limitations
+
+- The calculator's time zone data is IANA 2025c, from `timezone` 0.11.1. It misses the 2026 clock changes in Canada (America/Vancouver, America/Edmonton, America/Inuvik, America/Winnipeg) and Morocco, so times in those zones after the changes are wrong. Fix: move to `timezone` 0.11.2 (IANA 2026e) together with `tzdata` 2026.5 (IANA 2026e), once both pass the two-week rule, so the validator and the calculator stay on one release. Building our own database from IANA releases was rejected to avoid maintaining a custom build.
 
 ## Deferred
 

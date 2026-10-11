@@ -43,7 +43,7 @@ for pubspec in $(git ls-files -- 'pubspec.yaml' '*/pubspec.yaml'); do
   dir=$(dirname "$pubspec")
   if grep -q 'sdk: flutter' "$pubspec"; then tool=flutter; else tool=dart; fi
   (cd "$dir" && run "$tool" pub get && run "$tool" analyze --fatal-infos)
-  if [ -d "$dir/test" ]; then (cd "$dir" && run "$tool" test); fi
+  if has "$dir/test/*_test.dart"; then (cd "$dir" && run "$tool" test); fi
 done
 
 echo "pre-push: all checks passed"

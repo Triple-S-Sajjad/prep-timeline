@@ -1,0 +1,12 @@
+name: timeline
+description: Turns selected protocol modules, anchor times and a time zone into dated steps and reminders.
+publish_to: none
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  timezone: 0.11.1
+
+dev_dependencies:
+  test: 1.32.0
