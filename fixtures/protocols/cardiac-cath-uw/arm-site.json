@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "steps": [
     {
       "id": "first-48h",
@@ -16,8 +22,10 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "PT0H"
+        "offset": "PT0H",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "With the arm that had the catheter: don't lift, push or pull, don't bend or twist the wrist, and don't let anyone take your blood pressure on it."
     },
@@ -32,8 +40,10 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "PT0H"
+        "offset": "PT0H",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "No hard exercise with that arm, don't lift more than 5 pounds with it, and no baths, hot tubs or swimming. You can shower starting the day after your procedure."
     }

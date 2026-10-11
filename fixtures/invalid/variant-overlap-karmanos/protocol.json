@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "variant-overlap-karmanos",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/Detroit",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "variant-overlap-karmanos-base",
+    "version": 1,
+    "sha256": "6664e677e0d71f2713321a03514ce73890216f57e60f60a18a487805dbaec83f"
+  },
+  "optionalModules": [
+    {
+      "moduleId": "variant-overlap-karmanos-am-schedule",
+      "version": 1,
+      "sha256": "5cc1c4f618460347c3760a2b3a81f048f3b19c602bfa2a9f1364c7efac2f9b2a",
+      "selectedAt": "scheduling"
+    },
+    {
+      "moduleId": "variant-overlap-karmanos-pm-schedule",
+      "version": 1,
+      "sha256": "33c63101af3ca0ca66dfe8aa7546745f5d78fb992fda085146502dec18dbbcda",
+      "selectedAt": "scheduling"
+    }
+  ],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": [
+      {
+        "selectBy": "appointmentTime",
+        "modules": [
+          "variant-overlap-karmanos-am-schedule",
+          "variant-overlap-karmanos-pm-schedule"
+        ]
+      }
+    ]
+  },
+  "expectedFailure": "variantOverlap",
+  "source": [
+    "https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

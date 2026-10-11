@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "parameters": {
     "holdDays": {
       "min": 3,
@@ -37,6 +43,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "Stop taking your SGLT2 medicine (the name ends in -flozin, like Invokana, Farxiga or Jardiance) today."
     }

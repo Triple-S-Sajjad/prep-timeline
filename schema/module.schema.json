@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Protocol module",
+  "description": "One module of a prep protocol. Rules: docs/spec.md, Changeability.",
+  "type": "object",
+  "required": ["schemaVersion", "moduleId", "version", "owner", "reviewBy", "appliesWhen", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "moduleId": { "$ref": "#/$defs/id" },
+    "version": { "type": "integer", "minimum": 1 },
+    "owner": { "$ref": "#/$defs/text" },
+    "reviewBy": { "$ref": "#/$defs/date" },
+    "appliesWhen": {
+      "type": "object",
+      "required": ["appointmentTime"],
+      "additionalProperties": false,
+      "properties": {
+        "appointmentTime": {
+          "type": "object",
+          "required": ["fromInclusive", "toExclusive"],
+          "additionalProperties": false,
+          "properties": {
+            "fromInclusive": { "$ref": "#/$defs/clockTime" },
+            "toExclusive": { "anyOf": [{ "$ref": "#/$defs/clockTime" }, { "const": "24:00" }] }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][A-Za-z0-9]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["min", "max", "unit"],
+        "additionalProperties": false,
+        "properties": {
+          "min": { "type": "integer", "minimum": 0 },
+          "max": { "type": "integer", "minimum": 0 },
+          "unit": { "enum": ["days", "weeks"] }
+        }
+      }
+    },
+    "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/step" } },
+    "source": { "$ref": "#/$defs/url" },
+    "accessed": { "$ref": "#/$defs/date" },
+    "note": { "$ref": "#/$defs/text" },
+    "unmapped": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["text", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "text": { "$ref": "#/$defs/text" },
+          "reason": { "$ref": "#/$defs/text" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "text": { "type": "string", "minLength": 1 },
+    "url": { "type": "string", "pattern": "^https://\\S+$" },
+    "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "format": "date" },
+    "clockTime": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+    "signedDuration": {
+      "type": "string",
+      "pattern": "^-?P(?=[0-9]|T[0-9])([0-9]+D)?(T(?=[0-9])([0-9]+H)?([0-9]+M)?([0-9]+S)?)?$"
+    },
+    "positiveDuration": {
+      "type": "string",
+      "pattern": "^P(?=[0-9]|T[0-9])([0-9]+D)?(T(?=[0-9])([0-9]+H)?([0-9]+M)?([0-9]+S)?)?$"
+    },
+    "paramRef": {
+      "description": "Stands in for a number the clinician picks at QR creation. The unit comes from the parameter declaration.",
+      "type": "object",
+      "required": ["param", "before"],
+      "additionalProperties": false,
+      "properties": {
+        "param": { "type": "string" },
+        "before": { "type": "boolean" }
+      }
+    },
+    "dayNumber": {
+      "if": { "type": "object" },
+      "then": { "$ref": "#/$defs/paramRef" },
+      "else": { "type": "integer" }
+    },
+    "signedDurationOrParam": {
+      "if": { "type": "object" },
+      "then": { "$ref": "#/$defs/paramRef" },
+      "else": { "$ref": "#/$defs/signedDuration" }
+    },
+    "positiveDurationOrParam": {
+      "if": { "type": "object" },
+      "then": { "$ref": "#/$defs/paramRef" },
+      "else": { "$ref": "#/$defs/positiveDuration" }
+    },
+    "dayAt": {
+      "type": "object",
+      "required": ["kind", "day", "time", "defaulted"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "dayAt" },
+        "day": { "$ref": "#/$defs/dayNumber" },
+        "time": { "$ref": "#/$defs/clockTime" },
+        "defaulted": { "type": "boolean" }
+      }
+    },
+    "timing": {
+      "description": "Each kind's object is closed in its own branch; this level only dispatches on kind.",
+      "type": "object",
+      "required": ["kind"],
+      "properties": { "kind": { "enum": ["offset", "dayAt", "day", "window", "deadline"] } },
+      "allOf": [
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "offset" } } },
+          "then": {
+            "required": ["kind", "offset"],
+            "additionalProperties": false,
+            "properties": { "kind": true, "offset": { "$ref": "#/$defs/signedDurationOrParam" } }
+          }
+        },
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "dayAt" } } },
+          "then": {
+            "required": ["kind", "day", "time"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": true,
+              "day": { "$ref": "#/$defs/dayNumber" },
+              "time": { "$ref": "#/$defs/clockTime" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "day" } } },
+          "then": {
+            "required": ["kind", "day"],
+            "additionalProperties": false,
+            "properties": { "kind": true, "day": { "$ref": "#/$defs/dayNumber" } }
+          }
+        },
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "window" } } },
+          "then": {
+            "required": ["kind", "start", "duration"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": true,
+              "start": { "$ref": "#/$defs/signedDurationOrParam" },
+              "duration": { "$ref": "#/$defs/positiveDurationOrParam" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "deadline" } } },
+          "then": {
+            "required": ["kind", "by"],
+            "additionalProperties": false,
+            "properties": { "kind": true, "by": { "$ref": "#/$defs/signedDurationOrParam" } }
+          }
+        }
+      ]
+    },
+    "remind": {
+      "description": "Each kind's object is closed in its own branch; this level only dispatches on kind.",
+      "type": "object",
+      "required": ["kind"],
+      "properties": { "kind": { "enum": ["offset", "dayAt"] } },
+      "allOf": [
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "offset" } } },
+          "then": {
+            "required": ["kind", "offset", "defaulted"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": true,
+              "offset": { "$ref": "#/$defs/signedDurationOrParam" },
+              "defaulted": { "type": "boolean" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "dayAt" } } },
+          "then": { "$ref": "#/$defs/dayAt" }
+        }
+      ]
+    },
+    "untimedStep": {
+      "type": "object",
+      "required": ["id", "type", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": true,
+        "text": { "$ref": "#/$defs/text" }
+      }
+    },
+    "timedStep": {
+      "type": "object",
+      "required": ["id", "type", "anchor", "timing", "remind", "allowNight", "pastDue", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": true,
+        "anchor": { "enum": ["appointment", "arrival", "discharge"] },
+        "timing": { "$ref": "#/$defs/timing" },
+        "remind": { "$ref": "#/$defs/remind" },
+        "allowNight": { "type": "boolean" },
+        "headsUp": { "$ref": "#/$defs/dayAt" },
+        "pastDue": { "enum": ["critical", "doNow", "ignore"] },
+        "text": { "$ref": "#/$defs/text" }
+      },
+      "allOf": [
+        {
+          "description": "A night step gets a heads-up the evening before; a day step has none.",
+          "if": { "required": ["allowNight"], "properties": { "allowNight": { "const": true } } },
+          "then": { "required": ["headsUp"] },
+          "else": { "not": { "required": ["headsUp"] } }
+        },
+        {
+          "description": "A missed prep dose, fasting cutoff or arrival can cancel the procedure.",
+          "if": { "required": ["type"], "properties": { "type": { "enum": ["prep_dose", "npo", "arrive"] } } },
+          "then": { "properties": { "pastDue": { "const": "critical" } } }
+        },
+        {
+          "description": "Day steps on the procedure day itself are reminded the evening before.",
+          "if": {
+            "required": ["anchor", "timing"],
+            "properties": {
+              "anchor": { "enum": ["appointment", "arrival"] },
+              "timing": { "required": ["kind", "day"], "properties": { "kind": { "const": "day" }, "day": { "const": 0 } } }
+            }
+          },
+          "then": {
+            "properties": {
+              "remind": { "required": ["kind", "day"], "properties": { "kind": { "const": "dayAt" }, "day": { "const": -1 } } }
+            }
+          }
+        },
+        {
+          "description": "Procedure-day reminders never come from a defaulted clock time.",
+          "if": {
+            "required": ["anchor", "remind"],
+            "properties": {
+              "anchor": { "enum": ["appointment", "arrival"] },
+              "remind": { "required": ["kind", "day"], "properties": { "kind": { "const": "dayAt" }, "day": { "const": 0 } } }
+            }
+          },
+          "then": { "properties": { "remind": { "properties": { "defaulted": { "const": false } } } } }
+        }
+      ]
+    },
+    "step": {
+      "description": "Reference items are never timed; checklist items are timed only when the source gives a time; every other type is timed.",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": [
+            "reference",
+            "checklist",
+            "diet",
+            "prep_dose",
+            "npo",
+            "medication_hold",
+            "medication_change",
+            "restriction",
+            "arrive"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "reference" } } },
+          "then": { "$ref": "#/$defs/untimedStep" }
+        },
+        {
+          "if": { "required": ["type", "timing"], "properties": { "type": { "const": "checklist" } } },
+          "then": { "$ref": "#/$defs/timedStep" }
+        },
+        {
+          "if": {
+            "required": ["type"],
+            "properties": { "type": { "const": "checklist" } },
+            "not": { "required": ["timing"] }
+          },
+          "then": { "$ref": "#/$defs/untimedStep" }
+        },
+        {
+          "if": {
+            "required": ["type"],
+            "properties": { "type": { "not": { "enum": ["reference", "checklist"] } } }
+          },
+          "then": { "$ref": "#/$defs/timedStep" }
+        }
+      ]
+    }
+  }
+}

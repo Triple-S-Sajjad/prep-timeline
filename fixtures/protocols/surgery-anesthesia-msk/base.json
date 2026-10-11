@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "steps": [
     {
       "id": "stop-eating",
@@ -20,6 +26,7 @@
         "time": "22:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "Stop eating at midnight tonight, including gum and hard candy. After midnight and until 2 hours before you arrive, you can drink only water, clear apple, grape or cranberry juice, Gatorade or Powerade, or black coffee or plain tea (sugar is OK; no milk, creamer, honey or syrup)."
     },
@@ -35,8 +42,10 @@
       "remind": {
         "kind": "dayAt",
         "day": -1,
-        "time": "19:00"
+        "time": "19:00",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "If no one has called you with your arrival time yet, call 212-639-5014."
     },
@@ -50,7 +59,8 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT2H"
+        "offset": "-PT2H",
+        "defaulted": false
       },
       "allowNight": true,
       "headsUp": {

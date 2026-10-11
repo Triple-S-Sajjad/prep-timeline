@@ -13,18 +13,19 @@
   "baseModule": {
     "moduleId": "colo-golytely-split-am-umms-base",
     "version": 1,
-    "sha256": "5ae43e00dad5adea286b23ca99c1e5d4ee5fbb934151844c10f79fc63f3b853d"
+    "sha256": "8a0c5c0b65f5475f0d14713c30bd5e1ccba213a71cd03290a017256a95c9a860"
   },
   "optionalModules": [
     {
       "moduleId": "colo-golytely-split-am-umms-iron-hold",
       "version": 1,
-      "sha256": "c34c767ace665e590d44255193a4fce7514a3d8c8be4b8a7a4f11c2cc6f9d2e7",
+      "sha256": "053918d36d6d82cca978433f5a2e79af547e5e20298ba74eae5aad540cafbd9b",
       "selectedAt": "scheduling"
     }
   ],
   "allowedCombinations": {
-    "rule": "anySubset"
+    "rule": "anySubset",
+    "exactlyOneOf": []
   },
   "source": [
     "https://www.umms.org/ummc/-/media/files/ummc/health-services/digestive-health/colonos-prep-instr-golytely-split-dose.pdf"

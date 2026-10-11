@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "clinician-selected-at-uw-arm-site",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
+  "steps": [
+    {
+      "id": "first-48h",
+      "type": "restriction",
+      "anchor": "discharge",
+      "timing": {
+        "kind": "window",
+        "start": "PT0H",
+        "duration": "PT48H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "PT0H",
+        "defaulted": false
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "With the arm that had the catheter: don't lift, push or pull, don't bend or twist the wrist, and don't let anyone take your blood pressure on it."
+    },
+    {
+      "id": "first-5-days",
+      "type": "restriction",
+      "anchor": "discharge",
+      "timing": {
+        "kind": "window",
+        "start": "PT0H",
+        "duration": "P5D"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "PT0H",
+        "defaulted": false
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "No hard exercise with that arm, don't lift more than 5 pounds with it, and no baths, hot tubs or swimming. You can shower starting the day after your procedure."
+    }
+  ],
+  "source": "https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "unmapped": [
+    {
+      "text": "For 48 hours and for 5 days after your procedure.",
+      "reason": "The sheet counts from the procedure, which isn't an anchor. Re-anchored to discharge. At least as restrictive: the window ends a few hours later than the sheet says, and between the procedure and discharge the patient is in hospital care."
+    }
+  ]
+}

@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "steps": [
     {
       "id": "nurse-call",
@@ -24,6 +30,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "If the Cardiac Procedures nurse hasn't called you yet, call the nurse coordinator at 206.598.8435 or 206.597.3609 (8 AM to 5 PM)."
     },
@@ -78,8 +85,10 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT24H"
+        "offset": "-PT24H",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "No caffeine: no coffee, tea, energy drinks, or supplements with caffeine."
     },
@@ -94,7 +103,8 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT8H"
+        "offset": "-PT8H",
+        "defaulted": false
       },
       "allowNight": true,
       "headsUp": {
@@ -116,7 +126,8 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT6H"
+        "offset": "-PT6H",
+        "defaulted": false
       },
       "allowNight": true,
       "headsUp": {
@@ -148,8 +159,10 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "PT0S"
+        "offset": "PT0S",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "Check in at the Heart Institute, A-Wing, 1st floor."
     },
@@ -169,8 +182,10 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "PT0H"
+        "offset": "PT0H",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Don't take ibuprofen (Advil, Motrin) or naproxen (Aleve, Naprosyn). They can cause bleeding. You can take acetaminophen (Tylenol)."
     },

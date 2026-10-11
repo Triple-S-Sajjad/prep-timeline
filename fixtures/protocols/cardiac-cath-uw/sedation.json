@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "steps": [
     {
       "id": "after-sedation",
@@ -16,8 +22,10 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "PT0H"
+        "offset": "PT0H",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Don't drive, don't care for anyone else (children, pets or adults), don't drink alcohol or take drugs your doctor didn't prescribe or suggest, and don't make important decisions or sign legal papers. Have a responsible adult with you."
     }

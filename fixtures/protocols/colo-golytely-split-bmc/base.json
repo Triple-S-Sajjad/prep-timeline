@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "steps": [
     {
       "id": "ride",
@@ -34,6 +40,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Start a low-fiber diet. Use the food list from your care team."
     },
@@ -51,6 +58,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Mix the GoLYTELY today and put it in the fridge."
     },
@@ -68,6 +76,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Drink only clear liquids today, like water, clear soda, sports drinks, juice with no pulp, Jell-O, ice pops, black coffee or tea, and clear broth."
     },
@@ -85,6 +94,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Read the medication instructions sheet again."
     },
@@ -100,8 +110,10 @@
       "remind": {
         "kind": "dayAt",
         "day": -1,
-        "time": "18:00"
+        "time": "18:00",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "Drink half of the prep, 1 cup every 10-15 minutes."
     },
@@ -138,7 +150,8 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT2H"
+        "offset": "-PT2H",
+        "defaulted": false
       },
       "allowNight": true,
       "headsUp": {
@@ -160,8 +173,10 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT1H"
+        "offset": "-PT1H",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "Arrive and check in now, 1 hour before your procedure."
     },

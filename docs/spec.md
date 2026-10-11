@@ -121,10 +121,11 @@ Most future changes should be content edits done by clinicians in minutes, not c
 - **Five timing kinds.** offset (a duration from the anchor), dayAt (a calendar day relative to the anchor plus a local clock time), day (a whole calendar day relative to the anchor, reminded in the morning), window (a start plus a duration, for restrictions like "no driving for 24 hours"), and deadline (must be done by a time; its remind sets the lead time).
 - **Department defaults.** The manifest declares department defaults, such as the morning reminder time, the evening reminder time (for heads-ups and procedure-day day steps) and the reminder lead time. Where a source gives a vague time ("the morning of") or no lead time, the value comes from these defaults and is marked "defaulted": true until a clinician confirms it.
 - **Variants with explicit boundaries.** A module can apply only for some appointment times, with the boundary spelled out so a 12:00 appointment falls on exactly one side.
+- **Exactly one of a group.** Each exactlyOneOf group in the manifest states how its one module is chosen, with a required selectBy. appointmentTime: the modules' appliesWhen ranges cover every appointment time with no gap and no overlap, so the appointment matches exactly one. clinician: the modules are alternatives the times can't separate, such as groin or arm insertion site; all share one selectedAt, and the QR form accepts exactly one of them.
 - **Parameters for ranges.** Where a source gives a range ("stop 5–7 days before"), the module declares the allowed range and the clinician picks one value at QR creation. The app never picks. A parameter is structured, never a string template: { "param": "holdDays", "before": true } stands in for a fixed duration or day number. Its unit is written only in the module's parameter declaration.
 - **Checklist and reference items.** checklist items (arrange a ride, pack a bag) are untimed unless the source gives a time ("if no one has called by 7 PM, call us"); then they carry timing and remind like any step. Reference items (when to call 911, contacts by time of day, daily dose limits) are displayed, never computed. Business-day rules ("on Friday if your surgery is on Monday") are deferred.
-- **Past-due steps.** Each timed step has a pastDue level, set by the clinician, for when its effect time has already passed at QR creation:
-  - critical (the default): the scheduler gets a warning at QR creation, and the patient app shows "This step should already have started. Call your care team before your procedure." Required for all blood-thinner holds and for anything whose miss can cancel the procedure (prep doses, fasting cutoffs, arrival, holds the source ties to procedure safety).
+- **Past-due steps.** Each timed step must have a pastDue level, set by the clinician, for when its effect time has already passed at QR creation. There is no default:
+  - critical: the scheduler gets a warning at QR creation, and the patient app shows "This step should already have started. Call your care team before your procedure." Required for all blood-thinner holds and for anything whose miss can cancel the procedure (prep doses, fasting cutoffs, arrival, holds the source ties to procedure safety).
   - doNow: the patient app shows the step as due today ("Do this today"). For buying or mixing prep, diet changes, reading instructions and holds that can start late.
   - ignore: nothing is shown.
 - **Out of scope.** Per-patient drug lists and time shifts the patient chooses ("start 2 to 3 hours earlier if you need to") appear only as reference text.
@@ -149,7 +150,9 @@ A manifest:
     { "moduleId": "warfarin-hold", "version": 2, "sha256": "…", "selectedAt": "scheduling" },
     { "moduleId": "sedation", "version": 1, "sha256": "…", "selectedAt": "discharge" }
   ],
-  "allowedCombinations": { "rule": "anySubset", "exactlyOneOf": [["colo-split-am", "colo-split-pm"]] },
+  "allowedCombinations": { "rule": "anySubset", "exactlyOneOf": [
+    { "selectBy": "appointmentTime", "modules": ["colo-split-am", "colo-split-pm"] }
+  ] },
   "signature": "…"
 }
 ```

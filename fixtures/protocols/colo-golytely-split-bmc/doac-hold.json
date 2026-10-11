@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "steps": [
     {
       "id": "check-first",
@@ -24,6 +30,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "Stop taking Xarelto, Eliquis, Savaysa or Pradaxa today."
     }

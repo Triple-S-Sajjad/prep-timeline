@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "steps": [
     {
       "id": "pickup",
@@ -19,6 +25,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Pick up your SUTAB kit by today, at least 5 days before your colonoscopy."
     },
@@ -41,6 +48,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "If you take a blood thinner (Plavix, Coumadin, Ticlid, Agrylin, Xarelto, Pradaxa, Eliquis, Effient), contact your provider by today about changing it."
     },
@@ -63,6 +71,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Stop eating high-fiber foods: popcorn, beans, seeds, nuts, multigrain bread, salad and vegetables, and fresh or dried fruit."
     },
@@ -80,6 +89,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "No solid food today. Drink only clear liquids you can see through, like water, clear broth, and coffee or tea with no milk. Nothing red, purple or orange."
     },
@@ -95,8 +105,10 @@
       "remind": {
         "kind": "dayAt",
         "day": -1,
-        "time": "18:00"
+        "time": "18:00",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "Fill the cup to the line with cool water. Swallow each of the 12 tablets in the first bottle with a sip, then drink the rest of the water."
     },
@@ -112,8 +124,10 @@
       "remind": {
         "kind": "dayAt",
         "day": -1,
-        "time": "21:00"
+        "time": "21:00",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "Drink another full cup of cool water over 30 minutes. Then drink a third full cup."
     },
@@ -127,7 +141,8 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT6H"
+        "offset": "-PT6H",
+        "defaulted": false
       },
       "allowNight": true,
       "headsUp": {
@@ -149,7 +164,8 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT3H"
+        "offset": "-PT3H",
+        "defaulted": false
       },
       "allowNight": true,
       "headsUp": {

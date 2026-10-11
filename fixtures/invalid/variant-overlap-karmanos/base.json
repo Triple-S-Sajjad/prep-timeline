@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "variant-overlap-karmanos-base",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
+  "steps": [
+    {
+      "id": "iron",
+      "type": "medication_hold",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -3
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -3,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "Stop taking iron pills."
+    }
+  ],
+  "source": "https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

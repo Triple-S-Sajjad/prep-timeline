@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "steps": [
     {
       "id": "nsaids",
@@ -19,6 +25,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Stop these pain pills: Motrin, ibuprofen, Advil, Nuprin, naproxen, Aleve, Daypro, Indocin, Feldene, Voltaren, Celebrex, Relafen, Mobic, Lodine, Toradol, ketoprofen and Arthrotec."
     }

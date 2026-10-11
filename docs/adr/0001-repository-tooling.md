@@ -31,6 +31,9 @@ GitHub Actions are pinned by commit SHA, and npm packages by exact version, each
 | `ruff` | 0.16.9 | Python lint: no print, no empty or useless except, coded type-ignores |
 | `mypy` | 2.3.1 | Python type checker, strict mode |
 | `pytest` | 9.1.1 | Python test runner |
+| `jsonschema` | 4.26.0 | Validates protocol bundles against the JSON Schema 2020-12 files in `schema/`. Python because the cross-file checks (hashes, parameter references) live in the same script. The `ajv` already in `node_modules` comes with ESLint and is version 6, which only supports draft-07 |
+| `types-jsonschema` | 4.26.0.20260518 | Type stubs from typeshed; `jsonschema` ships none, and mypy runs in strict mode |
+| `tzdata` | 2026.4, Windows only | IANA time zone database for `zoneinfo`, which the validator uses to reject unknown time zones. Windows has no system copy; Linux and macOS use their own |
 | `actions/checkout` | v7.0.1 | Check out the repo in CI |
 | `actions/setup-node` | v7.0.0 | Node for npm tools in CI |
 | `actions/setup-python` | v7.0.0 | Python in CI, only once `.py` files exist |

@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "variant-gap-karmanos",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/Detroit",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "variant-gap-karmanos-base",
+    "version": 1,
+    "sha256": "5a7834f5ec8629da27d6f11a19c4892ae2550d6dd57d257cf10b22da2a4f8413"
+  },
+  "optionalModules": [
+    {
+      "moduleId": "variant-gap-karmanos-am-schedule",
+      "version": 1,
+      "sha256": "321d250fac90a5652aae0828a2056e6bbdf88fca190c29d46f327f4673364312",
+      "selectedAt": "scheduling"
+    },
+    {
+      "moduleId": "variant-gap-karmanos-pm-schedule",
+      "version": 1,
+      "sha256": "f4ddcc71bf9a6c114b7e7d2879f7f12e2fa95731f7676879d83c3cb3b7c6b159",
+      "selectedAt": "scheduling"
+    }
+  ],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": [
+      {
+        "selectBy": "appointmentTime",
+        "modules": [
+          "variant-gap-karmanos-am-schedule",
+          "variant-gap-karmanos-pm-schedule"
+        ]
+      }
+    ]
+  },
+  "expectedFailure": "variantGap",
+  "source": [
+    "https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

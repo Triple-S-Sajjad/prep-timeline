@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "clinician-selected-at-uw",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/Los_Angeles",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "clinician-selected-at-uw-base",
+    "version": 1,
+    "sha256": "5763011957ff5b8104a699c031b1547b1cb3bb14547fd558eb4b711091bc88fe"
+  },
+  "optionalModules": [
+    {
+      "moduleId": "clinician-selected-at-uw-groin-site",
+      "version": 1,
+      "sha256": "c6108cec585e6008ad8bb180760882a2fa65dae6ba840cb99a72b0ac2e7450ac",
+      "selectedAt": "scheduling"
+    },
+    {
+      "moduleId": "clinician-selected-at-uw-arm-site",
+      "version": 1,
+      "sha256": "eec729e2604fd849f5d68e8a7f39010f9ade23f95d4803d45ab5ddf4895200cb",
+      "selectedAt": "discharge"
+    }
+  ],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": [
+      {
+        "selectBy": "clinician",
+        "modules": [
+          "clinician-selected-at-uw-groin-site",
+          "clinician-selected-at-uw-arm-site"
+        ]
+      }
+    ]
+  },
+  "expectedFailure": "groupSelectedAt",
+  "source": [
+    "https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

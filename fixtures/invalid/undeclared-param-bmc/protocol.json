@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "undeclared-param-bmc",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "undeclared-param-bmc-base",
+    "version": 1,
+    "sha256": "7391e10a9473b272e14164130f3a2a88d2841cccc97ae013d6f233dc557ba3f8"
+  },
+  "optionalModules": [],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": []
+  },
+  "expectedFailure": "undeclaredParam",
+  "source": [
+    "https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "missing-past-due-bmc",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "missing-past-due-bmc-base",
+    "version": 1,
+    "sha256": "be65161e37633a550abec6a2d372713c50c005d73a2ee2fcb790dd8637b41bec"
+  },
+  "optionalModules": [],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": []
+  },
+  "expectedFailure": "required:pastDue",
+  "source": [
+    "https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

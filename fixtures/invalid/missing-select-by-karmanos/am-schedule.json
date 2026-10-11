@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "missing-select-by-karmanos-am-schedule",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "12:00"
+    }
+  },
+  "steps": [
+    {
+      "id": "bisacodyl",
+      "type": "prep_dose",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "08:00"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "08:00",
+        "defaulted": false
+      },
+      "allowNight": false,
+      "pastDue": "critical",
+      "text": "Take the three Dulcolax tablets. Drink plenty of fluids after."
+    },
+    {
+      "id": "dose1",
+      "type": "prep_dose",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "12:00"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "12:00",
+        "defaulted": false
+      },
+      "allowNight": false,
+      "pastDue": "critical",
+      "text": "Start drinking half of the MiraLAX mix, one 8-ounce glass every 10-15 minutes, until that half is gone."
+    },
+    {
+      "id": "dose2",
+      "type": "prep_dose",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "17:00"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "17:00",
+        "defaulted": false
+      },
+      "allowNight": false,
+      "pastDue": "critical",
+      "text": "Drink the other half the same way, one 8-ounce glass every 10-15 minutes."
+    }
+  ],
+  "source": "https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

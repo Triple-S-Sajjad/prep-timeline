@@ -10,6 +10,7 @@ Contradictions and ambiguities inside the public source sheets behind the test f
 - BMC medication sheet: the diabetes table says to skip a daily GLP-1 only on the procedure day, but the weight-loss section says not to take any GLP-1 for 1 week before. [Source](https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf)
 - UW heart catheterization: fasting counts from check-in (6 and 8 hours), but the snack and alarm advice counts from the procedure time, which the patient isn't told. [Source](https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf)
 - UW heart catheterization: nothing to eat or drink for 6 hours before check-in, but take usual morning medicines with small sips of water. [Source](https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf)
+- UW heart catheterization: the sheet has separate after-care for a groin site and an arm (wrist) site. The fixtures treat them as either/or: the discharge nurse picks exactly one. Can a patient ever have both sites, and if so, which instructions apply? [Source](https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf)
 
 ## Past-due levels to confirm
 

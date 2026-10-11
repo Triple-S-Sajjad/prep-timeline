@@ -1,17 +1,25 @@
 # Python dev tools. Every package, transitive ones included, is pinned so
 # OSV-Scanner checks exactly what gets installed. To update, resolve with
-#   pip install --uploaded-prior-to <date two weeks ago> ruff mypy pytest
-# in a fresh venv and copy `pip freeze` here.
+#   pip install --uploaded-prior-to <date two weeks ago> ruff mypy pytest jsonschema types-jsonschema tzdata
+# in a fresh venv and copy `pip freeze` here. tzdata stays Windows-only:
+# Windows has no system time zone database for zoneinfo.
 ruff==0.16.9
 mypy==2.3.1
 pytest==9.1.1
+jsonschema==4.26.0
+types-jsonschema==4.26.0.20260518
+tzdata==2026.4 ; sys_platform == "win32"
 ast_serialize==0.11.2
+attrs==26.1.0
 colorama==0.4.6 ; sys_platform == "win32"
 iniconfig==2.3.0
+jsonschema-specifications==2025.9.1
 librt==0.15.0
 mypy_extensions==1.1.0
 packaging==26.3
 pathspec==1.1.1
 pluggy==1.6.0
 Pygments==2.21.0
+referencing==0.37.0
+rpds-py==2026.6.3
 typing_extensions==4.16.0

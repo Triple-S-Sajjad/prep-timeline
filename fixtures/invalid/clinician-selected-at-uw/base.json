@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "clinician-selected-at-uw-base",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
+  "steps": [
+    {
+      "id": "overnight",
+      "type": "reference",
+      "text": "You may need to stay in the hospital overnight."
+    },
+    {
+      "id": "new-meds",
+      "type": "reference",
+      "text": "You'll take aspirin and a second blood thinner like clopidogrel (Plavix) to keep the stent from clotting."
+    },
+    {
+      "id": "symptoms",
+      "type": "reference",
+      "text": "If the symptoms you had before the procedure come back, call your doctor right away."
+    }
+  ],
+  "source": "https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

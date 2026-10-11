@@ -13,47 +13,50 @@
   "baseModule": {
     "moduleId": "colo-miralax-split-karmanos-base",
     "version": 1,
-    "sha256": "38a659f399d56164957ccb696a1b4adbc6857f714102b8317d622bbede8ce185"
+    "sha256": "0c61874e046f5388703bdef267f05a82cdc6794b39db45179ca4fb224dbe32a6"
   },
   "optionalModules": [
     {
       "moduleId": "colo-miralax-split-karmanos-am-schedule",
       "version": 1,
-      "sha256": "5be40dc50d7e09aafa6472bca26032db075d9fbab1e8879210aa6aa0d81e1fca",
+      "sha256": "58c5d62d4e364207a6050f7d5df2d12f2dc3e2b05aded16b8b1a25d2b5557dbb",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-miralax-split-karmanos-pm-schedule",
       "version": 1,
-      "sha256": "5f582bb5e86422a65c7048cc9015c8e7263deba480287a1db94a96ca24bf059a",
+      "sha256": "72eca340e3bf8ef9694e594bb544401b575571672c5a89695a25965b522462f0",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-miralax-split-karmanos-iron-hold",
       "version": 1,
-      "sha256": "037873c57402cbaff43365e8f2e0abb9bab9e42b051d8c352b23fcce05014cfc",
+      "sha256": "ed095179e73ddc5265f2d58215de08af6dec8cbf9340f19448141e65e334d16c",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-miralax-split-karmanos-nsaid-hold",
       "version": 1,
-      "sha256": "4ca946d81f3220759e58ce3d2b0a5a6d3c64ab478feb76f76a2926aa58da0b5a",
+      "sha256": "61783110b20997e82ac5c063c64a12d33f42875abcf2c146182426e83ef547d6",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-miralax-split-karmanos-aspirin-limit",
       "version": 1,
-      "sha256": "cc8f5f62db3a1f48c7d5dae757cb9e32c1a2736a75e8dee29a238698183412e6",
+      "sha256": "152f1458ab54a0da6c77f5785b22518aea63897077e7b2ff7881dfd8f4efc267",
       "selectedAt": "scheduling"
     }
   ],
   "allowedCombinations": {
     "rule": "anySubset",
     "exactlyOneOf": [
-      [
-        "colo-miralax-split-karmanos-am-schedule",
-        "colo-miralax-split-karmanos-pm-schedule"
-      ]
+      {
+        "selectBy": "appointmentTime",
+        "modules": [
+          "colo-miralax-split-karmanos-am-schedule",
+          "colo-miralax-split-karmanos-pm-schedule"
+        ]
+      }
     ]
   },
   "source": [

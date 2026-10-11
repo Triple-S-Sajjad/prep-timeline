@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "steps": [
     {
       "id": "last-sips",
@@ -15,7 +21,8 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT3H"
+        "offset": "-PT3H",
+        "defaulted": false
       },
       "allowNight": true,
       "headsUp": {

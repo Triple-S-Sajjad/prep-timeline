@@ -13,30 +13,31 @@
   "baseModule": {
     "moduleId": "colo-sutab-low-volume-ccf-base",
     "version": 1,
-    "sha256": "b74203944c428a6935c3d41f9272cd82e4eb660436067e3901940fa44da80aa1"
+    "sha256": "96423b81088ee85d23847e0ae23caa5ccd86d9b486a432f471b00fcb323b5932"
   },
   "optionalModules": [
     {
       "moduleId": "colo-sutab-low-volume-ccf-iron-hold",
       "version": 1,
-      "sha256": "068cf0a2e021fdbe814407ec9d7d0cc7c63d90c533269d57bcc9dffb9be5e7ba",
+      "sha256": "0bbfbcbaa33467ee17f222f1578789c5c6287d49b5f74c41c83a87148e8c1eb8",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-sutab-low-volume-ccf-insulin-half-dose",
       "version": 1,
-      "sha256": "f6c49ecd71a03be3a33dc2413c986a76c2addb3bf7c028d0838bd0e718870549",
+      "sha256": "5c3c7cabc2634b0754a8fbebe4ce649658e81a2d5fe064488db290e18a2e6636",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-sutab-low-volume-ccf-diabetes-pills",
       "version": 1,
-      "sha256": "fd6627e93b588293b75e7564ee83ee2c331e50ae32d80620c871ee78dba01b87",
+      "sha256": "f19b2a0c08d5a8d562c21266c239a25098e3b45c39a04e5e30c8924786633fb9",
       "selectedAt": "scheduling"
     }
   ],
   "allowedCombinations": {
-    "rule": "anySubset"
+    "rule": "anySubset",
+    "exactlyOneOf": []
   },
   "source": [
     "https://my.clevelandclinic.org/health/articles/sutab-bowel-preparation-instructions"

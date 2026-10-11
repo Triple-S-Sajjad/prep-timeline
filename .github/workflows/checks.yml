@@ -47,7 +47,7 @@ jobs:
         with:
           python-version: "3.14"
       - if: hashFiles('**/*.py', '!**/node_modules/**') != ''
-        run: pip install -r requirements-dev.txt
+        run: python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 
       - if: hashFiles('**/pubspec.yaml', '!**/node_modules/**') != ''
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0

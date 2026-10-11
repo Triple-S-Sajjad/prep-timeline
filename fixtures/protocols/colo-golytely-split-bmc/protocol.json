@@ -13,90 +13,91 @@
   "baseModule": {
     "moduleId": "colo-golytely-split-bmc-base",
     "version": 1,
-    "sha256": "2422831c61bcc1ad7e7f49ab4199acf9d4342435bfcbd93e9cc94304b2e044c3"
+    "sha256": "7b1ba59c61b83c530148211fcbe9ecf1b90069e47833e5c49aa998443f15fe24"
   },
   "optionalModules": [
     {
       "moduleId": "colo-golytely-split-bmc-iron-hold",
       "version": 1,
-      "sha256": "91dbe13cd0da78db9db6676e14a3b585676126ca90c5eef8ca19fd4fc4bd1191",
+      "sha256": "56947d804b9864009885031156a91088740f1d7a7fc80dfb841b3ee03b469466",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-warfarin-hold",
       "version": 1,
-      "sha256": "9a914aabdff7e8b82a5eabe7b5b2e8368d4f2a8464c87ad99e839e5e6754058f",
+      "sha256": "30db6bdfd9a2fd188d90aea85b514e4836e486e442fb763728720fa78a4bf956",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-doac-hold",
       "version": 1,
-      "sha256": "e81d4162e6e1998a453e607c41feea188c707f4959ffd62a12a167bcef60e6fe",
+      "sha256": "ad895413f212f3dda82db5d78a2c1cfd193304b395fb48274d3f0e398e3a936b",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-lmwh-hold",
       "version": 1,
-      "sha256": "9cc2b9fa3f7a82cf15174c0b68586540d446d3c49b6bff4d9ec4f28e863a7418",
+      "sha256": "2fbf00656a0633d18caf8bbd0cb88198e9697b5a0c412fd349076e6cece35683",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-p2y12-hold",
       "version": 1,
-      "sha256": "b43e6ef1a4fd503bf2aa513e71defd62947c72470d583ba27896caf314b4c972",
+      "sha256": "65be65cfdbcf3cc522aec8b1e7a11e96fecf67be38e6e56b1253cfd26472152d",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-ticlid-hold",
       "version": 1,
-      "sha256": "0edaff6bae02cc3dc78ba1add356b63ccdb1845be60ea7533c5e6bfd176d1b20",
+      "sha256": "2200fa0bb14f2fbcae0caca2288aadd7dfb9bbc2505ebf94fcf7ddbd8274c828",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-continue-medicines",
       "version": 1,
-      "sha256": "0520ed5736123b9f86b1620f166a14aa330bd10f92a0ed5df29b3353f73fb0a2",
+      "sha256": "f09c204b129786f8ecf7007f741a563fbeb5811c218fd78389f8de8786c27676",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-insulin-half-dose",
       "version": 1,
-      "sha256": "2c40465cb9c3766cc87e10d16d1646b83a8b1f80af2452247a41f3f7ab14e4af",
+      "sha256": "8a502f26bc0610ed4296af4d03b1471a1cc79d2704bd3d9c5d34d1f6f8fd3a2d",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-diabetes-pills",
       "version": 1,
-      "sha256": "d6a5c6aa167f2824e03b4abd9a4bc41a58cb7d1715c273fb70a3a2552556a919",
+      "sha256": "b14cdc77ecee62eb87c09850cb533f48f0be9be35c2a2eb992c5b3e67d3fdbad",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-insulin-pump",
       "version": 1,
-      "sha256": "e3bc9e53c75996fce917c27f81f7927bd2255036e5cf2c65cb03603807161440",
+      "sha256": "2c3f2f64ff36f7a8d3480e052d1ca3611cdef25ec841d9156a9abdbc20097eeb",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-sglt2-hold",
       "version": 1,
-      "sha256": "cf2012572ba82bd26b6bffe8fa58e252983ab5751184bfae8d2321fdc139bd82",
+      "sha256": "3774e703fe098c20600712bd95531680a73a8893489f87d709efe26507967275",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-glp1-weekly-hold",
       "version": 1,
-      "sha256": "2beed92257354e055ba9acf2eef8c3ee66dd65e692b2b8e57157f48a6e58a42b",
+      "sha256": "2de5176578ca9414f4d0a74ae3be5774a2c523ae4fd7fe74f6e61c927eb71e6b",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-glp1-daily-hold",
       "version": 1,
-      "sha256": "e369d5420d70c282c19ec749de06e3e7fb31b086dac7db1fb2f4e1dc41331314",
+      "sha256": "421a3560fa0bfa592d499023a96557a34e4ea371208be67ed6c4d1226389663f",
       "selectedAt": "scheduling"
     }
   ],
   "allowedCombinations": {
-    "rule": "anySubset"
+    "rule": "anySubset",
+    "exactlyOneOf": []
   },
   "source": [
     "https://www.bmc.org/files/gastro-prep/english/Colonoscopy%20Golytely%20Split%20Dose%20Prep.pdf",

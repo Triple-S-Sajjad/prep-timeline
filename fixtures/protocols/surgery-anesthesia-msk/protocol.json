@@ -13,24 +13,25 @@
   "baseModule": {
     "moduleId": "surgery-anesthesia-msk-base",
     "version": 1,
-    "sha256": "ffa445af9341122a9a2d88569f789939ec2f499859ceab32ca0c17da2a4428af"
+    "sha256": "7699c0219a675db1634eabfeb46f6c7a06c9405b6137f506e544d95507beb2ca"
   },
   "optionalModules": [
     {
       "moduleId": "surgery-anesthesia-msk-supplements-hold",
       "version": 1,
-      "sha256": "8f8ce458dc37ab6357a1262233d463c3eefbb02cc06713089ad18dd6027e4b78",
+      "sha256": "90339a6dcfd6a809760a29abf1907a888d35d15d7b726666c06e86d44c41a4a7",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "surgery-anesthesia-msk-nsaid-hold",
       "version": 1,
-      "sha256": "9848a85b7344883adfeacc3595fa20209373e91a61a948ca0d0de59825b3710f",
+      "sha256": "4da79e291b6d41eea5e2ad06b3eca927859f126b3f710ad06bee053490dd3bcd",
       "selectedAt": "scheduling"
     }
   ],
   "allowedCombinations": {
-    "rule": "anySubset"
+    "rule": "anySubset",
+    "exactlyOneOf": []
   },
   "source": [
     "https://www.mskcc.org/cancer-care/patient-education/instructions-before-your-procedure-or-surgery"

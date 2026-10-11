@@ -45,6 +45,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "You can have a small breakfast, like a slice of bread with coffee or juice. After that, drink only clear liquids for the rest of the day."
     },
@@ -62,6 +63,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Fill the prep jug with water to the line today. You can keep it in the fridge."
     },
@@ -77,8 +79,10 @@
       "remind": {
         "kind": "dayAt",
         "day": -1,
-        "time": "17:00"
+        "time": "17:00",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "Start your prep. Drink one 8-ounce glass every 15 minutes until 3 liters are gone."
     },
@@ -96,6 +100,7 @@
         "time": "20:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "This morning, have nothing to eat or drink except your prep."
     },
@@ -109,7 +114,8 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT4H"
+        "offset": "-PT4H",
+        "defaulted": false
       },
       "allowNight": true,
       "headsUp": {
@@ -131,8 +137,10 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT1H"
+        "offset": "-PT1H",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "Check in at the GI Endoscopy Lab now, 1 hour before your procedure."
     },

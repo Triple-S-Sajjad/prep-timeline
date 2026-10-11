@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "steps": [
     {
       "id": "read",
@@ -19,6 +25,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Read both pages of your prep instructions today, at least 1 week before your colonoscopy."
     },
@@ -41,6 +48,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Buy your prep supplies by today: one 56-64 oz and one 28-32 oz bottle of a clear, non-red drink that isn't fizzy (people with diabetes can use sugar-free Gatorade), Dulcolax (bisacodyl) 5 mg tablets (you need 3), and MiraLAX 238 g and 119 g."
     },
@@ -63,6 +71,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "critical",
       "text": "If you take a blood thinner (Aggrastat, Aggrenox, Brilinta, Coumadin, Eliquis, heparin, Lovenox, Persantine, Plavix, Pradaxa, Savaysa, Xarelto), ask your primary care provider by today whether and when to stop it."
     },
@@ -90,6 +99,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Stop high-fiber foods like popcorn, beans, seeds, nuts, multigrain bread, vegetables and fruit, and fiber supplements like Metamucil. You can still eat meat, eggs, dairy, white bread, pasta, bananas, applesauce, canned peaches and melon."
     },
@@ -107,6 +117,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Mix your prep today (not earlier): the 238 g MiraLAX into the large bottle and the 119 g into the small one. Shake until it dissolves. Chill if you like, but add no ice, sugar or flavor."
     },
@@ -124,6 +135,7 @@
         "time": "07:00",
         "defaulted": true
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "No solid food today. Drink only clear liquids, like water, apple or white grape juice, clear broth, and coffee or tea with no milk. Nothing red."
     },
@@ -137,7 +149,8 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "-PT4H"
+        "offset": "-PT4H",
+        "defaulted": false
       },
       "allowNight": true,
       "headsUp": {

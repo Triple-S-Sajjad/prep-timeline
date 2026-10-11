@@ -4,6 +4,12 @@
   "version": 1,
   "owner": "Test fixture",
   "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
   "steps": [
     {
       "id": "first-day",
@@ -15,8 +21,10 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "PT24H"
+        "offset": "PT24H",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "ignore",
       "text": "You can now do light activity, drive and shower. Still avoid anything that strains the puncture site, like housework or gardening, and limit stairs."
     },
@@ -31,8 +39,10 @@
       },
       "remind": {
         "kind": "offset",
-        "offset": "PT0H"
+        "offset": "PT0H",
+        "defaulted": false
       },
+      "allowNight": false,
       "pastDue": "doNow",
       "text": "Don't lift more than 10 pounds, don't strain on the toilet, and don't let water cover the puncture site (no bath, hot tub or swimming). Showers are OK after the first 24 hours."
     }

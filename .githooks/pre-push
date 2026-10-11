@@ -25,10 +25,18 @@ if has '*.ts' '*.tsx'; then
 fi
 
 if has '*.py'; then
+  # Python tools come from the repo's .venv (bin on Linux/macOS, Scripts on
+  # Windows), never the system Python.
+  venv="$PWD/.venv/bin"; [ -d "$venv" ] || venv="$PWD/.venv/Scripts"
+  [ -d "$venv" ] || fail "no .venv; see Setup in README.md"
+  PATH="$venv:$PATH"
   run ruff check .
   # shellcheck disable=SC2046 # word splitting is intended; paths have no spaces
   run mypy $(git ls-files -- '*.py')
   if has '*test_*.py' '*_test.py'; then run pytest; fi
+  # fixtures/invalid is checked by schema/test_validate.py, since each one
+  # must fail for its own reason.
+  run python schema/validate.py fixtures/protocols/*
 fi
 
 for pubspec in $(git ls-files -- 'pubspec.yaml' '*/pubspec.yaml'); do
