@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "missing-bookable-hours-bmc",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H",
+    "quietHours": {
+      "from": "23:00",
+      "to": "05:00"
+    }
+  },
+  "baseModule": {
+    "moduleId": "missing-bookable-hours-bmc-base",
+    "version": 1,
+    "sha256": "6563bb30d71379320ebef82e651b87fa2ce3e03cd9295ff0e70ef418d8025da1"
+  },
+  "optionalModules": [],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": []
+  },
+  "expectedFailure": "required:bookableHours",
+  "source": [
+    "https://www.bmc.org/files/gastro-prep/english/Colonoscopy%20Golytely%20Split%20Dose%20Prep.pdf",
+    "https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

@@ -8,12 +8,20 @@
   "departmentDefaults": {
     "morningReminder": "07:00",
     "eveningReminder": "20:00",
-    "reminderLead": "PT2H"
+    "reminderLead": "PT2H",
+    "quietHours": {
+      "from": "23:00",
+      "to": "05:00"
+    }
+  },
+  "bookableHours": {
+    "from": "07:00",
+    "to": "17:00"
   },
   "baseModule": {
     "moduleId": "missing-select-by-karmanos-base",
     "version": 1,
-    "sha256": "4e7b46b19076523f3dc5f8c4a0a72a054a3a334ccec6484f2e557f00995d3262"
+    "sha256": "2ccdb3b5e404a59fa52e1c49508150f7e32b2ff4902c4618a00165e2970ece42"
   },
   "optionalModules": [
     {

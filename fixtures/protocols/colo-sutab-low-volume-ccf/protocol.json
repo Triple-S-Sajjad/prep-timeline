@@ -8,30 +8,38 @@
   "departmentDefaults": {
     "morningReminder": "07:00",
     "eveningReminder": "20:00",
-    "reminderLead": "PT2H"
+    "reminderLead": "PT2H",
+    "quietHours": {
+      "from": "23:00",
+      "to": "05:00"
+    }
+  },
+  "bookableHours": {
+    "from": "07:00",
+    "to": "17:00"
   },
   "baseModule": {
     "moduleId": "colo-sutab-low-volume-ccf-base",
     "version": 1,
-    "sha256": "96423b81088ee85d23847e0ae23caa5ccd86d9b486a432f471b00fcb323b5932"
+    "sha256": "86114340d3f486ab5f985f22904ef163f2e05cc6dc8980174e3432923683f01d"
   },
   "optionalModules": [
     {
       "moduleId": "colo-sutab-low-volume-ccf-iron-hold",
       "version": 1,
-      "sha256": "0bbfbcbaa33467ee17f222f1578789c5c6287d49b5f74c41c83a87148e8c1eb8",
+      "sha256": "00245d0138fe0dbd0686b964216004633acbe78b66bd78d67beb1ddf8bc94932",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-sutab-low-volume-ccf-insulin-half-dose",
       "version": 1,
-      "sha256": "5c3c7cabc2634b0754a8fbebe4ce649658e81a2d5fe064488db290e18a2e6636",
+      "sha256": "7743708244a3f6b41d9ffe5875a6679061f0c3c58b109ae79203d54c893ede0c",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-sutab-low-volume-ccf-diabetes-pills",
       "version": 1,
-      "sha256": "f19b2a0c08d5a8d562c21266c239a25098e3b45c39a04e5e30c8924786633fb9",
+      "sha256": "fafa8cd6377cbf50af82f1e1562f52d9c7b84666586978e863e871ad022e170c",
       "selectedAt": "scheduling"
     }
   ],

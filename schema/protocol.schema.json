@@ -11,6 +11,7 @@
     "reviewBy",
     "timezone",
     "departmentDefaults",
+    "bookableHours",
     "baseModule",
     "optionalModules",
     "allowedCombinations",
@@ -30,17 +31,22 @@
     },
     "departmentDefaults": {
       "type": "object",
-      "required": ["morningReminder", "eveningReminder", "reminderLead"],
+      "required": ["morningReminder", "eveningReminder", "reminderLead", "quietHours"],
       "additionalProperties": false,
       "properties": {
         "morningReminder": { "$ref": "#/$defs/clockTime" },
         "eveningReminder": { "$ref": "#/$defs/clockTime" },
         "reminderLead": {
-          "description": "Elapsed hours and minutes, like the module schema's positiveDuration.",
+          "description": "Elapsed hours and minutes, like the module schema's signedDuration but never negative.",
           "type": "string",
           "pattern": "^PT(?=[0-9])([0-9]{1,4}H)?([0-9]{1,4}M)?$"
-        }
+        },
+        "quietHours": { "$ref": "#/$defs/clockRange" }
       }
+    },
+    "bookableHours": {
+      "description": "Appointment times the department books. The publish check samples every 15 minutes inside it.",
+      "$ref": "#/$defs/clockRange"
     },
     "baseModule": {
       "type": "object",
@@ -102,6 +108,16 @@
     "text": { "type": "string", "minLength": 1 },
     "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "format": "date" },
     "clockTime": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+    "clockRange": {
+      "description": "Local clock times from inclusive to exclusive. Wraps midnight when to is earlier than from: 23:00 to 05:00 includes 23:00, not 05:00.",
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "from": { "$ref": "#/$defs/clockTime" },
+        "to": { "$ref": "#/$defs/clockTime" }
+      }
+    },
     "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
   }
 }

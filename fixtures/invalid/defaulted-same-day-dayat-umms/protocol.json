@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "defaulted-same-day-dayat-umms",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H",
+    "quietHours": {
+      "from": "23:00",
+      "to": "05:00"
+    }
+  },
+  "bookableHours": {
+    "from": "07:00",
+    "to": "12:00"
+  },
+  "baseModule": {
+    "moduleId": "defaulted-same-day-dayat-umms-base",
+    "version": 1,
+    "sha256": "bfde30a621e073bc5ba301616fbeb61d093842bc5e82b0b02c570e200bf16831"
+  },
+  "optionalModules": [],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": []
+  },
+  "expectedFailure": "defaultedMismatch",
+  "source": [
+    "https://www.umms.org/ummc/-/media/files/ummc/health-services/digestive-health/colonos-prep-instr-golytely-split-dose.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

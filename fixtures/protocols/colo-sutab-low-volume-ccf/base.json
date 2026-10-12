@@ -17,7 +17,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -5
+        "day": -5,
+        "lasts": "oneDay"
       },
       "remind": {
         "kind": "dayAt",
@@ -40,7 +41,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -14
+        "day": -14,
+        "lasts": "oneDay"
       },
       "remind": {
         "kind": "dayAt",
@@ -63,7 +65,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -3
+        "day": -3,
+        "lasts": "untilAnchor"
       },
       "remind": {
         "kind": "dayAt",
@@ -81,7 +84,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -1
+        "day": -1,
+        "lasts": "oneDay"
       },
       "remind": {
         "kind": "dayAt",
@@ -145,12 +149,6 @@
         "defaulted": false
       },
       "allowNight": true,
-      "headsUp": {
-        "kind": "dayAt",
-        "day": -1,
-        "time": "20:00",
-        "defaulted": true
-      },
       "pastDue": "critical",
       "text": "Take the second bottle the same way as last night: fill the cup to the line with cool water, swallow each tablet with a sip, and drink the rest. Then drink two more full cups of water."
     },
@@ -168,12 +166,6 @@
         "defaulted": false
       },
       "allowNight": true,
-      "headsUp": {
-        "kind": "dayAt",
-        "day": -1,
-        "time": "20:00",
-        "defaulted": true
-      },
       "pastDue": "critical",
       "text": "Stop drinking all liquids now."
     },

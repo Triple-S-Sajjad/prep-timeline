@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "defaulted-lead-bmc-base",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
+  "steps": [
+    {
+      "id": "ride",
+      "type": "checklist",
+      "text": "Arrange an adult to take you home. Without one, your procedure may be cancelled."
+    },
+    {
+      "id": "med-sheet",
+      "type": "checklist",
+      "text": "Read the medication instructions sheet."
+    },
+    {
+      "id": "prescription",
+      "type": "checklist",
+      "text": "Fill your prescription for the prep."
+    },
+    {
+      "id": "low-fiber",
+      "type": "diet",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -3,
+        "lasts": "untilAnchor"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -3,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "Start a low-fiber diet. Use the food list from your care team."
+    },
+    {
+      "id": "mix",
+      "type": "checklist",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -2,
+        "lasts": "oneDay"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -2,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "Mix the GoLYTELY today and put it in the fridge."
+    },
+    {
+      "id": "clear-liquids",
+      "type": "diet",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -1,
+        "lasts": "oneDay"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "Drink only clear liquids today, like water, clear soda, sports drinks, juice with no pulp, Jell-O, ice pops, black coffee or tea, and clear broth."
+    },
+    {
+      "id": "med-sheet-again",
+      "type": "checklist",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -1,
+        "lasts": "oneDay"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "Read the medication instructions sheet again."
+    },
+    {
+      "id": "dose1",
+      "type": "prep_dose",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "18:00"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "18:00",
+        "defaulted": false
+      },
+      "allowNight": false,
+      "pastDue": "critical",
+      "text": "Drink half of the prep, 1 cup every 10-15 minutes."
+    },
+    {
+      "id": "dose2",
+      "type": "prep_dose",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "deadline",
+        "by": "-PT2H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT3H",
+        "defaulted": true
+      },
+      "allowNight": true,
+      "pastDue": "critical",
+      "text": "Drink the rest of your prep early this morning. You must finish it by 2 hours before your appointment."
+    },
+    {
+      "id": "npo",
+      "type": "npo",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "offset",
+        "offset": "-PT2H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT2H",
+        "defaulted": false
+      },
+      "allowNight": true,
+      "pastDue": "critical",
+      "text": "Stop drinking all liquids now."
+    },
+    {
+      "id": "arrive",
+      "type": "arrive",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "offset",
+        "offset": "-PT1H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT1H",
+        "defaulted": false
+      },
+      "allowNight": false,
+      "pastDue": "critical",
+      "text": "Arrive and check in now, 1 hour before your procedure."
+    },
+    {
+      "id": "contacts",
+      "type": "reference",
+      "text": "Endoscopy scheduling: 617-414-2600, option 1. Endoscopy nurses: 617-414-2420. GI doctor on nights and weekends: 617-638-7243."
+    }
+  ],
+  "source": "https://www.bmc.org/files/gastro-prep/english/Colonoscopy%20Golytely%20Split%20Dose%20Prep.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "unmapped": [
+    {
+      "text": "Low-fiber diet: 'see provided list'.",
+      "reason": "The list is not in the public PDF."
+    }
+  ]
+}

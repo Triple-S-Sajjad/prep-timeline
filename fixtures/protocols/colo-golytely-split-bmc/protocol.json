@@ -8,48 +8,56 @@
   "departmentDefaults": {
     "morningReminder": "07:00",
     "eveningReminder": "20:00",
-    "reminderLead": "PT2H"
+    "reminderLead": "PT2H",
+    "quietHours": {
+      "from": "23:00",
+      "to": "05:00"
+    }
+  },
+  "bookableHours": {
+    "from": "07:00",
+    "to": "17:00"
   },
   "baseModule": {
     "moduleId": "colo-golytely-split-bmc-base",
     "version": 1,
-    "sha256": "7b1ba59c61b83c530148211fcbe9ecf1b90069e47833e5c49aa998443f15fe24"
+    "sha256": "c736d77984544f97a33336125098b6048350ab8edac3a0c0077d1f5d63804ea2"
   },
   "optionalModules": [
     {
       "moduleId": "colo-golytely-split-bmc-iron-hold",
       "version": 1,
-      "sha256": "56947d804b9864009885031156a91088740f1d7a7fc80dfb841b3ee03b469466",
+      "sha256": "4a750cead57ea491f37c73c21d1ae7ee3e62b2079319862b91734b5941c9bb15",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-warfarin-hold",
       "version": 1,
-      "sha256": "30db6bdfd9a2fd188d90aea85b514e4836e486e442fb763728720fa78a4bf956",
+      "sha256": "9af975d4691d052082cac2b6e3fe2e0da17592d21002430ece27496d85a7fc78",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-doac-hold",
       "version": 1,
-      "sha256": "ad895413f212f3dda82db5d78a2c1cfd193304b395fb48274d3f0e398e3a936b",
+      "sha256": "1dc718165015072d75919402625af723c85a17eae3bc0602415d60dcf76c0225",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-lmwh-hold",
       "version": 1,
-      "sha256": "2fbf00656a0633d18caf8bbd0cb88198e9697b5a0c412fd349076e6cece35683",
+      "sha256": "e86c798e46c652c9310d0a708ab88b3db9b34db6c91e5c6ba8ae918fad5f4c07",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-p2y12-hold",
       "version": 1,
-      "sha256": "65be65cfdbcf3cc522aec8b1e7a11e96fecf67be38e6e56b1253cfd26472152d",
+      "sha256": "8fd882296a3101e94d06f6a12c0e49d41ccea1fb160a4603d33ee43f95c0a4ff",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-ticlid-hold",
       "version": 1,
-      "sha256": "2200fa0bb14f2fbcae0caca2288aadd7dfb9bbc2505ebf94fcf7ddbd8274c828",
+      "sha256": "50d2da35e888d62a592a4ec677a92b952e97b4106dd6259545f3546f4a4b592c",
       "selectedAt": "scheduling"
     },
     {
@@ -61,13 +69,13 @@
     {
       "moduleId": "colo-golytely-split-bmc-insulin-half-dose",
       "version": 1,
-      "sha256": "8a502f26bc0610ed4296af4d03b1471a1cc79d2704bd3d9c5d34d1f6f8fd3a2d",
+      "sha256": "fb06b2970b382a13e9c72967d80a41e9614305aa27dd57cdaef93d79bf167eda",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-diabetes-pills",
       "version": 1,
-      "sha256": "b14cdc77ecee62eb87c09850cb533f48f0be9be35c2a2eb992c5b3e67d3fdbad",
+      "sha256": "3dc21e6fbc1392b9dcddecb06436688c6677c0badba256634d1b206c14631800",
       "selectedAt": "scheduling"
     },
     {
@@ -79,19 +87,19 @@
     {
       "moduleId": "colo-golytely-split-bmc-sglt2-hold",
       "version": 1,
-      "sha256": "3774e703fe098c20600712bd95531680a73a8893489f87d709efe26507967275",
+      "sha256": "96526eb8e7a69c4083f2727cd69656ff6af49467ebe0e36be6231447a06d1fc5",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-glp1-weekly-hold",
       "version": 1,
-      "sha256": "2de5176578ca9414f4d0a74ae3be5774a2c523ae4fd7fe74f6e61c927eb71e6b",
+      "sha256": "efc2102f140b66f3ca1492b1c62c63c5bcac9946b5d4f24c8a1ab5e365165524",
       "selectedAt": "scheduling"
     },
     {
       "moduleId": "colo-golytely-split-bmc-glp1-daily-hold",
       "version": 1,
-      "sha256": "421a3560fa0bfa592d499023a96557a34e4ea371208be67ed6c4d1226389663f",
+      "sha256": "a3d0661b40c147910b89b28b5f63ea5b1a7fecd5e0043087d32f92403de9aae4",
       "selectedAt": "scheduling"
     }
   ],

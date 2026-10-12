@@ -32,7 +32,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -3
+        "day": -3,
+        "lasts": "untilAnchor"
       },
       "remind": {
         "kind": "dayAt",
@@ -50,7 +51,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -2
+        "day": -2,
+        "lasts": "oneDay"
       },
       "remind": {
         "kind": "dayAt",
@@ -68,7 +70,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -1
+        "day": -1,
+        "lasts": "oneDay"
       },
       "remind": {
         "kind": "dayAt",
@@ -86,7 +89,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -1
+        "day": -1,
+        "lasts": "oneDay"
       },
       "remind": {
         "kind": "dayAt",
@@ -131,12 +135,6 @@
         "defaulted": true
       },
       "allowNight": true,
-      "headsUp": {
-        "kind": "dayAt",
-        "day": -1,
-        "time": "20:00",
-        "defaulted": true
-      },
       "pastDue": "critical",
       "text": "Drink the rest of your prep early this morning. You must finish it by 2 hours before your appointment."
     },
@@ -154,12 +152,6 @@
         "defaulted": false
       },
       "allowNight": true,
-      "headsUp": {
-        "kind": "dayAt",
-        "day": -1,
-        "time": "20:00",
-        "defaulted": true
-      },
       "pastDue": "critical",
       "text": "Stop drinking all liquids now."
     },

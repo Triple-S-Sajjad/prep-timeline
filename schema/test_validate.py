@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from validate import check_protocol
+from validate import check_protocol, in_clock_range
 
 INVALID = Path(__file__).parent.parent / "fixtures" / "invalid"
 
@@ -23,3 +23,26 @@ def test_invalid_fixture_fails_for_its_expected_reason(name: str) -> None:
         assert codes == set()
     else:
         assert expected in codes
+
+
+@pytest.mark.parametrize(
+    ("time", "start", "end", "inside"),
+    [
+        # Wraps midnight: 23:00 is quiet, 05:00 is not.
+        ("23:00", "23:00", "05:00", True),
+        ("00:00", "23:00", "05:00", True),
+        ("04:59", "23:00", "05:00", True),
+        ("05:00", "23:00", "05:00", False),
+        ("22:59", "23:00", "05:00", False),
+        ("12:00", "23:00", "05:00", False),
+        # Doesn't wrap.
+        ("13:00", "13:00", "21:00", True),
+        ("20:59", "13:00", "21:00", True),
+        ("21:00", "13:00", "21:00", False),
+        ("12:59", "13:00", "21:00", False),
+    ],
+)
+def test_clock_range_is_half_open(
+    time: str, start: str, end: str, inside: bool
+) -> None:
+    assert in_clock_range(time, {"from": start, "to": end}) is inside

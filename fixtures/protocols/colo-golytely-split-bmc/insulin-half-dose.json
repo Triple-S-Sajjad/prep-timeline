@@ -17,7 +17,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -1
+        "day": -1,
+        "lasts": "oneDay"
       },
       "remind": {
         "kind": "dayAt",

@@ -28,3 +28,27 @@ The sheets don't say what happens when a hold starts late. The fixtures set thes
 No source sheet covers this; the rule comes from the timeline calculator and applies to every protocol. It needs the clinical owner to confirm or change it.
 
 - A clock time that doesn't exist because of a spring-forward change resolves to the earlier instant; a time that happens twice resolves to its first occurrence. For cutoffs, earlier is the more restrictive choice. Example: a 2:30 AM prep dose on the night clocks spring forward is due at 1:30 AM; a 1:30 AM cutoff on the night clocks fall back applies at the first 1:30 AM.
+
+## Reminder rules to confirm
+
+These come from the app's design, not a source sheet, and apply to every protocol.
+
+- A reminder is never dropped. If it would come during quiet hours (for a step not allowed at night) or after the step has already started, it moves earlier to the nearest allowed time. Its text always gives the real time the step starts.
+- The app never uses the appointment time in place of an arrival time the patient hasn't entered. If a step that counts from arrival is still waiting at the evening reminder time the day before the appointment, the patient gets "Enter your arrival time or call us" instead.
+- A restriction that lasts a set time, like "no driving for 24 hours", is reminded when it starts. No reminder comes when it ends; the app shows the end time.
+
+## Placeholder hours to replace
+
+No source sheet gives these, so every fixture manifest uses a placeholder. The department needs to supply its real values.
+
+- Quiet hours, when reminders don't go out unless a step must happen at night: 11 PM to 5 AM in every fixture.
+- Bookable appointment hours, the times the department actually schedules: 7 AM to 5 PM in every fixture, except 7 AM to noon for the UMMC morning-only prep.
+
+## How long day steps last
+
+Each step tied to a calendar day now says whether it lasts one day or until the appointment. The fixtures choose by the sheet's wording; each choice needs the clinical owner to confirm or change it.
+
+- One day: clear liquids (UMMC, BMC, Karmanos, Cleveland Clinic), mixing the prep (UMMC, BMC, Karmanos), half-dose insulin (BMC, Cleveland Clinic), the daily GLP-1 hold (BMC, "today"), rereading the medication sheet (BMC), reading the instructions, buying supplies and asking about blood thinners (Karmanos), picking up the kit and asking about blood thinners (Cleveland Clinic), and the "nurse hasn't called" check (UW).
+- Until the appointment: iron, warfarin, Plavix-type, SGLT2, Ticlid, DOAC, Lovenox, NSAID and supplement holds; the weekly GLP-1 hold; the aspirin limit (Karmanos); low-fiber diets (BMC, Karmanos, Cleveland Clinic); nothing but prep on the procedure morning (UMMC); and skipping diabetes pills that morning (BMC).
+- The weekly GLP-1 hold says "until after your procedure", but "until the appointment" ends at the appointment time. [BMC](https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf)
+- Clear liquids are set to one day because the sheets say "today". That leaves the procedure morning, before the fasting cutoff, with no diet step at BMC, Karmanos and Cleveland Clinic. Do clear liquids continue that morning? [BMC](https://www.bmc.org/files/gastro-prep/english/Colonoscopy%20Golytely%20Split%20Dose%20Prep.pdf), [Karmanos](https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf), [Cleveland Clinic](https://my.clevelandclinic.org/health/articles/sutab-bowel-preparation-instructions)

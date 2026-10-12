@@ -35,7 +35,11 @@
         "required": ["min", "max", "unit"],
         "additionalProperties": false,
         "properties": {
-          "min": { "type": "integer", "minimum": 0 },
+          "min": {
+            "description": "At least 1, so a parameter can never put a day step on day 0.",
+            "type": "integer",
+            "minimum": 1
+          },
           "max": { "type": "integer", "minimum": 0 },
           "unit": { "enum": ["days", "weeks"] }
         }
@@ -70,9 +74,9 @@
       "pattern": "^-?PT(?=[0-9])([0-9]{1,4}H)?([0-9]{1,4}M)?$"
     },
     "positiveDuration": {
-      "description": "Elapsed hours and minutes, like signedDuration.",
+      "description": "Elapsed hours and minutes, like signedDuration, but greater than zero: a window must last some time.",
       "type": "string",
-      "pattern": "^PT(?=[0-9])([0-9]{1,4}H)?([0-9]{1,4}M)?$"
+      "pattern": "^PT(?=[0-9])(?!(0+H)?(0+M)?$)([0-9]{1,4}H)?([0-9]{1,4}M)?$"
     },
     "paramRef": {
       "description": "Stands in for a number the clinician picks at QR creation. The unit comes from the parameter declaration.",
@@ -129,9 +133,16 @@
         {
           "if": { "required": ["kind"], "properties": { "kind": { "const": "day" } } },
           "then": {
-            "required": ["kind", "day"],
+            "required": ["kind", "day", "lasts"],
             "additionalProperties": false,
-            "properties": { "kind": true, "day": { "$ref": "#/$defs/dayNumber" } }
+            "properties": {
+              "kind": true,
+              "day": { "$ref": "#/$defs/dayNumber" },
+              "lasts": {
+                "description": "oneDay ends at the start of the next day; untilAnchor ends at the anchor.",
+                "enum": ["oneDay", "untilAnchor"]
+              }
+            }
           }
         },
         {
@@ -200,18 +211,14 @@
         "anchor": { "enum": ["appointment", "arrival", "discharge"] },
         "timing": { "$ref": "#/$defs/timing" },
         "remind": { "$ref": "#/$defs/remind" },
-        "allowNight": { "type": "boolean" },
-        "headsUp": { "$ref": "#/$defs/dayAt" },
+        "allowNight": {
+          "description": "The step may be reminded in quiet hours. Its heads-up is computed from the manifest's eveningReminder, never stored.",
+          "type": "boolean"
+        },
         "pastDue": { "enum": ["critical", "doNow", "ignore"] },
         "text": { "$ref": "#/$defs/text" }
       },
       "allOf": [
-        {
-          "description": "A night step gets a heads-up the evening before; a day step has none.",
-          "if": { "required": ["allowNight"], "properties": { "allowNight": { "const": true } } },
-          "then": { "required": ["headsUp"] },
-          "else": { "not": { "required": ["headsUp"] } }
-        },
         {
           "description": "A missed prep dose, fasting cutoff or arrival can cancel the procedure.",
           "if": { "required": ["type"], "properties": { "type": { "enum": ["prep_dose", "npo", "arrive"] } } },

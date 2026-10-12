@@ -8,18 +8,26 @@
   "departmentDefaults": {
     "morningReminder": "07:00",
     "eveningReminder": "20:00",
-    "reminderLead": "PT2H"
+    "reminderLead": "PT2H",
+    "quietHours": {
+      "from": "23:00",
+      "to": "05:00"
+    }
+  },
+  "bookableHours": {
+    "from": "07:00",
+    "to": "12:00"
   },
   "baseModule": {
     "moduleId": "colo-golytely-split-am-umms-base",
     "version": 1,
-    "sha256": "8a0c5c0b65f5475f0d14713c30bd5e1ccba213a71cd03290a017256a95c9a860"
+    "sha256": "ba0dd89a121313a49f3896e396769d51f847241e0a241400cc949697bc8be8ca"
   },
   "optionalModules": [
     {
       "moduleId": "colo-golytely-split-am-umms-iron-hold",
       "version": 1,
-      "sha256": "053918d36d6d82cca978433f5a2e79af547e5e20298ba74eae5aad540cafbd9b",
+      "sha256": "a0ba7ab1f052fc4125ae8745e0e39b54c9a0a32855198b96f1f1d75e6f48f2b9",
       "selectedAt": "scheduling"
     }
   ],

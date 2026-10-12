@@ -23,7 +23,7 @@
       "remind": {
         "kind": "dayAt",
         "day": -1,
-        "time": "22:00",
+        "time": "20:00",
         "defaulted": true
       },
       "allowNight": false,

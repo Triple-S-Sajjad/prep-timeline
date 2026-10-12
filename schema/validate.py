@@ -79,7 +79,7 @@ def schema_problems(
         elif error.validator == "additionalProperties":
             known = error.schema.get("properties", {})
             code += ":" + ",".join(sorted(set(error.instance) - set(known)))
-        elif error.validator == "pattern":
+        elif error.validator in ("pattern", "minimum"):
             code += ":" + str(error.path[-1])
         problems.append(Problem(file, code, f"{error.json_path}: {error.message}"))
     return problems
@@ -101,6 +101,41 @@ def time_range(module: dict[str, Any]) -> tuple[str, str]:
     return times["fromInclusive"], times["toExclusive"]
 
 
+def in_clock_range(time: str, clock_range: dict[str, str]) -> bool:
+    """Half-open, wrapping midnight when "to" is earlier than "from".
+    Zero-padded HH:MM strings sort in time order."""
+    start, end = clock_range["from"], clock_range["to"]
+    if start <= end:
+        return start <= time < end
+    return time >= start or time < end
+
+
+DURATION = re.compile(r"(-?)PT(?:([0-9]+)H)?(?:([0-9]+)M)?")
+
+
+def minutes(duration: str) -> int:
+    """Signed minutes in a duration whose pattern the schema has checked."""
+    match = DURATION.fullmatch(duration)
+    assert match is not None
+    sign, hours, mins = match.groups()
+    total = int(hours or 0) * 60 + int(mins or 0)
+    return -total if sign else total
+
+
+def day_step_problems(step: dict[str, Any], file: Path) -> Iterator[Problem]:
+    """A day step on any day but day 0 is reminded on its own day. Day 0 from
+    the appointment or arrival is the schema's rule: the evening before."""
+    day, remind = step["timing"]["day"], step["remind"]
+    if day == 0 and step["anchor"] == "discharge":
+        # Its day starts before the patient taps "I'm home", so no reminder
+        # could come before it takes effect.
+        msg = f"{step['id']} counts from discharge, so it can't be on day 0"
+        yield Problem(file, "dischargeDayZero", msg)
+    elif day != 0 and (remind["kind"] != "dayAt" or remind["day"] != day):
+        msg = f"{step['id']} must be reminded on its own day"
+        yield Problem(file, "dayReminder", msg)
+
+
 def module_problems(module: dict[str, Any], file: Path) -> Iterator[Problem]:
     """Rules for one schema-valid module."""
     seen: set[str] = set()
@@ -108,6 +143,8 @@ def module_problems(module: dict[str, Any], file: Path) -> Iterator[Problem]:
         if step["id"] in seen:
             yield Problem(file, "duplicateStepId", f"{step['id']!r} is used twice")
         seen.add(step["id"])
+        if step.get("timing", {}).get("kind") == "day":
+            yield from day_step_problems(step, file)
     declared = module.get("parameters", {})
     for name in param_refs(module["steps"]):
         if name not in declared:
@@ -144,6 +181,67 @@ def coverage_problems(
         yield Problem(file, "variantGap", msg)
 
 
+def default_for(step: dict[str, Any], defaults: dict[str, Any]) -> str | int | None:
+    """What a defaulted remind must be: the morning reminder time on a day
+    step's own day, the evening reminder time the day before, or the effect
+    time less the reminder lead, in minutes. None if no default gives it,
+    including a dayAt step reminded on its own day: no rule says which
+    default that would be yet."""
+    timing, remind = step["timing"], step["remind"]
+    if remind["kind"] == "offset":
+        effect = {"offset": "offset", "window": "start", "deadline": "by"}
+        field = effect.get(timing["kind"])
+        if field is None:
+            return None
+        return minutes(timing[field]) - minutes(defaults["reminderLead"])
+    if timing["kind"] not in ("day", "dayAt"):
+        return None
+    if timing["kind"] == "day" and remind["day"] == timing["day"]:
+        return str(defaults["morningReminder"])
+    if isinstance(timing["day"], int) and remind["day"] == timing["day"] - 1:
+        return str(defaults["eveningReminder"])
+    return None
+
+
+def defaulted_problems(
+    module: dict[str, Any], defaults: dict[str, Any], file: Path
+) -> Iterator[Problem]:
+    """A defaulted value must equal the department default it came from."""
+    for step in module["steps"]:
+        remind = step.get("remind")
+        if remind is None or not remind["defaulted"]:
+            continue
+        offset = remind["kind"] == "offset"
+        actual = minutes(remind["offset"]) if offset else remind["time"]
+        expected = default_for(step, defaults)
+        if actual != expected:
+            msg = f"{step['id']}.remind is {actual!r}, default is {expected!r}"
+            yield Problem(file, "defaultedMismatch", msg)
+
+
+CLOCK_TIMES = [f"{h:02}:{m:02}" for h in range(24) for m in range(60)]
+
+
+def bookable_problems(
+    manifest: dict[str, Any], modules: dict[str, Module], file: Path
+) -> Iterator[Problem]:
+    """The base module applies to every appointment, so its appliesWhen must
+    cover every bookable time. appointmentTime groups already cover the whole
+    day exactly once (coverage_problems)."""
+    base_id = manifest["baseModule"]["moduleId"]
+    base = modules.get(base_id)
+    if base is None or not base.valid:
+        return  # Already reported as missing or schema-invalid.
+    start, end = time_range(base.data)
+    if start >= end:
+        return  # Already reported as appliesWhenRange.
+    for time in CLOCK_TIMES:
+        if in_clock_range(time, manifest["bookableHours"]) and not start <= time < end:
+            msg = f"bookable time {time} is outside {base_id}'s {start}-{end}"
+            yield Problem(file, "bookableCoverage", msg)
+            return
+
+
 def manifest_problems(
     manifest: dict[str, Any], modules: dict[str, Module], file: Path
 ) -> Iterator[Problem]:
@@ -152,6 +250,23 @@ def manifest_problems(
     if timezone not in zoneinfo.available_timezones():
         msg = f"{timezone!r} is not an IANA time zone"
         yield Problem(file, "unknownTimezone", msg)
+
+    defaults = manifest["departmentDefaults"]
+    quiet = defaults["quietHours"]
+    spans = {"quietHours": quiet, "bookableHours": manifest["bookableHours"]}
+    for name, span in spans.items():
+        if span["from"] == span["to"]:
+            msg = f"{name} starts and ends at {span['from']}"
+            yield Problem(file, "emptyRange", msg)
+    # Heads-ups come at the evening reminder time, so this keeps them out of
+    # quiet hours.
+    if in_clock_range(defaults["eveningReminder"], quiet):
+        msg = f"eveningReminder {defaults['eveningReminder']} is in quiet hours"
+        yield Problem(file, "eveningInQuietHours", msg)
+    for loaded in modules.values():
+        if loaded.valid:
+            yield from defaulted_problems(loaded.data, defaults, loaded.file)
+    yield from bookable_problems(manifest, modules, file)
 
     base_id = manifest["baseModule"]["moduleId"]
     selected_at = {r["moduleId"]: r["selectedAt"] for r in manifest["optionalModules"]}

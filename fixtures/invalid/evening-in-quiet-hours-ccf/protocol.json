@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "evening-in-quiet-hours-ccf",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/New_York",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H",
+    "quietHours": {
+      "from": "19:00",
+      "to": "06:00"
+    }
+  },
+  "bookableHours": {
+    "from": "07:00",
+    "to": "17:00"
+  },
+  "baseModule": {
+    "moduleId": "evening-in-quiet-hours-ccf-base",
+    "version": 1,
+    "sha256": "f665fea816e1d34698fe637e6a4168e95daacc68eee70f8595345ec04363c946"
+  },
+  "optionalModules": [],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": []
+  },
+  "expectedFailure": "eveningInQuietHours",
+  "source": [
+    "https://my.clevelandclinic.org/health/articles/sutab-bowel-preparation-instructions"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

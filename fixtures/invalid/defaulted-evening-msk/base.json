@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "defaulted-evening-msk-base",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
+  "steps": [
+    {
+      "id": "stop-eating",
+      "type": "diet",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "dayAt",
+        "day": 0,
+        "time": "00:00"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "22:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "critical",
+      "text": "Stop eating at midnight tonight, including gum and hard candy. After midnight and until 2 hours before you arrive, you can drink only water, clear apple, grape or cranberry juice, Gatorade or Powerade, or black coffee or plain tea (sugar is OK; no milk, creamer, honey or syrup)."
+    },
+    {
+      "id": "no-call",
+      "type": "checklist",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "19:00"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "19:00",
+        "defaulted": false
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "If no one has called you with your arrival time yet, call 212-639-5014."
+    },
+    {
+      "id": "npo",
+      "type": "npo",
+      "anchor": "arrival",
+      "timing": {
+        "kind": "offset",
+        "offset": "-PT2H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT2H",
+        "defaulted": false
+      },
+      "allowNight": true,
+      "pastDue": "critical",
+      "text": "Stop drinking now. This includes water."
+    },
+    {
+      "id": "call",
+      "type": "reference",
+      "text": "A staff member will call after 2 PM the day before to tell you your arrival time."
+    },
+    {
+      "id": "medicine-lists",
+      "type": "reference",
+      "text": "At your pre-surgery visit, your care team fills in which medicines to take the night before, which to take the morning of with small sips of water, which to stop and how many days before, and any new medicines to start. Follow that list."
+    },
+    {
+      "id": "earlier",
+      "type": "reference",
+      "text": "If your provider tells you to stop eating or drinking earlier than this, do what they say."
+    },
+    {
+      "id": "diabetes-drinks",
+      "type": "reference",
+      "text": "If you have diabetes, choose drinks that are sugar-free or low in sugar."
+    },
+    {
+      "id": "thirst",
+      "type": "reference",
+      "text": "Drink if you're thirsty, but no more than you need. You'll get IV fluids during surgery."
+    },
+    {
+      "id": "pst",
+      "type": "reference",
+      "text": "We'll go over these instructions at your pre-surgery testing appointment."
+    },
+    {
+      "id": "outcome",
+      "type": "reference",
+      "text": "If you don't follow these instructions, your surgery may be delayed or canceled."
+    }
+  ],
+  "source": "https://www.mskcc.org/cancer-care/patient-education/instructions-before-your-procedure-or-surgery",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "unmapped": [
+    {
+      "text": "If your surgery is on a Monday, the call comes on the Friday before.",
+      "reason": "Business-day rule, deferred. The no-call check fires the evening before, which is Sunday for a Monday surgery."
+    }
+  ]
+}

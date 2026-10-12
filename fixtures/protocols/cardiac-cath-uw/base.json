@@ -22,7 +22,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -3
+        "day": -3,
+        "lasts": "oneDay"
       },
       "remind": {
         "kind": "dayAt",
@@ -107,12 +108,6 @@
         "defaulted": false
       },
       "allowNight": true,
-      "headsUp": {
-        "kind": "dayAt",
-        "day": -1,
-        "time": "20:00",
-        "defaulted": true
-      },
       "pastDue": "doNow",
       "text": "No high-fat foods like bacon, sausage or eggs."
     },
@@ -130,12 +125,6 @@
         "defaulted": false
       },
       "allowNight": true,
-      "headsUp": {
-        "kind": "dayAt",
-        "day": -1,
-        "time": "20:00",
-        "defaulted": true
-      },
       "pastDue": "critical",
       "text": "Stop eating and drinking now."
     },

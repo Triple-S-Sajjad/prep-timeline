@@ -8,18 +8,26 @@
   "departmentDefaults": {
     "morningReminder": "07:00",
     "eveningReminder": "20:00",
-    "reminderLead": "PT2H"
+    "reminderLead": "PT2H",
+    "quietHours": {
+      "from": "23:00",
+      "to": "05:00"
+    }
+  },
+  "bookableHours": {
+    "from": "07:00",
+    "to": "17:00"
   },
   "baseModule": {
     "moduleId": "conflicting-cutoffs-karmanos-base",
     "version": 1,
-    "sha256": "ff98367cef0f14d5101d013e0107e163e493f6a9fcde83d4bf69270b0183d341"
+    "sha256": "15900fb90f1da7d55d771141a777bbe19efb6229237a8130f3a6035c54edeb0e"
   },
   "optionalModules": [
     {
       "moduleId": "conflicting-cutoffs-karmanos-regular-pills",
       "version": 1,
-      "sha256": "7ff6db31f4b1f800f1286406a8a2b7191d6b9454ebead416c8e679ea6c1ba5c2",
+      "sha256": "6089bafbacb11679bb1390bd9b9892e7f95b16e1181b8afd28ce297b2f267f74",
       "selectedAt": "scheduling"
     }
   ],

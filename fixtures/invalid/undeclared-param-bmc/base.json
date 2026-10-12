@@ -32,12 +32,13 @@
         "day": {
           "param": "holdDay",
           "before": true
-        }
+        },
+        "lasts": "untilAnchor"
       },
       "remind": {
         "kind": "dayAt",
         "day": {
-          "param": "holdDays",
+          "param": "holdDay",
           "before": true
         },
         "time": "07:00",

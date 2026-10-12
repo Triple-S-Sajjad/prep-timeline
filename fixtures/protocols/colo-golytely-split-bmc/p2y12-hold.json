@@ -32,7 +32,8 @@
         "day": {
           "param": "holdDays",
           "before": true
-        }
+        },
+        "lasts": "untilAnchor"
       },
       "remind": {
         "kind": "dayAt",

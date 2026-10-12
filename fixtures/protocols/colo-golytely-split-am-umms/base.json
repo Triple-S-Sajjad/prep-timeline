@@ -37,7 +37,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -1
+        "day": -1,
+        "lasts": "oneDay"
       },
       "remind": {
         "kind": "dayAt",
@@ -55,7 +56,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": -1
+        "day": -1,
+        "lasts": "oneDay"
       },
       "remind": {
         "kind": "dayAt",
@@ -92,7 +94,8 @@
       "anchor": "appointment",
       "timing": {
         "kind": "day",
-        "day": 0
+        "day": 0,
+        "lasts": "untilAnchor"
       },
       "remind": {
         "kind": "dayAt",
@@ -118,12 +121,6 @@
         "defaulted": false
       },
       "allowNight": true,
-      "headsUp": {
-        "kind": "dayAt",
-        "day": -1,
-        "time": "20:00",
-        "defaulted": true
-      },
       "pastDue": "critical",
       "text": "Drink the last liter of your prep, one 8-ounce glass at a time. It takes about an hour."
     },
