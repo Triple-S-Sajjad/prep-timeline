@@ -109,6 +109,75 @@ void main() {
     });
   });
 
+  group('localTime (a time the patient enters)', () {
+    test('an ordinary time', () {
+      expect(
+        localTime(ny, 2026, 11, 18, 9, 0).millisecondsSinceEpoch,
+        utc(2026, 11, 18, 14),
+      );
+    });
+    test('a skipped time resolves to the earlier instant', () {
+      expect(
+        localTime(ny, 2027, 3, 14, 2, 30).millisecondsSinceEpoch,
+        utc(2027, 3, 14, 6, 30),
+      );
+    });
+    test(
+      'a repeated time resolves to its first occurrence, east of UTC too',
+      () {
+        expect(
+          localTime(ny, 2026, 11, 1, 1, 30).millisecondsSinceEpoch,
+          utc(2026, 11, 1, 5, 30),
+        );
+        final sydney = tz.getLocation('Australia/Sydney');
+        expect(
+          localTime(sydney, 2026, 4, 5, 2, 30).millisecondsSinceEpoch,
+          utc(2026, 4, 4, 15, 30),
+        );
+      },
+    );
+    test('a date that does not exist is rejected, not rolled over', () {
+      expect(() => localTime(ny, 2026, 2, 30, 9, 0), throwsArgumentError);
+      expect(() => localTime(ny, 2026, 13, 1, 9, 0), throwsArgumentError);
+      expect(() => localTime(ny, 2026, 11, 0, 9, 0), throwsArgumentError);
+    });
+    test('a clock time out of range is rejected', () {
+      expect(() => localTime(ny, 2026, 11, 18, 24, 0), throwsArgumentError);
+      expect(() => localTime(ny, 2026, 11, 18, 9, 60), throwsArgumentError);
+    });
+    test('a time after 2037 is rejected', () {
+      expect(() => localTime(ny, 2038, 1, 1, 9, 0), throwsArgumentError);
+    });
+  });
+
+  group('arrivalAt', () {
+    test('before the appointment is accepted', () {
+      expect(
+        arrivalAt(
+          at(2026, 11, 18, 9),
+          2026,
+          11,
+          18,
+          7,
+          30,
+        ).millisecondsSinceEpoch,
+        utc(2026, 11, 18, 12, 30),
+      );
+    });
+    test('at the appointment is accepted', () {
+      expect(
+        arrivalAt(at(2026, 11, 18, 9), 2026, 11, 18, 9, 0),
+        at(2026, 11, 18, 9),
+      );
+    });
+    test('after the appointment is rejected', () {
+      expect(
+        () => arrivalAt(at(2026, 11, 18, 9), 2026, 11, 18, 9, 1),
+        throwsArgumentError,
+      );
+    });
+  });
+
   group('limits', () {
     test('23:59 on the last day of 2037 is accepted', () {
       expect(

@@ -34,6 +34,20 @@ const offsets = [
   Duration(hours: 72),
 ];
 
+const windowLengths = [
+  Duration(minutes: 30),
+  Duration(hours: 24),
+  Duration(hours: 120),
+];
+
+const everyKind = <Timing>[
+  OffsetTiming(Duration(hours: -6)),
+  DayAtTiming(-1, (hour: 17, minute: 0)),
+  DayTiming(-1, Lasts.oneDay),
+  WindowTiming(Duration.zero, Duration(hours: 24)),
+  DeadlineTiming(Duration(hours: -2)),
+];
+
 void main() {
   setUpAll(tzdata.initializeTimeZones);
 
@@ -159,6 +173,126 @@ void main() {
                   'expected '
                   '${tz.TZDateTime.fromMillisecondsSinceEpoch(loc, minutes[m])}',
             );
+          }
+        }
+        failures.expectNone();
+      });
+
+      test('effectOf: offset, deadline and window are exact elapsed times', () {
+        final failures = Failures();
+        for (final a in hourly) {
+          final anchors = (appointment: a, arrival: null, discharge: null);
+          final from = a.millisecondsSinceEpoch;
+          for (final offset in offsets) {
+            for (final timing in [
+              OffsetTiming(offset),
+              DeadlineTiming(offset),
+            ]) {
+              final e = effectOf(Anchor.appointment, timing, anchors)!;
+              failures.check(
+                e.at.millisecondsSinceEpoch - from == offset.inMilliseconds &&
+                    e.at.location == loc &&
+                    e.until == null,
+                () => '${timing.runtimeType}($offset) from $a = $e',
+              );
+            }
+            for (final duration in windowLengths) {
+              final e = effectOf(
+                Anchor.appointment,
+                WindowTiming(offset, duration),
+                anchors,
+              )!;
+              final at = e.at.millisecondsSinceEpoch;
+              failures.check(
+                at - from == offset.inMilliseconds &&
+                    e.until!.millisecondsSinceEpoch - at ==
+                        duration.inMilliseconds &&
+                    e.until!.location == loc,
+                () => 'WindowTiming($offset, $duration) from $a = $e',
+              );
+            }
+          }
+        }
+        failures.expectNone();
+      });
+
+      test('effectOf: day and dayAt land on the anchor date + day', () {
+        final failures = Failures();
+        for (final a in daily) {
+          final anchors = (appointment: a, arrival: null, discharge: null);
+          for (var day = -14; day <= 3; day++) {
+            final date = DateTime.utc(a.year, a.month, a.day + day);
+            final next = DateTime.utc(a.year, a.month, a.day + day + 1);
+            final oneDay = effectOf(
+              Anchor.appointment,
+              DayTiming(day, Lasts.oneDay),
+              anchors,
+            )!;
+            // untilAnchor runs from the day's start to the anchor, and is
+            // rejected after the anchor, where it would end before it starts.
+            bool untilAnchorHolds() {
+              try {
+                final e = effectOf(
+                  Anchor.appointment,
+                  DayTiming(day, Lasts.untilAnchor),
+                  anchors,
+                )!;
+                return day <= 0 && e.at == oneDay.at && e.until == a;
+              } on ArgumentError {
+                return day >= 1;
+              }
+            }
+
+            final until = oneDay.until!.millisecondsSinceEpoch;
+            failures.check(
+              localDate(loc, oneDay.at.millisecondsSinceEpoch) == date &&
+                  // oneDay ends at the first instant of the next date.
+                  localDate(loc, until) == next &&
+                  localDate(loc, until - 1) == date &&
+                  untilAnchorHolds(),
+              () => 'day $day from $a: oneDay $oneDay, untilAnchor wrong',
+            );
+            // Times every zone here has on every date.
+            for (final hour in const [6, 12, 18]) {
+              final timing = DayAtTiming(day, (hour: hour, minute: 30));
+              final e = effectOf(Anchor.appointment, timing, anchors)!;
+              failures.check(
+                localDate(loc, e.at.millisecondsSinceEpoch) == date &&
+                    (e.at.hour, e.at.minute) == (hour, 30) &&
+                    e.until == null,
+                () => 'dayAt $day $hour:30 from $a = $e',
+              );
+            }
+          }
+        }
+        failures.expectNone();
+      });
+
+      test('effectOf is pending exactly when its anchor is unknown', () {
+        final failures = Failures();
+        for (final a in daily) {
+          for (final arrival in [null, a]) {
+            for (final discharge in [null, a]) {
+              final anchors = (
+                appointment: a,
+                arrival: arrival,
+                discharge: discharge,
+              );
+              for (final anchor in Anchor.values) {
+                final known = switch (anchor) {
+                  Anchor.appointment => true,
+                  Anchor.arrival => arrival != null,
+                  Anchor.discharge => discharge != null,
+                };
+                for (final timing in everyKind) {
+                  final e = effectOf(anchor, timing, anchors);
+                  failures.check(
+                    (e != null) == known,
+                    () => '$anchor ${timing.runtimeType} with $anchors = $e',
+                  );
+                }
+              }
+            }
           }
         }
         failures.expectNone();

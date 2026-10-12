@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "until-anchor-after-anchor-karmanos-base",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
+  "steps": [
+    {
+      "id": "read",
+      "type": "checklist",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -7,
+        "lasts": "oneDay"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -7,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "Read both pages of your prep instructions today, at least 1 week before your colonoscopy."
+    },
+    {
+      "id": "nurse-call",
+      "type": "reference",
+      "text": "A pre-procedure nurse will call you 24 to 72 hours before for a health history."
+    },
+    {
+      "id": "buy",
+      "type": "checklist",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -5,
+        "lasts": "oneDay"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -5,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "Buy your prep supplies by today: one 56-64 oz and one 28-32 oz bottle of a clear, non-red drink that isn't fizzy (people with diabetes can use sugar-free Gatorade), Dulcolax (bisacodyl) 5 mg tablets (you need 3), and MiraLAX 238 g and 119 g."
+    },
+    {
+      "id": "ride",
+      "type": "checklist",
+      "text": "A family member or friend must drive you home. You can't drive or leave alone. Without a driver, the exam is rescheduled."
+    },
+    {
+      "id": "blood-thinners",
+      "type": "checklist",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -14,
+        "lasts": "oneDay"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -14,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "critical",
+      "text": "If you take a blood thinner (Aggrastat, Aggrenox, Brilinta, Coumadin, Eliquis, heparin, Lovenox, Persantine, Plavix, Pradaxa, Savaysa, Xarelto), ask your primary care provider by today whether and when to stop it."
+    },
+    {
+      "id": "diabetes",
+      "type": "reference",
+      "text": "If you have diabetes, you'll get medicine instructions during the pre-procedure phone call."
+    },
+    {
+      "id": "regular-pills",
+      "type": "reference",
+      "text": "You can take your regular pills with sips of water up to 3 hours before your procedure."
+    },
+    {
+      "id": "low-fiber",
+      "type": "diet",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": 2,
+        "lasts": "untilAnchor"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": 2,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "Stop high-fiber foods like popcorn, beans, seeds, nuts, multigrain bread, vegetables and fruit, and fiber supplements like Metamucil. You can still eat meat, eggs, dairy, white bread, pasta, bananas, applesauce, canned peaches and melon."
+    },
+    {
+      "id": "mix",
+      "type": "checklist",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -1,
+        "lasts": "oneDay"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "Mix your prep today (not earlier): the 238 g MiraLAX into the large bottle and the 119 g into the small one. Shake until it dissolves. Chill if you like, but add no ice, sugar or flavor."
+    },
+    {
+      "id": "clear-liquids",
+      "type": "diet",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": -1,
+        "lasts": "oneDay"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": -1,
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "No solid food today. Drink only clear liquids, like water, apple or white grape juice, clear broth, and coffee or tea with no milk. Nothing red."
+    },
+    {
+      "id": "npo",
+      "type": "npo",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "offset",
+        "offset": "-PT4H"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "-PT4H",
+        "defaulted": false
+      },
+      "allowNight": true,
+      "pastDue": "critical",
+      "text": "Stop eating and drinking now, including clear liquids."
+    },
+    {
+      "id": "contact",
+      "type": "reference",
+      "text": "To reschedule, cancel or ask questions, call the Endoscopy Nurse Navigator at 231-487-4398 or 231-487-5736 before 4 PM."
+    }
+  ],
+  "source": "https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

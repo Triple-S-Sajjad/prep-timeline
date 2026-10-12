@@ -13,16 +13,52 @@ import 'limits.dart';
 /// more restrictive choice the spec requires.
 tz.TZDateTime dayAtTime(tz.TZDateTime anchor, int day, int hour, int minute) {
   checkSupported(anchor);
-  // Without this, 24:00 or 17:60 would silently roll over to the next hour or day.
-  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-    throw ArgumentError('Clock time must be between 00:00 and 23:59.');
+  _checkClockTime(hour, minute);
+  return _resolve(anchor.location, _wall(anchor, day, hour, minute));
+}
+
+/// A local date and clock time the patient enters, resolved by the same rule
+/// as [dayAtTime].
+tz.TZDateTime localTime(
+  tz.Location location,
+  int year,
+  int month,
+  int day,
+  int hour,
+  int minute,
+) {
+  _checkClockTime(hour, minute);
+  final date = DateTime.utc(year, month, day);
+  // DateTime.utc would quietly roll February 30 into March.
+  if ((date.year, date.month, date.day) != (year, month, day)) {
+    throw ArgumentError('$year-$month-$day is not a date.');
   }
-  final location = anchor.location;
-  final wall = _wall(anchor, day, hour, minute);
-  // Read with the offset of its period, the wall time is the first occurrence
-  // or, if skipped, the earlier instant.
-  final offset = _periodOf(location, wall).timeZone.offset.inMilliseconds;
-  return _at(location, wall - offset);
+  final wall = DateTime.utc(year, month, day, hour, minute);
+  return _resolve(location, wall.millisecondsSinceEpoch);
+}
+
+/// The arrival time the patient enters for [appointment]. Arrival can't come
+/// after the appointment.
+tz.TZDateTime arrivalAt(
+  tz.TZDateTime appointment,
+  int year,
+  int month,
+  int day,
+  int hour,
+  int minute,
+) {
+  final arrival = localTime(
+    appointment.location,
+    year,
+    month,
+    day,
+    hour,
+    minute,
+  );
+  if (arrival.isAfter(appointment)) {
+    throw ArgumentError('Arrival must be at or before the appointment.');
+  }
+  return arrival;
 }
 
 /// The first instant of a calendar day counted from [anchor]'s local date.
@@ -35,6 +71,20 @@ tz.TZDateTime dayStart(tz.TZDateTime anchor, int day) {
   final period = _periodOf(location, midnight);
   final offset = period.timeZone.offset.inMilliseconds;
   return _at(location, max(midnight - offset, period.start));
+}
+
+void _checkClockTime(int hour, int minute) {
+  // Without this, 24:00 or 17:60 would silently roll over to the next hour or day.
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    throw ArgumentError('Clock time must be between 00:00 and 23:59.');
+  }
+}
+
+/// Read with the offset of its period, local time [wall] is its first
+/// occurrence or, if skipped, the earlier instant.
+tz.TZDateTime _resolve(tz.Location location, int wall) {
+  final offset = _periodOf(location, wall).timeZone.offset.inMilliseconds;
+  return _at(location, wall - offset);
 }
 
 /// The local time as milliseconds read as if UTC. DateTime.utc rolls day

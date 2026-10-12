@@ -134,6 +134,13 @@ def day_step_problems(step: dict[str, Any], file: Path) -> Iterator[Problem]:
     elif day != 0 and (remind["kind"] != "dayAt" or remind["day"] != day):
         msg = f"{step['id']} must be reminded on its own day"
         yield Problem(file, "dayReminder", msg)
+    # A parameter's range starts at 1, so one without "before" always lands
+    # after the anchor too.
+    after_anchor = not day["before"] if isinstance(day, dict) else day >= 1
+    if step["timing"]["lasts"] == "untilAnchor" and after_anchor:
+        # Its until (the anchor) would fall before its at (the day's start).
+        msg = f"{step['id']} starts after its anchor, so it can't last until it"
+        yield Problem(file, "untilAnchorAfterAnchor", msg)
 
 
 def module_problems(module: dict[str, Any], file: Path) -> Iterator[Problem]:

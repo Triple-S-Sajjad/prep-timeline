@@ -52,3 +52,9 @@ Each step tied to a calendar day now says whether it lasts one day or until the 
 - Until the appointment: iron, warfarin, Plavix-type, SGLT2, Ticlid, DOAC, Lovenox, NSAID and supplement holds; the weekly GLP-1 hold; the aspirin limit (Karmanos); low-fiber diets (BMC, Karmanos, Cleveland Clinic); nothing but prep on the procedure morning (UMMC); and skipping diabetes pills that morning (BMC).
 - The weekly GLP-1 hold says "until after your procedure", but "until the appointment" ends at the appointment time. [BMC](https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf)
 - Clear liquids are set to one day because the sheets say "today". That leaves the procedure morning, before the fasting cutoff, with no diet step at BMC, Karmanos and Cleveland Clinic. Do clear liquids continue that morning? [BMC](https://www.bmc.org/files/gastro-prep/english/Colonoscopy%20Golytely%20Split%20Dose%20Prep.pdf), [Karmanos](https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf), [Cleveland Clinic](https://my.clevelandclinic.org/health/articles/sutab-bowel-preparation-instructions)
+
+## Arrival entry to decide
+
+This comes from the app's design, not a source sheet, and applies to every protocol. Decide before the arrival-entry screen is built.
+
+- Arrival lower bound: `arrivalAt` rejects an arrival after the appointment but accepts any earlier one, so a wrong date the patient types (a day or a year early) moves every arrival-anchored step. Proposed: the protocol states an explicit maximum lead, such as arrival no more than `PT12H` before the appointment, written in the manifest rather than hardcoded. Open: the value per department, and whether it belongs in `departmentDefaults` or per protocol.
