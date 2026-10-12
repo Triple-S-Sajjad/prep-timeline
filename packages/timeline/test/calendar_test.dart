@@ -91,6 +91,24 @@ void main() {
     );
   });
 
+  group('a skipped midnight (America/Santiago, 2026-09-06)', () {
+    late tz.TZDateTime noon;
+
+    setUpAll(() {
+      noon = tz.TZDateTime(tz.getLocation('America/Santiago'), 2026, 9, 6, 12);
+    });
+
+    test('dayStart is 01:00, when the day actually begins', () {
+      expect(dayStart(noon, 0).millisecondsSinceEpoch, utc(2026, 9, 6, 4));
+    });
+    test('dayAtTime 00:00 still resolves to the earlier instant', () {
+      expect(
+        dayAtTime(noon, 0, 0, 0).millisecondsSinceEpoch,
+        utc(2026, 9, 6, 3),
+      );
+    });
+  });
+
   group('limits', () {
     test('23:59 on the last day of 2037 is accepted', () {
       expect(
