@@ -1,15 +1,13 @@
 import 'package:test/test.dart';
 import 'package:timeline/timeline.dart';
-import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
+
+import 'support.dart';
 
 void main() {
   late tz.Location ny;
 
-  setUpAll(() {
-    tzdata.initializeTimeZones();
-    ny = tz.getLocation('America/New_York');
-  });
+  setUpAll(() => ny = loadNewYork());
 
   test('2 hours before a 09:00 appointment is 07:00 the same day', () {
     final appointment = tz.TZDateTime(ny, 2026, 11, 18, 9);

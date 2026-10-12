@@ -22,3 +22,9 @@ The sheets don't say what happens when a hold starts late. The fixtures set thes
 - GLP-1 holds, weekly and daily, set to `critical`: a late start is assumed to risk cancellation. [BMC](https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf)
 - SGLT2 hold set to `critical`. [BMC](https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf)
 - Aspirin limit set to `critical`, the same as the blood-thinner holds. [Karmanos](https://www.karmanos.org/uploads/Public/Documents/Northern/forms/602.035%20Split%20Colonoscopy%20Prep%20Instructions.pdf)
+
+## Daylight-saving rule to confirm
+
+No source sheet covers this; the rule comes from the timeline calculator and applies to every protocol. It needs the clinical owner to confirm or change it.
+
+- A clock time that doesn't exist because of a spring-forward change resolves to the earlier instant; a time that happens twice resolves to its first occurrence. For cutoffs, earlier is the more restrictive choice. Example: a 2:30 AM prep dose on the night clocks spring forward is due at 1:30 AM; a 1:30 AM cutoff on the night clocks fall back applies at the first 1:30 AM.
