@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "duration-newline-uw-base",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
+  "steps": [
+    {
+      "id": "no-nsaids",
+      "type": "restriction",
+      "anchor": "discharge",
+      "timing": {
+        "kind": "window",
+        "start": "PT0H",
+        "duration": "PT120H\n"
+      },
+      "remind": {
+        "kind": "offset",
+        "offset": "PT0H",
+        "defaulted": false
+      },
+      "allowNight": false,
+      "pastDue": "doNow",
+      "text": "Don't take ibuprofen (Advil, Motrin) or naproxen (Aleve, Naprosyn). They can cause bleeding. You can take acetaminophen (Tylenol)."
+    }
+  ],
+  "source": "https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

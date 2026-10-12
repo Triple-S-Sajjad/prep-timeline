@@ -38,7 +38,7 @@
         "reminderLead": {
           "description": "Elapsed hours and minutes, like the module schema's positiveDuration.",
           "type": "string",
-          "pattern": "^PT(?=[0-9])([0-9]+H)?([0-9]+M)?$"
+          "pattern": "^PT(?=[0-9])([0-9]{1,4}H)?([0-9]{1,4}M)?$"
         }
       }
     },

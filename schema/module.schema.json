@@ -67,12 +67,12 @@
     "signedDuration": {
       "description": "Elapsed hours and minutes from the anchor. Calendar days use day or dayAt, so a daylight-saving change can't move their clock time.",
       "type": "string",
-      "pattern": "^-?PT(?=[0-9])([0-9]+H)?([0-9]+M)?$"
+      "pattern": "^-?PT(?=[0-9])([0-9]{1,4}H)?([0-9]{1,4}M)?$"
     },
     "positiveDuration": {
       "description": "Elapsed hours and minutes, like signedDuration.",
       "type": "string",
-      "pattern": "^PT(?=[0-9])([0-9]+H)?([0-9]+M)?$"
+      "pattern": "^PT(?=[0-9])([0-9]{1,4}H)?([0-9]{1,4}M)?$"
     },
     "paramRef": {
       "description": "Stands in for a number the clinician picks at QR creation. The unit comes from the parameter declaration.",

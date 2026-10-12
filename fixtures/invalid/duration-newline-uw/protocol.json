@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "duration-newline-uw",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/Los_Angeles",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H"
+  },
+  "baseModule": {
+    "moduleId": "duration-newline-uw-base",
+    "version": 1,
+    "sha256": "56db31817532758a0d98d03d5f1811676f01a8564ec3b621667be6752165f570"
+  },
+  "optionalModules": [],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": []
+  },
+  "expectedFailure": "pattern:duration",
+  "source": [
+    "https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}

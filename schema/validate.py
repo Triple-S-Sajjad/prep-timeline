@@ -10,24 +10,42 @@ the timeline calculator.
 
 import hashlib
 import json
+import re
 import sys
 import zoneinfo
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, NamedTuple
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, ValidationError, validators
+from jsonschema.protocols import Validator
 
 SCHEMA_DIR = Path(__file__).parent
 WHOLE_DAY = ("00:00", "24:00")
 
 
+def _pattern(
+    validator: Validator, pattern: str, instance: Any, schema: Any
+) -> Iterator[ValidationError]:
+    # jsonschema uses re.search, where "$" also matches before a final "\n",
+    # so "PT6H\n" would pass. fullmatch gives JSON Schema's end-of-string "$".
+    # Every schema pattern is anchored with ^...$, so nothing else changes.
+    if validator.is_type(instance, "string") and not re.fullmatch(pattern, instance):
+        yield ValidationError(f"{instance!r} does not match {pattern!r}")
+
+
+# extend is untyped; the class it builds has Draft202012Validator's interface.
+SchemaValidator: type[Draft202012Validator] = validators.extend(  # type: ignore[no-untyped-call]
+    Draft202012Validator, {"pattern": _pattern}
+)
+
+
 def _validator(name: str) -> Draft202012Validator:
     schema = json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
-    Draft202012Validator.check_schema(schema)
+    SchemaValidator.check_schema(schema)
     # Without a format checker, "format": "date" is only an annotation.
-    checker = Draft202012Validator.FORMAT_CHECKER
-    return Draft202012Validator(schema, format_checker=checker)
+    checker = SchemaValidator.FORMAT_CHECKER
+    return SchemaValidator(schema, format_checker=checker)
 
 
 PROTOCOL_SCHEMA = _validator("protocol.schema.json")
