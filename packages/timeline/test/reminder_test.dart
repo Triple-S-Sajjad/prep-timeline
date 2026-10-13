@@ -61,10 +61,23 @@ void main() {
   ]) => tz.TZDateTime(tz.getLocation(zone), y, mo, d, h, mi, s);
   Anchors appointment(tz.TZDateTime a) =>
       (appointment: a, arrival: null, discharge: null);
+  const evening = (hour: 20, minute: 0);
+  // The main reminder remindersOf schedules, or null if it schedules none.
   Reminder? remind(
     ({Anchor anchor, Timing timing, Remind remind, bool allowNight}) step,
-    Anchors anchors,
-  ) => reminderOf(step, anchors, quiet: quiet, now: now);
+    Anchors anchors, {
+    QuietHours hours = quiet,
+    tz.TZDateTime? at,
+  }) => switch (remindersOf(
+    step,
+    anchors,
+    quiet: hours,
+    evening: evening,
+    now: at ?? now,
+  )) {
+    Scheduled(:final main) => main,
+    _ => null,
+  };
 
   const ny = 'America/New_York';
   const la = 'America/Los_Angeles';
@@ -115,7 +128,7 @@ void main() {
     }
   });
 
-  group('reminderOf', () {
+  group('main reminder', () {
     test('2. MSK npo counts from the entered arrival, not the appointment', () {
       final r = remind(fixtureStep('surgery-anesthesia-msk/base.json', 'npo'), (
         appointment: local(ny, 2026, 11, 18, 7, 30),
@@ -143,12 +156,14 @@ void main() {
     });
 
     test('4. a step whose anchor is unknown has no reminder', () {
-      final r = remind(fixtureStep('surgery-anesthesia-msk/base.json', 'npo'), (
-        appointment: local(ny, 2026, 11, 18, 7, 30),
-        arrival: null,
-        discharge: null,
-      ));
-      expect(r, isNull);
+      final r = remindersOf(
+        fixtureStep('surgery-anesthesia-msk/base.json', 'npo'),
+        appointment(local(ny, 2026, 11, 18, 7, 30)),
+        quiet: quiet,
+        evening: evening,
+        now: now,
+      );
+      expect(r, isA<Pending>());
     });
 
     test('5. BMC dose2: the deadline reminder stays 4 h before', () {
@@ -444,11 +459,10 @@ void main() {
         allowNight: false,
       );
       test('a 03:00 reminder moves to 00:29', () {
-        final r = reminderOf(
+        final r = remind(
           atEffect,
           appointment(local(ny, 2026, 11, 18, 3)),
-          quiet: afterMidnight,
-          now: now,
+          hours: afterMidnight,
         );
         expectReminder(
           r,
@@ -458,11 +472,10 @@ void main() {
         );
       });
       test('a 20:00 reminder stays', () {
-        final r = reminderOf(
+        final r = remind(
           atEffect,
           appointment(local(ny, 2026, 11, 18, 20)),
-          quiet: afterMidnight,
-          now: now,
+          hours: afterMidnight,
         );
         expectReminder(
           r,
@@ -472,4 +485,450 @@ void main() {
       });
     });
   });
+
+  group('lateness', () {
+    test(
+      '23. a reminder whose time has passed fires at now, to the second',
+      () {
+        final r = remind(
+          (
+            anchor: Anchor.appointment,
+            timing: const OffsetTiming(Duration(hours: -1)),
+            remind: const OffsetRemind(Duration(hours: -2)),
+            allowNight: false,
+          ),
+          appointment(local(ny, 2026, 11, 18, 12)),
+          at: local(ny, 2026, 11, 18, 10, 30, 20),
+        );
+        expectReminder(
+          r,
+          at: utc(2026, 11, 18, 15, 30, 20),
+          effect: utc(2026, 11, 18, 16),
+        );
+      },
+    );
+
+    test('24. a move to 22:59 that is already past fires at now, even in '
+        'quiet hours', () {
+      final r = remind(
+        fixtureStep('colo-golytely-split-am-umms/base.json', 'arrive'),
+        appointment(local(ny, 2026, 11, 18, 5, 30)),
+        at: local(ny, 2026, 11, 18, 1),
+      );
+      expectReminder(
+        r,
+        at: utc(2026, 11, 18, 6),
+        effect: utc(2026, 11, 18, 9, 30),
+        moves: {MoveReason.quietHours},
+      );
+    });
+  });
+
+  group('remindersOf', () {
+    StepReminders plan(
+      TimedStep step,
+      Anchors anchors, {
+      QuietHours hours = quiet,
+      tz.TZDateTime? at,
+    }) => remindersOf(
+      step,
+      anchors,
+      quiet: hours,
+      evening: evening,
+      now: at ?? now,
+    );
+    Scheduled scheduled(StepReminders r) {
+      expect(r, isA<Scheduled>());
+      return r as Scheduled;
+    }
+
+    const nightStep = (
+      anchor: Anchor.appointment,
+      timing: OffsetTiming(Duration.zero),
+      remind: OffsetRemind(Duration.zero),
+      allowNight: true,
+    );
+    TimedStep dose2() =>
+        fixtureStep('colo-golytely-split-bmc/base.json', 'dose2');
+
+    group('25. in effect and pending', () {
+      test('effect already reached: in effect, no reminder', () {
+        final dose1 = fixtureStep(
+          'colo-golytely-split-am-umms/base.json',
+          'dose1',
+        );
+        final anchors = appointment(local(ny, 2026, 11, 18, 7));
+        expect(
+          plan(dose1, anchors, at: local(ny, 2026, 11, 17, 18)),
+          isA<InEffect>(),
+        );
+        // At the effect itself, the effect is no longer ahead.
+        expect(
+          plan(dose1, anchors, at: local(ny, 2026, 11, 17, 17)),
+          isA<InEffect>(),
+        );
+      });
+      test('anchor unknown: pending', () {
+        final npo = fixtureStep('surgery-anesthesia-msk/base.json', 'npo');
+        expect(
+          plan(npo, appointment(local(ny, 2026, 11, 18, 7, 30))),
+          isA<Pending>(),
+        );
+      });
+    });
+
+    test(
+      '26. BMC dose2, 07:00 appointment: heads-up at 20:00 the day before',
+      () {
+        final s = scheduled(
+          plan(dose2(), appointment(local(ny, 2026, 11, 18, 7))),
+        );
+        expect(s.main.at.millisecondsSinceEpoch, utc(2026, 11, 18, 8));
+        expect(s.headsUp?.millisecondsSinceEpoch, utc(2026, 11, 18, 1));
+      },
+    );
+
+    test(
+      '27. BMC dose2, 13:00 appointment: 09:00 is not quiet, no heads-up',
+      () {
+        final s = scheduled(
+          plan(dose2(), appointment(local(ny, 2026, 11, 18, 13))),
+        );
+        expect(s.main.at.millisecondsSinceEpoch, utc(2026, 11, 18, 14));
+        expect(s.headsUp, isNull);
+      },
+    );
+
+    test('28. a 23:30 reminder: heads-up at 20:00 the same date', () {
+      final s = scheduled(
+        plan(nightStep, appointment(local(ny, 2026, 11, 17, 23, 30))),
+      );
+      expect(s.main.at.millisecondsSinceEpoch, utc(2026, 11, 18, 4, 30));
+      expect(s.headsUp?.millisecondsSinceEpoch, utc(2026, 11, 18, 1));
+    });
+
+    test('29. a 00:30 reminder: heads-up at 20:00 the date before', () {
+      final s = scheduled(
+        plan(nightStep, appointment(local(ny, 2026, 11, 18, 0, 30))),
+      );
+      expect(s.main.at.millisecondsSinceEpoch, utc(2026, 11, 18, 5, 30));
+      expect(s.headsUp?.millisecondsSinceEpoch, utc(2026, 11, 18, 1));
+    });
+
+    test('30. quiet hours 00:30-06:00, a 03:00 reminder: heads-up at 20:00 '
+        'the date before, not after the reminder', () {
+      final s = scheduled(
+        plan(
+          nightStep,
+          appointment(local(ny, 2026, 11, 18, 3)),
+          hours: (from: (hour: 0, minute: 30), to: (hour: 6, minute: 0)),
+        ),
+      );
+      expect(s.main.at.millisecondsSinceEpoch, utc(2026, 11, 18, 8));
+      expect(s.headsUp?.millisecondsSinceEpoch, utc(2026, 11, 18, 1));
+    });
+
+    test('31. a step without allowNight is moved, never given a heads-up', () {
+      final s = scheduled(
+        plan(
+          fixtureStep('colo-golytely-split-am-umms/base.json', 'arrive'),
+          appointment(local(ny, 2026, 11, 18, 5, 30)),
+        ),
+      );
+      expect(s.main.moves, {MoveReason.quietHours});
+      expect(s.headsUp, isNull);
+    });
+
+    test('32. a heads-up whose time has passed fires at now, even in quiet '
+        'hours, while the main reminder stays', () {
+      final s = scheduled(
+        plan(
+          dose2(),
+          appointment(local(ny, 2026, 11, 18, 7)),
+          at: local(ny, 2026, 11, 17, 23, 15, 10),
+        ),
+      );
+      expect(s.main.at.millisecondsSinceEpoch, utc(2026, 11, 18, 8));
+      expect(s.headsUp?.millisecondsSinceEpoch, utc(2026, 11, 18, 4, 15, 10));
+    });
+
+    test(
+      '40. a late main reminder gets no heads-up, nor one exactly at now',
+      () {
+        // Main reminder 04:30 (quiet hours, allowNight), effect 06:30.
+        final anchors = appointment(local(ny, 2026, 11, 18, 8, 30));
+        final late = scheduled(
+          plan(dose2(), anchors, at: local(ny, 2026, 11, 18, 5, 10)),
+        );
+        expect(late.main.at.millisecondsSinceEpoch, utc(2026, 11, 18, 10, 10));
+        expect(late.headsUp, isNull);
+        final onTime = scheduled(
+          plan(dose2(), anchors, at: local(ny, 2026, 11, 18, 4, 30)),
+        );
+        expect(onTime.main.at.millisecondsSinceEpoch, utc(2026, 11, 18, 9, 30));
+        expect(onTime.headsUp, isNull);
+      },
+    );
+
+    group('arrivalPrompt', () {
+      List<TimedStep> steps(String path, List<String> ids) => [
+        for (final id in ids) fixtureStep(path, id),
+      ];
+      test('33. arrival still unknown: prompt at 20:00 the day before', () {
+        final prompt = arrivalPrompt(
+          steps('surgery-anesthesia-msk/base.json', ['stop-eating', 'npo']),
+          appointment(local(ny, 2026, 11, 18, 7, 30)),
+          evening: evening,
+          now: now,
+        );
+        expect(prompt?.millisecondsSinceEpoch, utc(2026, 11, 18, 1));
+      });
+      test(
+        '34. no prompt once arrival is entered, or with no arrival steps',
+        () {
+          final entered = arrivalPrompt(
+            steps('surgery-anesthesia-msk/base.json', ['stop-eating', 'npo']),
+            (
+              appointment: local(ny, 2026, 11, 18, 7, 30),
+              arrival: local(ny, 2026, 11, 18, 5, 30),
+              discharge: null,
+            ),
+            evening: evening,
+            now: now,
+          );
+          expect(entered, isNull);
+          final noArrivalSteps = arrivalPrompt(
+            steps('colo-golytely-split-bmc/base.json', ['dose2', 'npo']),
+            appointment(local(ny, 2026, 11, 18, 7, 30)),
+            evening: evening,
+            now: now,
+          );
+          expect(noArrivalSteps, isNull);
+        },
+      );
+      tz.TZDateTime? mskPrompt(tz.TZDateTime at) => arrivalPrompt(
+        steps('surgery-anesthesia-msk/base.json', ['stop-eating', 'npo']),
+        appointment(local(ny, 2026, 11, 18, 7, 30)),
+        evening: evening,
+        now: at,
+      );
+      test('38. past 20:00 but before the appointment: the prompt fires at '
+          'now, even in quiet hours', () {
+        final prompt = mskPrompt(local(ny, 2026, 11, 18, 2, 10, 5));
+        expect(prompt?.millisecondsSinceEpoch, utc(2026, 11, 18, 7, 10, 5));
+      });
+      test('39. at or after the appointment: no prompt', () {
+        expect(mskPrompt(local(ny, 2026, 11, 18, 7, 30)), isNull);
+        expect(mskPrompt(local(ny, 2026, 11, 18, 8)), isNull);
+      });
+    });
+
+    group('over the publish sample space', () {
+      bool quietAt(tz.TZDateTime t) =>
+          inRange((hour: t.hour, minute: t.minute), quiet);
+
+      test('35. safety invariants', () {
+        var headsUps = 0;
+        forEverySample((f, anchors, t) {
+          final step = f.step;
+          final s = scheduled(plan(step, anchors));
+          final main = s.main;
+          final headsUp = s.headsUp;
+          final why = '${f.name} at $t: $main, heads-up $headsUp';
+          final morningOfItsDay = switch (step.timing) {
+            DayTiming(:final day) => day != 0,
+            _ => false,
+          };
+          final atDischarge =
+              step.anchor == Anchor.discharge &&
+              switch (step.remind) {
+                OffsetRemind(offset: Duration.zero) => true,
+                _ => false,
+              };
+          expect(main.at.millisecondsSinceEpoch % 60000, 0, reason: why);
+          expect(
+            morningOfItsDay || !main.at.isAfter(main.effect),
+            isTrue,
+            reason: why,
+          );
+          expect(
+            step.allowNight || atDischarge || !quietAt(main.at),
+            isTrue,
+            reason: why,
+          );
+          expect(
+            headsUp != null,
+            step.allowNight && quietAt(main.at),
+            reason: why,
+          );
+          if (headsUp != null) {
+            headsUps++;
+            expect(
+              headsUp.isBefore(main.at) &&
+                  !quietAt(headsUp) &&
+                  (headsUp.hour, headsUp.minute) == (20, 0),
+              isTrue,
+              reason: why,
+            );
+          }
+        });
+        // Proves the heads-up checks ran.
+        expect(headsUps, greaterThan(0));
+      });
+
+      test('36. a move ends at the latest allowed minute; a late reminder '
+          'keeps now exactly', () {
+        forEverySample((f, anchors, t) {
+          final main = scheduled(plan(f.step, anchors)).main;
+          final why = '${f.name} at $t: $main';
+          expect(
+            main.effect,
+            effectOf(f.step.anchor, f.step.timing, anchors)!.at,
+            reason: why,
+          );
+          if (main.moves.isNotEmpty) {
+            final next = main.at.add(const Duration(minutes: 1));
+            expect(
+              main.moves.contains(MoveReason.quietHours)
+                  ? quietAt(next)
+                  : next.isAfter(main.effect),
+              isTrue,
+              reason: why,
+            );
+          }
+          final later = main.at.add(const Duration(minutes: 1, seconds: 7));
+          final again = plan(f.step, anchors, at: later);
+          if (main.effect.isAfter(later)) {
+            expect(
+              again is Scheduled && again.main.at == later,
+              isTrue,
+              reason: '$why; computed at $later: $again',
+            );
+          } else {
+            expect(again, isA<InEffect>(), reason: '$why; computed at $later');
+          }
+        });
+      });
+
+      test('37. publishing would fail only on UW first-day, for discharges '
+          'from 23:00 to 05:00', () {
+        // Changes when the UW first-day entry under "Reminders that may fail
+        // the publish check" in fixtures/open-questions.md is settled.
+        const firstDay = 'cardiac-cath-uw-groin-site/first-day';
+        final moved = <String>{};
+        forEverySample((f, anchors, t) {
+          final main = scheduled(plan(f.step, anchors)).main;
+          if (main.moves.isNotEmpty) moved.add(f.name);
+          if (f.name == firstDay && (t.month, t.day) == (11, 18)) {
+            expect(
+              main.moves.isNotEmpty,
+              quietAt(t),
+              reason: 'discharge $t: $main',
+            );
+          }
+        });
+        expect(moved, {firstDay});
+      });
+    });
+  });
+}
+
+bool inRange(({int hour, int minute}) clock, QuietHours range) {
+  final c = clock.hour * 60 + clock.minute;
+  final from = range.from.hour * 60 + range.from.minute;
+  final to = range.to.hour * 60 + range.to.minute;
+  return from <= to ? from <= c && c < to : c >= from || c < to;
+}
+
+typedef SampledStep = ({
+  String name,
+  TimedStep step,
+  tz.Location zone,
+  QuietHours bookable,
+});
+
+/// Every timed step in fixtures/protocols, each parameter at its lowest and
+/// highest value, with its protocol's zone and bookable hours.
+Iterable<SampledStep> everyFixtureStep() sync* {
+  Map<String, Object?> read(String path) =>
+      jsonDecode(File(path).readAsStringSync()) as Map<String, Object?>;
+  final protocols = Directory('../../fixtures/protocols').listSync();
+  for (final dir in protocols.whereType<Directory>()) {
+    final manifest = read('${dir.path}/protocol.json');
+    final hours = manifest['bookableHours']! as Map<String, Object?>;
+    final zone = tz.getLocation(manifest['timezone']! as String);
+    final bookable = (
+      from: parseClockTime(hours['from']! as String),
+      to: parseClockTime(hours['to']! as String),
+    );
+    for (final file in dir.listSync().whereType<File>()) {
+      if (file.path.endsWith('protocol.json')) continue;
+      final module = read(file.path);
+      final params =
+          (module['parameters'] ?? <String, Object?>{}) as Map<String, Object?>;
+      for (final end in const ['min', 'max']) {
+        final picked = params.map(
+          (name, range) =>
+              MapEntry(name, (range! as Map<String, Object?>)[end]! as int),
+        );
+        int day(Object? d) => resolveDay(d, params, picked);
+        final steps = module['steps']! as List<Object?>;
+        for (final s in steps.cast<Map<String, Object?>>()) {
+          if (s['timing'] case final Map<String, Object?> timing) {
+            yield (
+              name: '${module['moduleId']}/${s['id']}',
+              step: (
+                anchor: Anchor.values.byName(s['anchor']! as String),
+                timing: parseTiming(timing, day),
+                remind: parseRemind(s['remind']! as Map<String, Object?>, day),
+                allowNight: s['allowNight']! as bool,
+              ),
+              zone: zone,
+              bookable: bookable,
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
+/// The publish check's samples (docs/spec.md, Conflict check at publish):
+/// every 15 minutes inside bookable hours, with arrival at the appointment,
+/// or across the whole day for discharge; on an ordinary date and on each
+/// 2026-2027 clock-change date of the fixtures' US zones.
+void forEverySample(
+  void Function(SampledStep f, Anchors anchors, tz.TZDateTime sample) check,
+) {
+  const dates = [
+    (2026, 11, 18),
+    (2026, 3, 8),
+    (2026, 11, 1),
+    (2027, 3, 14),
+    (2027, 11, 7),
+  ];
+  for (final f in everyFixtureStep()) {
+    for (final (y, m, d) in dates) {
+      for (var minute = 0; minute < 24 * 60; minute += 15) {
+        final clock = (hour: minute ~/ 60, minute: minute % 60);
+        final discharge = f.step.anchor == Anchor.discharge;
+        if (!discharge && !inRange(clock, f.bookable)) continue;
+        final t = localTime(f.zone, y, m, d, clock.hour, clock.minute);
+        final Anchors anchors = switch (f.step.anchor) {
+          Anchor.appointment => (
+            appointment: t,
+            arrival: null,
+            discharge: null,
+          ),
+          Anchor.arrival => (appointment: t, arrival: t, discharge: null),
+          Anchor.discharge => (
+            appointment: localTime(f.zone, y, m, d, 0, 0),
+            arrival: null,
+            discharge: t,
+          ),
+        };
+        check(f, anchors, t);
+      }
+    }
+  }
 }

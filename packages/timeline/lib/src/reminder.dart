@@ -66,17 +66,73 @@ Remind parseRemind(
   _ => throw FormatException('Not a remind', json),
 };
 
-/// A step's reminder, or null while its anchor isn't known yet. The stored
-/// remind is rounded down to the whole minute, then moved to before the
-/// effect if needed, then moved out of quiet hours if needed.
-///
-/// [now] is for the lateness rules, which are not built yet.
-Reminder? reminderOf(
+/// What the phone does about [step] when computed at [now]. The stored remind
+/// is rounded down to the whole minute, then moved to before the effect if
+/// needed, then moved out of quiet hours if needed; a reminder whose time has
+/// passed fires at [now], to the second, even in quiet hours. A heads-up is
+/// given only while the main reminder is still ahead of [now].
+StepReminders remindersOf(
   TimedStep step,
   Anchors anchors, {
   required QuietHours quiet,
+  required ({int hour, int minute}) evening,
   required tz.TZDateTime now,
 }) {
+  final placed = _placed(step, anchors, quiet);
+  if (placed == null) return const Pending();
+  // "Ahead" is strict: a step taking effect right now is already past due.
+  if (!placed.effect.isAfter(now)) return const InEffect();
+  final warn = step.allowNight && placed.at.isAfter(now);
+  final quietStart = warn ? _quietStart(placed.at, quiet) : null;
+  final headsUp = quietStart == null
+      ? null
+      : _notBefore(now, _eveningBefore(quietStart, evening));
+  return Scheduled((
+    at: _notBefore(now, placed.at),
+    effect: placed.effect,
+    moves: placed.moves,
+  ), headsUp);
+}
+
+/// When to ask for the arrival time: while arrival-anchored [steps] wait for
+/// it and the appointment is still ahead, at the evening reminder time the
+/// day before the appointment, or at [now] if that has passed.
+tz.TZDateTime? arrivalPrompt(
+  Iterable<TimedStep> steps,
+  Anchors anchors, {
+  required ({int hour, int minute}) evening,
+  required tz.TZDateTime now,
+}) {
+  final appointment = anchors.appointment;
+  if (anchors.arrival != null ||
+      !steps.any((s) => s.anchor == Anchor.arrival) ||
+      !appointment.isAfter(now)) {
+    return null;
+  }
+  return _notBefore(
+    now,
+    dayAtTime(appointment, -1, evening.hour, evening.minute),
+  );
+}
+
+/// The latest evening reminder time before [quietStart].
+tz.TZDateTime _eveningBefore(
+  tz.TZDateTime quietStart,
+  ({int hour, int minute}) evening,
+) {
+  final sameDate = dayAtTime(quietStart, 0, evening.hour, evening.minute);
+  return sameDate.isBefore(quietStart)
+      ? sameDate
+      : dayAtTime(quietStart, -1, evening.hour, evening.minute);
+}
+
+/// [time], or [now] if [time] has already passed: late reminders fire at
+/// once and keep now exactly.
+tz.TZDateTime _notBefore(tz.TZDateTime now, tz.TZDateTime time) =>
+    time.isBefore(now) ? tz.TZDateTime.from(now, time.location) : time;
+
+/// The stored remind, rounded down and moved, before any lateness.
+Reminder? _placed(TimedStep step, Anchors anchors, QuietHours quiet) {
   final from = anchorTime(step.anchor, anchors);
   if (from == null) return null;
   final effect = effectOf(step.anchor, step.timing, anchors)!.at;
@@ -114,6 +170,28 @@ Reminder? reminderOf(
     }
   }
   return (at: at, effect: effect, moves: moves);
+}
+
+/// What the phone does about one step.
+sealed class StepReminders {
+  const StepReminders();
+}
+
+/// The step's anchor isn't known yet.
+final class Pending extends StepReminders {
+  const Pending();
+}
+
+/// The step has already taken effect, so no reminder. Whether it was missed
+/// (past due) depends on the QR creation instant and is decided in 4c.
+final class InEffect extends StepReminders {
+  const InEffect();
+}
+
+final class Scheduled extends StepReminders {
+  const Scheduled(this.main, this.headsUp);
+  final Reminder main;
+  final tz.TZDateTime? headsUp;
 }
 
 tz.TZDateTime _wholeMinute(tz.TZDateTime time) {
