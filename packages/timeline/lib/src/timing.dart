@@ -130,20 +130,26 @@ Effect _untilAnchor(tz.TZDateTime start, tz.TZDateTime anchor) {
   return (at: start, until: anchor);
 }
 
-/// When a step takes effect, counted from its [anchor], or null while that
-/// anchor isn't known yet and the step shows as pending.
-Effect? effectOf(Anchor anchor, Timing timing, Anchors anchors) {
-  final from = switch (anchor) {
+/// The instant [anchor] stands for, or null while it isn't known yet.
+tz.TZDateTime? anchorTime(Anchor anchor, Anchors anchors) {
+  final time = switch (anchor) {
     Anchor.appointment => anchors.appointment,
     Anchor.arrival => anchors.arrival,
     Anchor.discharge => anchors.discharge,
   };
-  if (from == null) return null;
   // Calendar days are counted in the anchor's own zone. By name, because the
   // same zone can be loaded more than once.
-  if (from.location.name != anchors.appointment.location.name) {
+  if (time != null && time.location.name != anchors.appointment.location.name) {
     throw ArgumentError("Every anchor must be in the protocol's time zone.");
   }
+  return time;
+}
+
+/// When a step takes effect, counted from its [anchor], or null while that
+/// anchor isn't known yet and the step shows as pending.
+Effect? effectOf(Anchor anchor, Timing timing, Anchors anchors) {
+  final from = anchorTime(anchor, anchors);
+  if (from == null) return null;
   return switch (timing) {
     OffsetTiming(:final offset) || DeadlineTiming(by: final offset) => (
       at: stepTime(from, offset),
