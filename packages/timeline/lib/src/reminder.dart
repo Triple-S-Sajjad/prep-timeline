@@ -80,7 +80,7 @@ StepReminders remindersOf(
 }) {
   final placed = _placed(step, anchors, quiet);
   if (placed == null) return const Pending();
-  // "Ahead" is strict: a step taking effect right now is already past due.
+  // "Ahead" is strict: a step taking effect right now is already in effect.
   if (!placed.effect.isAfter(now)) return const InEffect();
   final warn = step.allowNight && placed.at.isAfter(now);
   final quietStart = warn ? _quietStart(placed.at, quiet) : null;

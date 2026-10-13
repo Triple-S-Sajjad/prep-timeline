@@ -23,7 +23,8 @@ void main() {
       'PT2S', 'PT1.5H', // seconds and fractions
       'pt2h', ' PT2H', 'PT2H ', 'PT2H\n', // case and whitespace
       'PT-2H', '+PT2H', 'PT30M2H', // sign or order in the wrong place
-      'PT99999H', // more than 4 digits
+      'PT99999H', 'PT99999M', // more than 4 digits
+      'P2H', // no T
     ];
     for (final text in bad) {
       test('"$text"', () {

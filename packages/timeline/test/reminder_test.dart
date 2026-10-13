@@ -529,12 +529,13 @@ void main() {
       TimedStep step,
       Anchors anchors, {
       QuietHours hours = quiet,
+      ({int hour, int minute}) eveningAt = evening,
       tz.TZDateTime? at,
     }) => remindersOf(
       step,
       anchors,
       quiet: hours,
-      evening: evening,
+      evening: eveningAt,
       now: at ?? now,
     );
     Scheduled scheduled(StepReminders r) {
@@ -669,6 +670,22 @@ void main() {
         expect(onTime.headsUp, isNull);
       },
     );
+
+    test('41. a heads-up comes strictly before the quiet start, even where a '
+        'skipped midnight resolves it to the evening time', () {
+      // 00:30 doesn't exist on 2026-09-06 in Santiago, so the quiet period
+      // starts at 23:30 -04 on 09-05, the evening reminder time itself.
+      final s = scheduled(
+        plan(
+          nightStep,
+          appointment(local('America/Santiago', 2026, 9, 6, 3)),
+          hours: (from: (hour: 0, minute: 30), to: (hour: 6, minute: 0)),
+          eveningAt: (hour: 23, minute: 30),
+        ),
+      );
+      expect(s.main.at.millisecondsSinceEpoch, utc(2026, 9, 6, 6));
+      expect(s.headsUp?.millisecondsSinceEpoch, utc(2026, 9, 5, 3, 30));
+    });
 
     group('arrivalPrompt', () {
       List<TimedStep> steps(String path, List<String> ids) => [
