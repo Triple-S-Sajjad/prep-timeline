@@ -37,6 +37,13 @@ These come from the app's design, not a source sheet, and apply to every protoco
 - The app never uses the appointment time in place of an arrival time the patient hasn't entered. If a step that counts from arrival is still waiting at the evening reminder time the day before the appointment, the patient gets "Enter your arrival time or call us" instead.
 - A restriction that lasts a set time, like "no driving for 24 hours", is reminded when it starts. No reminder comes when it ends; the app shows the end time.
 
+## Reminders that may fail the publish check
+
+Publishing fails if any reminder would need moving out of quiet hours or to before its step takes effect (the move on the phone is only a safety net).
+
+- UMMC arrival: the reminder comes 1 hour before the appointment, and the step isn't allowed at night. With the placeholder bookable hours (from 7 AM) the earliest reminder is 6 AM, which passes. If the department books appointments before 6 AM, this step needs `allowNight` or a different reminder before the publish check lands. [UMMC](https://www.umms.org/ummc/-/media/files/ummc/health-services/digestive-health/colonos-prep-instr-golytely-split-dose.pdf)
+- UW first day after a groin catheterization: the reminder comes 24 hours after discharge, and the step isn't allowed at night. The publish check samples discharge across the whole day, so a discharge between 11 PM and 5 AM puts the reminder in quiet hours. Options: `allowNight` or a different reminder on this step, or protocols declare discharge hours the way they declare bookable hours. Undecided. [UW](https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf)
+
 ## Placeholder hours to replace
 
 No source sheet gives these, so every fixture manifest uses a placeholder. The department needs to supply its real values.

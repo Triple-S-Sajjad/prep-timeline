@@ -150,8 +150,18 @@ def module_problems(module: dict[str, Any], file: Path) -> Iterator[Problem]:
         if step["id"] in seen:
             yield Problem(file, "duplicateStepId", f"{step['id']!r} is used twice")
         seen.add(step["id"])
-        if step.get("timing", {}).get("kind") == "day":
+        timing = step.get("timing", {})
+        if timing.get("kind") == "day":
             yield from day_step_problems(step, file)
+        # A window is reminded when it starts; the calculator reads only the
+        # stored remind, so the two must agree.
+        if timing.get("kind") == "window":
+            remind = step["remind"]
+            if remind["kind"] != "offset" or minutes(remind["offset"]) != minutes(
+                timing["start"]
+            ):
+                msg = f"{step['id']} must be reminded at its start"
+                yield Problem(file, "windowRemindNotStart", msg)
     declared = module.get("parameters", {})
     for name in param_refs(module["steps"]):
         if name not in declared:
@@ -270,6 +280,11 @@ def manifest_problems(
     if in_clock_range(defaults["eveningReminder"], quiet):
         msg = f"eveningReminder {defaults['eveningReminder']} is in quiet hours"
         yield Problem(file, "eveningInQuietHours", msg)
+    # Day steps are reminded at the morning reminder time on their own day; in
+    # quiet hours that reminder would move to the evening before.
+    if in_clock_range(defaults["morningReminder"], quiet):
+        msg = f"morningReminder {defaults['morningReminder']} is in quiet hours"
+        yield Problem(file, "morningInQuietHours", msg)
     for loaded in modules.values():
         if loaded.valid:
             yield from defaulted_problems(loaded.data, defaults, loaded.file)

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "window-remind-not-start-uw",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "timezone": "America/Los_Angeles",
+  "departmentDefaults": {
+    "morningReminder": "07:00",
+    "eveningReminder": "20:00",
+    "reminderLead": "PT2H",
+    "quietHours": {
+      "from": "23:00",
+      "to": "05:00"
+    }
+  },
+  "bookableHours": {
+    "from": "07:00",
+    "to": "17:00"
+  },
+  "baseModule": {
+    "moduleId": "window-remind-not-start-uw-base",
+    "version": 1,
+    "sha256": "1b60e5df027c0fd3302e77d06600a7d2d47b12aebec2f245d338b2e6e2e97c4a"
+  },
+  "optionalModules": [],
+  "allowedCombinations": {
+    "rule": "anySubset",
+    "exactlyOneOf": []
+  },
+  "expectedFailure": "windowRemindNotStart",
+  "source": [
+    "https://healthonline.washington.edu/sites/default/files/record_pdfs/How-to-Prepare-for-Your-Heart-Catheterization_a11y.pdf"
+  ],
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance.",
+  "signature": ""
+}
