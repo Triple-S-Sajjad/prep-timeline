@@ -6,6 +6,8 @@ import 'package:timeline/timeline.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'support.dart';
+
 const fixtures = '../../fixtures/protocols';
 
 Map<String, Object?> load(String path) =>
@@ -47,12 +49,6 @@ int? ms(tz.TZDateTime? t) => t?.millisecondsSinceEpoch;
 
 void main() {
   setUpAll(tzdata.initializeTimeZones);
-
-  tz.TZDateTime local(String zone, int y, int mo, int d, int h, [int mi = 0]) =>
-      tz.TZDateTime(tz.getLocation(zone), y, mo, d, h, mi);
-
-  Anchors appointment(tz.TZDateTime a) =>
-      (appointment: a, arrival: null, discharge: null);
 
   const ny = 'America/New_York';
   const la = 'America/Los_Angeles';
