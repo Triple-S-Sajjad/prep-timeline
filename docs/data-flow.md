@@ -1,0 +1,53 @@
+# Data flow: server to phone
+
+Clinical content flows one way, from server to phone. The appointment date and reminders exist only on the patient's device. Source: [the spec](spec.md). Anything undecided is marked OPEN.
+
+```mermaid
+flowchart LR
+  subgraph Hospital["Hospital"]
+    IdP["Identity provider<br/>SAML/OIDC + MFA"]
+    Scheduler["Scheduler or discharge nurse"]
+  end
+
+  subgraph AWS["Server: protocol content only, no PHI"]
+    Portal["Staff portal<br/>author, approver, admin"]
+    API["API<br/>FastAPI"]
+    DB[("PostgreSQL<br/>protocols, versions,<br/>approvals, audit log")]
+    KMS["KMS<br/>signing key, never exported"]
+    S3[("S3<br/>signed bundles")]
+    CDN["CloudFront<br/>hospital domain"]
+  end
+
+  subgraph Device["Patient's device: the only place dates live"]
+    App["Patient app or web page"]
+    Calc["Timeline calculator"]
+    Notify["On-device notifications<br/>or .ics calendar"]
+  end
+
+  IdP -- "sign-in" --> Portal
+  Portal -- "drafts, approvals" --> API
+  API --> DB
+  API -- "approved version:<br/>sign module hashes" --> KMS
+  KMS -- "signature" --> API
+  API -- "publish signed bundle" --> S3
+  S3 --> CDN
+  Scheduler -- "QR code: protocol, modules,<br/>parameters, creation instant" --> App
+  CDN -- "signed bundle (read-only)" --> App
+  App -- "verify signature,<br/>then date and time<br/>entered by the patient" --> Calc
+  Calc --> Notify
+```
+
+## Steps
+
+1. Staff sign in through the hospital's identity provider. An author drafts a protocol in the portal; a different clinician approves it.
+2. The API asks KMS to sign the approved version. The signature covers the SHA-256 of every module listed in the manifest.
+3. The signed bundle is published to S3 and served by CloudFront under the hospital's domain. Every publish alerts the clinical owner.
+4. At scheduling, the clinician ticks the optional modules and fills any parameters, and the patient gets a QR code. At discharge, a second code carries the after-procedure modules. OPEN: where the code is generated, and whether its contents pass through the server.
+5. The app scans the code, downloads the bundle from the hospital's domain, and refuses it if the signature is missing or wrong. It caches the bundle offline.
+6. The patient enters the procedure date and time on the device. The calculator computes the timeline and reminders, which are scheduled on the device. The web fallback offers a calendar download instead.
+
+## Trust boundaries
+
+- Hospital identity provider to portal: staff identity only.
+- Server to device: one way. Nothing about the patient goes back. OPEN: whether the check for a newer safety-relevant version on app open sends anything beyond the protocol ID and version.
+- KMS: only the approval service may request a signature.

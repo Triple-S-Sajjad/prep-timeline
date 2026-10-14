@@ -1,0 +1,19 @@
+# Mutants of lib/src/step.dart (parseRemind moved here from reminder.dart,
+# slice 4b).
+tests: test/offset_test.dart test/past_due_test.dart test/protocol_test.dart test/reminder_test.dart test/timing_test.dart
+
+find: 'offset': final String offset, 'defaulted': bool()}
+replace: 'offset': final String offset}
+name: offset remind without defaulted accepted
+
+find: 'defaulted': bool(),
+replace:
+name: dayAt remind without defaulted accepted
+
+find: DayAtRemind(day(d), parseClockTime(time)),
+replace: DayAtRemind(0, parseClockTime(time)),
+name: dayAt remind day ignored
+
+find: OffsetRemind(parseElapsed(offset)),
+replace: OffsetRemind(-parseElapsed(offset)),
+name: offset remind sign flipped

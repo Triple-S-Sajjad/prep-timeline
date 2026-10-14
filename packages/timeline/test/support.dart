@@ -40,6 +40,29 @@ Anchors appointment(tz.TZDateTime a) =>
   return (module: module, step: step);
 }
 
+/// One step's JSON as a timed step; [day] turns a day number into days.
+TimedStep stepFrom(Map<String, Object?> s, int Function(Object? d) day) => (
+  id: s['id']! as String,
+  anchor: Anchor.values.byName(s['anchor']! as String),
+  timing: parseTiming(s['timing']! as Map<String, Object?>, day),
+  remind: parseRemind(s['remind']! as Map<String, Object?>, day),
+  allowNight: s['allowNight']! as bool,
+  pastDue: PastDue.values.byName(s['pastDue']! as String),
+);
+
+/// A timed step from a fixture module, parsed the way the app will parse it,
+/// with [chosen] parameter values.
+TimedStep fixtureStep(
+  String path,
+  String id, [
+  Map<String, int> chosen = const {},
+]) {
+  final (:module, :step) = fixtureJson(path, id);
+  final params =
+      (module['parameters'] ?? <String, Object?>{}) as Map<String, Object?>;
+  return stepFrom(step, (d) => resolveDay(d, params, chosen));
+}
+
 bool inRange(({int hour, int minute}) clock, QuietHours range) {
   final c = clock.hour * 60 + clock.minute;
   final from = range.from.hour * 60 + range.from.minute;
@@ -50,8 +73,6 @@ bool inRange(({int hour, int minute}) clock, QuietHours range) {
 typedef SampledStep = ({
   String name,
   TimedStep step,
-  // Raw, so these samples don't depend on parsing it.
-  String pastDue,
   tz.Location zone,
   QuietHours bookable,
 });
@@ -83,16 +104,10 @@ Iterable<SampledStep> everyFixtureStep() sync* {
         int day(Object? d) => resolveDay(d, params, picked);
         final steps = module['steps']! as List<Object?>;
         for (final s in steps.cast<Map<String, Object?>>()) {
-          if (s['timing'] case final Map<String, Object?> timing) {
+          if (s.containsKey('timing')) {
             yield (
               name: '${module['moduleId']}/${s['id']}',
-              step: (
-                anchor: Anchor.values.byName(s['anchor']! as String),
-                timing: parseTiming(timing, day),
-                remind: parseRemind(s['remind']! as Map<String, Object?>, day),
-                allowNight: s['allowNight']! as bool,
-              ),
-              pastDue: s['pastDue']! as String,
+              step: stepFrom(s, day),
               zone: zone,
               bookable: bookable,
             );

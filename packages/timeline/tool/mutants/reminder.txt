@@ -1,0 +1,160 @@
+# Mutants of lib/src/reminder.dart (slice 4b). "Heads-up allowed at the
+# quiet start itself" was killed by test 41; "empty quiet hours wrap
+# midnight" survives, see MUTATION.md.
+tests: test/reminder_test.dart
+
+find: return sameDate.isBefore(quietStart)
+replace: return !sameDate.isAfter(quietStart)
+name: Heads-up allowed at the quiet start itself
+
+find: final wraps = to < from;
+replace: final wraps = to <= from;
+name: empty quiet hours wrap midnight
+
+find: if (!placed.effect.isAfter(now)) return const InEffect();
+replace: if (placed.effect.isBefore(now)) return const InEffect();
+name: step taking effect right now still reminded
+
+find: final warn = step.allowNight && placed.at.isAfter(now);
+replace: final warn = placed.at.isAfter(now);
+name: heads-up without allowNight
+
+find: final warn = step.allowNight && placed.at.isAfter(now);
+replace: final warn = step.allowNight;
+name: heads-up while the main reminder is late
+
+find: : _notBefore(now, _eveningBefore(quietStart, evening));
+replace: : _eveningBefore(quietStart, evening);
+name: late heads-up not moved to now
+
+find: at: _notBefore(now, placed.at),
+replace: at: placed.at,
+name: late main reminder not moved to now
+
+find: moves: placed.moves,
+replace: moves: <MoveReason>{},
+name: moves not reported
+
+find: if (anchors.arrival != null ||
+replace: if (false ||
+name: arrival prompt after arrival entered
+
+find: !steps.any((s) => s.anchor == Anchor.arrival) ||
+replace: false ||
+name: arrival prompt without arrival steps
+
+find: !appointment.isAfter(now)) {
+replace: false) {
+name: arrival prompt after the appointment
+
+find: dayAtTime(appointment, -1, evening.hour, evening.minute),
+replace: dayAtTime(appointment, 0, evening.hour, evening.minute),
+name: arrival prompt on the appointment day
+
+find: return sameDate.isBefore(quietStart)
+replace: return false
+name: heads-up always the evening before the quiet date
+
+find: : dayAtTime(quietStart, -1, evening.hour, evening.minute);
+replace: : sameDate;
+name: heads-up never the evening before
+
+find: time.isBefore(now) ? tz.TZDateTime.from(now, time.location) : time
+replace: time
+name: late times kept
+
+find: tz.TZDateTime.from(now, time.location)
+replace: now
+name: late time in the zone of now
+
+find: tz.TZDateTime.from(now, time.location)
+replace: _wholeMinute(tz.TZDateTime.from(now, time.location))
+name: late time rounded down
+
+find: var at = _wholeMinute(switch (step.remind) {
+replace: var at = (switch (step.remind) {
+name: remind not rounded down
+
+find: final from = anchorTime(step.anchor, anchors);
+replace: final from = anchors.appointment;
+name: remind counted from the appointment
+
+find: final effect = effectOf(step.anchor, step.timing, anchors)!.at;
+replace: final effect = effectOf(Anchor.appointment, step.timing, anchors)!.at;
+name: effect counted from the appointment
+
+find: DayTiming(:final day) => day != 0,
+replace: DayTiming() => true,
+name: day 0 step exempt from the after-effect move
+
+find: DayTiming(:final day) => day != 0,
+replace: DayTiming() => false,
+name: morning reminder of a day step moved
+
+find: if (!morningOfItsDay && at.isAfter(effect)) {
+replace: if (!morningOfItsDay && !at.isBefore(effect)) {
+name: reminder exactly at its effect moved
+
+find: at = _wholeMinute(effect);
+replace: at = effect;
+name: after-effect move not rounded down
+
+find: moves.add(MoveReason.afterEffect);
+replace:
+name: after-effect move not reported
+
+find: moves.add(MoveReason.quietHours);
+replace:
+name: quiet-hours move not reported
+
+find: at = start.subtract(const Duration(minutes: 1));
+replace: at = start;
+name: quiet-hours move to the quiet start
+
+find: step.anchor == Anchor.discharge &&
+replace: true &&
+name: zero-offset exemption for every anchor
+
+find: OffsetRemind(offset: Duration.zero) => true,
+replace: OffsetRemind(offset: Duration.zero) => false,
+name: discharge exemption dropped
+
+find: OffsetRemind(offset: Duration.zero) => true,
+replace: OffsetRemind() => true,
+name: discharge exemption for any offset
+
+find: if (!step.allowNight && !atDischarge) {
+replace: if (!atDischarge) {
+name: allowNight reminder moved out of quiet hours
+
+find: ms - ms % Duration.millisecondsPerMinute,
+replace: ms - ms % Duration.millisecondsPerSecond,
+name: rounded to the second
+
+find: ? clock >= from || clock < to
+replace: ? clock > from || clock < to
+name: wrapping quiet start not quiet
+
+find: ? clock >= from || clock < to
+replace: ? clock >= from || clock <= to
+name: wrapping quiet end quiet
+
+find: : clock >= from && clock < to;
+replace: : clock > from && clock < to;
+name: quiet start not quiet
+
+find: : clock >= from && clock < to;
+replace: : clock >= from && clock <= to;
+name: quiet end quiet
+
+find: final day = wraps && clock < to ? -1 : 0;
+replace: final day = 0;
+name: after-midnight quiet period starts the same evening
+
+find: final day = wraps && clock < to ? -1 : 0;
+replace: final day = clock < to ? -1 : 0;
+name: non-wrapping quiet period starts the day before
+
+find: return dayAtTime(time, day, quiet.from.hour, quiet.from.minute);
+replace: return dayAtTime(time, day, quiet.to.hour, quiet.to.minute);
+name: quiet start read from its end

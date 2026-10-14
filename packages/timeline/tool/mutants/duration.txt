@@ -1,0 +1,47 @@
+# Mutants of lib/src/duration.dart (slices 1-3). The first two are the
+# survivors of the first run recorded in MUTATION.md.
+tests: test/duration_test.dart test/offset_test.dart test/past_due_test.dart test/properties_test.dart test/protocol_test.dart test/reminder_test.dart test/timing_test.dart
+
+find: (\d{1,4})M
+replace: (\d{1,5})M
+name: 5-digit minutes accepted
+
+find: )?PT(?:
+replace: )?PT?(?:
+name: 'P2H' (no T) accepted
+
+find: (\d{1,4})H
+replace: (\d{1,5})H
+name: 5-digit hours accepted
+
+find: r'^(-)?PT
+replace: r'(-)?PT
+name: start anchor dropped
+
+find: M)?$');
+replace: M)?');
+name: end anchor dropped
+
+find: match == null || (hours == null && minutes == null)
+replace: match == null
+name: 'PT' with no parts accepted
+
+find: (hours == null && minutes == null)
+replace: (hours == null || minutes == null)
+name: hours-only or minutes-only rejected
+
+find: hours: hours == null ? 0 : int.parse(hours),
+replace: hours: 0,
+name: hours ignored
+
+find: minutes: minutes == null ? 0 : int.parse(minutes),
+replace: minutes: 0,
+name: minutes ignored
+
+find: return match.group(1) == null ? duration : -duration;
+replace: return duration;
+name: minus sign ignored
+
+find: match.group(1) == null ? duration
+replace: match.group(1) != null ? duration
+name: sign inverted

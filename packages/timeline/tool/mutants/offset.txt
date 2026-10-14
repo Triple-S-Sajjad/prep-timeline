@@ -1,0 +1,14 @@
+# Mutants of lib/src/offset.dart (slices 1-3).
+tests: test/offset_test.dart test/past_due_test.dart test/properties_test.dart test/protocol_test.dart test/reminder_test.dart test/timing_test.dart
+
+find: checkSupported(appointment);
+replace:
+name: appointment limit check dropped
+
+find: return checkSupported(appointment.add(offset));
+replace: return appointment.add(offset);
+name: result limit check dropped
+
+find: appointment.add(offset)
+replace: appointment.subtract(offset)
+name: offset subtracted

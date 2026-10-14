@@ -1,0 +1,58 @@
+# Mutants of lib/src/calendar.dart (slice 4a).
+tests: test/calendar_test.dart test/offset_test.dart test/past_due_test.dart test/properties_test.dart test/protocol_test.dart test/reminder_test.dart test/timing_test.dart
+
+find: tz.TZDateTime dayAtTime(tz.TZDateTime anchor, int day, int hour, int minute) {
+replace: tz.TZDateTime dayAtTime(tz.TZDateTime anchor, int day, int hour, int minute) { return _resolve(anchor.location, _wall(anchor, day, hour, minute));
+name: dayAtTime checks dropped
+
+find: if ((date.year, date.month, date.day) != (year, month, day)) {
+replace: if (false) {
+name: rolled-over date accepted
+
+find: if (arrival.isAfter(appointment)) {
+replace: if (false) {
+name: arrival after the appointment accepted
+
+find: if (arrival.isAfter(appointment)) {
+replace: if (!arrival.isBefore(appointment)) {
+name: arrival at the appointment rejected
+
+find: max(midnight - offset, period.start)
+replace: midnight - offset
+name: skipped midnight starts the evening before
+
+find: max(midnight - offset, period.start)
+replace: min(midnight - offset, period.start)
+name: day start takes the earlier instant
+
+find: hour > 23
+replace: hour > 24
+name: hour 24 accepted
+
+find: minute > 59
+replace: minute > 60
+name: minute 60 accepted
+
+find: hour < 0 ||
+replace: hour < -1 ||
+name: hour -1 accepted
+
+find: return _at(location, wall - offset);
+replace: return _at(location, wall + offset);
+name: offset applied with the wrong sign
+
+find: anchor.day + day,
+replace: anchor.day,
+name: day number ignored
+
+find: >= period.end) {
+replace: > period.end) {
+name: period end treated as inside the period
+
+find: location.lookupTimeZone(wall - Duration.millisecondsPerDay)
+replace: location.lookupTimeZone(wall)
+name: period search starts at the wall time
+
+find: checkSupported(tz.TZDateTime.fromMillisecondsSinceEpoch(location, utc))
+replace: tz.TZDateTime.fromMillisecondsSinceEpoch(location, utc)
+name: result limit check dropped

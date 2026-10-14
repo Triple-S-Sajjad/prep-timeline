@@ -1,0 +1,70 @@
+# Mutants of lib/src/timing.dart (slice 4a).
+tests: test/offset_test.dart test/past_due_test.dart test/properties_test.dart test/protocol_test.dart test/reminder_test.dart test/timing_test.dart
+
+find: value < min ||
+replace: false ||
+name: chosen value below min accepted
+
+find: || value > max)
+replace: || false)
+name: chosen value above max accepted
+
+find: value < min ||
+replace: value <= min ||
+name: chosen value at min rejected
+
+find: || value > max)
+replace: || value >= max)
+name: chosen value at max rejected
+
+find: 'weeks' => value * 7,
+replace: 'weeks' => value,
+name: weeks read as days
+
+find: return before ? -days : days;
+replace: return days;
+name: before ignored
+
+find: duration <= Duration.zero
+replace: duration < Duration.zero
+name: zero-length window accepted
+
+find: if (start.isAfter(anchor)) {
+replace: if (false) {
+name: untilAnchor after its anchor accepted
+
+find: if (start.isAfter(anchor)) {
+replace: if (!start.isBefore(anchor)) {
+name: untilAnchor starting at its anchor rejected
+
+find: return (at: start, until: anchor);
+replace: return (at: start, until: start);
+name: untilAnchor ends at its start
+
+find: if (time != null && time.location.name != anchors.appointment.location.name) {
+replace: if (false) {
+name: zone check dropped
+
+find: Anchor.arrival => anchors.arrival,
+replace: Anchor.arrival => anchors.appointment,
+name: arrival read as the appointment
+
+find: Anchor.discharge => anchors.discharge,
+replace: Anchor.discharge => anchors.arrival,
+name: discharge read as arrival
+
+find: until: dayStart(from, day + 1),
+replace: until: dayStart(from, day),
+name: oneDay ends when it starts
+
+find: at: dayAtTime(from, day, time.hour, time.minute),
+replace: at: dayAtTime(from, 0, time.hour, time.minute),
+name: dayAt day ignored
+
+find: at: stepTime(from, start),
+replace: at: from,
+name: window starts at its anchor
+
+find: until: stepTime(from, start + duration),
+replace: until: stepTime(from, duration),
+name: window end ignores its start

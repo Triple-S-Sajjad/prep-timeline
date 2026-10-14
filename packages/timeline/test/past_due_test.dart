@@ -5,28 +5,6 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'support.dart';
 
-typedef LeveledStep = ({Anchor anchor, Timing timing, PastDue level});
-
-/// A fixture step with its pastDue level read by name, so these tests don't
-/// depend on parsePastDue.
-LeveledStep fixtureStep(
-  String path,
-  String id, [
-  Map<String, int> chosen = const {},
-]) {
-  final (:module, :step) = fixtureJson(path, id);
-  final params =
-      (module['parameters'] ?? <String, Object?>{}) as Map<String, Object?>;
-  return (
-    anchor: Anchor.values.byName(step['anchor']! as String),
-    timing: parseTiming(
-      step['timing']! as Map<String, Object?>,
-      (d) => resolveDay(d, params, chosen),
-    ),
-    level: PastDue.values.byName(step['pastDue']! as String),
-  );
-}
-
 // Expected instants written in UTC, so they can't come from the code under
 // test.
 tz.TZDateTime utc(int y, int mo, int d, int h, [int mi = 0]) =>
@@ -38,16 +16,10 @@ void main() {
   const ny = 'America/New_York';
   const la = 'America/Los_Angeles';
   PastDue? pastDue(
-    LeveledStep step,
+    TimedStep step,
     tz.TZDateTime appointment,
     tz.TZDateTime createdAt,
-  ) => pastDueOf(
-    step.anchor,
-    step.timing,
-    step.level,
-    appointment,
-    createdAt: createdAt,
-  );
+  ) => pastDueOf(step, appointment, createdAt: createdAt);
 
   group('parsePastDue', () {
     test('1. reads every level', () {
@@ -64,7 +36,7 @@ void main() {
 
   group('pastDueOf', () {
     // Day -5 until the appointment: takes effect 2026-11-13 00:00 EST.
-    LeveledStep warfarin() =>
+    TimedStep warfarin() =>
         fixtureStep('colo-golytely-split-bmc/warfarin-hold.json', 'warfarin');
     tz.TZDateTime bmc() => local(ny, 2026, 11, 18, 9);
 
@@ -96,16 +68,19 @@ void main() {
 
     test('7. an ignore step past due returns ignore, not null', () {
       const step = (
+        id: 'step',
         anchor: Anchor.appointment,
         timing: OffsetTiming(Duration(hours: -2)),
-        level: PastDue.ignore,
+        remind: OffsetRemind(Duration(hours: -2)),
+        allowNight: false,
+        pastDue: PastDue.ignore,
       );
       expect(pastDue(step, bmc(), utc(2026, 11, 18, 13)), PastDue.ignore);
     });
 
     test('8. BMC P2Y12 hold, created on day -6: past due with 7 hold days, '
         'not with 5', () {
-      LeveledStep p2y12(int days) => fixtureStep(
+      TimedStep p2y12(int days) => fixtureStep(
         'colo-golytely-split-bmc/p2y12-hold.json',
         'p2y12',
         {'holdDays': days},
@@ -149,8 +124,7 @@ void main() {
 
     group('12. only the appointment is known at QR creation', () {
       // 2 hours before arrival; with arrival at the 07:30 appointment, 05:30.
-      LeveledStep npo() =>
-          fixtureStep('surgery-anesthesia-msk/base.json', 'npo');
+      TimedStep npo() => fixtureStep('surgery-anesthesia-msk/base.json', 'npo');
       tz.TZDateTime msk() => local(ny, 2026, 11, 18, 7, 30);
       test('(a) MSK npo, created 06:00 the same day, arrival unknown: '
           'critical', () {
@@ -178,9 +152,12 @@ void main() {
     test('13. a day step on a date whose midnight is skipped starts at the '
         'clock change (01:00 in Santiago), not the evening before', () {
       const day0 = (
+        id: 'day0',
         anchor: Anchor.appointment,
         timing: DayTiming(0, Lasts.oneDay),
-        level: PastDue.doNow,
+        remind: DayAtRemind(-1, (hour: 20, minute: 0)),
+        allowNight: false,
+        pastDue: PastDue.doNow,
       );
       final appointment = local('America/Santiago', 2026, 9, 6, 9);
       // 23:30 -04 on 09-05: after midnight read at -03 (23:00 -04), the
@@ -195,18 +172,14 @@ void main() {
           'with arrival unknown; discharge steps never', () {
         const ms = Duration(milliseconds: 1);
         forEverySample((f, anchors, t) {
-          final level = PastDue.values.byName(f.pastDue);
           // Arrival samples put arrival at the appointment, the latest it
           // can be, so this effect is the bound the spec uses.
           final effect = effectOf(f.step.anchor, f.step.timing, anchors)!.at;
-          PastDue? created(Duration d) => pastDueOf(
-            f.step.anchor,
-            f.step.timing,
-            level,
-            anchors.appointment,
-            createdAt: effect.add(d),
-          );
-          final expected = f.step.anchor == Anchor.discharge ? null : level;
+          PastDue? created(Duration d) =>
+              pastDueOf(f.step, anchors.appointment, createdAt: effect.add(d));
+          final expected = f.step.anchor == Anchor.discharge
+              ? null
+              : f.step.pastDue;
           final why = '${f.name} at $t, effect $effect';
           expect(created(-ms), isNull, reason: why);
           expect(created(Duration.zero), expected, reason: why);
@@ -219,9 +192,7 @@ void main() {
         final created = tz.TZDateTime.utc(2020);
         forEverySample((f, anchors, t) {
           final result = pastDueOf(
-            f.step.anchor,
-            f.step.timing,
-            PastDue.values.byName(f.pastDue),
+            f.step,
             anchors.appointment,
             createdAt: created,
           );

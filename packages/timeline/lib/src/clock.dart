@@ -9,3 +9,10 @@ final _clock = RegExp(r'^([01][0-9]|2[0-3]):([0-5][0-9])$');
   }
   return (hour: int.parse(match[1]!), minute: int.parse(match[2]!));
 }
+
+/// Local clock times from inclusive to exclusive, wrapping midnight when
+/// [to] is earlier than [from].
+typedef QuietHours = ({
+  ({int hour, int minute}) from,
+  ({int hour, int minute}) to,
+});

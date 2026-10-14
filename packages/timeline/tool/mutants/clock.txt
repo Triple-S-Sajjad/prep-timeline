@@ -1,0 +1,42 @@
+# Mutants of lib/src/clock.dart (slices 1-3). QuietHours is a type only.
+tests: test/clock_test.dart test/offset_test.dart test/past_due_test.dart test/properties_test.dart test/protocol_test.dart test/reminder_test.dart test/timing_test.dart
+
+find: 2[0-3]
+replace: 2[0-4]
+name: 24:00 accepted
+
+find: |2[0-3]
+replace: |2[0-2]
+name: 23:xx rejected
+
+find: [01][0-9]|
+replace: [0-2][0-9]|
+name: hours 24-29 accepted
+
+find: ([01][0-9]|
+replace: ([01]?[0-9]|
+name: one-digit hour accepted
+
+find: ([0-5][0-9])
+replace: ([0-6][0-9])
+name: minute 60 accepted
+
+find: r'^([01]
+replace: r'([01]
+name: start anchor dropped
+
+find: [0-9])$');
+replace: [0-9])');
+name: end anchor dropped
+
+find: if (match == null) {
+replace: if (match == null) return (hour: 0, minute: 0); if (false) {
+name: unmatched text read as 00:00
+
+find: hour: int.parse(match[1]!)
+replace: hour: int.parse(match[2]!)
+name: hour read from the minute
+
+find: minute: int.parse(match[2]!)
+replace: minute: int.parse(match[1]!)
+name: minute read from the hour

@@ -3,5 +3,7 @@ export 'src/clock.dart';
 export 'src/duration.dart';
 export 'src/offset.dart';
 export 'src/past_due.dart';
+export 'src/protocol.dart';
 export 'src/reminder.dart';
+export 'src/step.dart';
 export 'src/timing.dart';

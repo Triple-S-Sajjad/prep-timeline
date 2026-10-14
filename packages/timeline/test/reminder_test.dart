@@ -5,21 +5,6 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'support.dart';
 
-/// A timed step from a fixture module, parsed the way the app will parse it.
-({Anchor anchor, Timing timing, Remind remind, bool allowNight}) fixtureStep(
-  String path,
-  String id,
-) {
-  final (:step, module: _) = fixtureJson(path, id);
-  int day(Object? dayNumber) => resolveDay(dayNumber, const {}, const {});
-  return (
-    anchor: Anchor.values.byName(step['anchor']! as String),
-    timing: parseTiming(step['timing']! as Map<String, Object?>, day),
-    remind: parseRemind(step['remind']! as Map<String, Object?>, day),
-    allowNight: step['allowNight']! as bool,
-  );
-}
-
 // Expected instants written in UTC, so they can't come from the code under
 // test.
 int utc(int y, int mo, int d, int h, [int mi = 0, int s = 0]) =>
@@ -47,7 +32,7 @@ void main() {
   const evening = (hour: 20, minute: 0);
   // The main reminder remindersOf schedules, or null if it schedules none.
   Reminder? remind(
-    ({Anchor anchor, Timing timing, Remind remind, bool allowNight}) step,
+    TimedStep step,
     Anchors anchors, {
     QuietHours hours = quiet,
     tz.TZDateTime? at,
@@ -166,7 +151,9 @@ void main() {
         anchor: Anchor.appointment,
         timing: const DeadlineTiming(Duration(hours: -4)),
         remind: const OffsetRemind(Duration(hours: -2)),
+        id: 'step',
         allowNight: true,
+        pastDue: PastDue.critical,
       ), appointment(local(ny, 2026, 11, 18, 12)));
       expectReminder(
         r,
@@ -246,7 +233,9 @@ void main() {
         anchor: Anchor.appointment,
         timing: OffsetTiming(Duration.zero),
         remind: OffsetRemind(Duration.zero),
+        id: 'step',
         allowNight: false,
+        pastDue: PastDue.critical,
       );
       test('a reminder at exactly 23:00 moves to 22:59', () {
         final r = remind(atEffect, appointment(local(ny, 2026, 11, 17, 23)));
@@ -286,7 +275,9 @@ void main() {
         anchor: Anchor.appointment,
         timing: const DeadlineTiming(Duration(hours: -6)),
         remind: const OffsetRemind(Duration(hours: -5)),
+        id: 'step',
         allowNight: false,
+        pastDue: PastDue.critical,
       ), appointment(local(ny, 2026, 11, 18, 6)));
       expectReminder(
         r,
@@ -320,7 +311,9 @@ void main() {
         anchor: Anchor.appointment,
         timing: const DayAtTiming(0, (hour: 3, minute: 30)),
         remind: const DayAtRemind(0, (hour: 2, minute: 30)),
+        id: 'step',
         allowNight: true,
+        pastDue: PastDue.critical,
       ), appointment(local(ny, 2027, 3, 14, 9)));
       expectReminder(
         r,
@@ -335,7 +328,9 @@ void main() {
         anchor: Anchor.appointment,
         timing: const OffsetTiming(Duration.zero),
         remind: const OffsetRemind(Duration.zero),
+        id: 'step',
         allowNight: false,
+        pastDue: PastDue.critical,
       ), appointment(local(ny, 2027, 3, 14, 4, 30)));
       expectReminder(
         r,
@@ -357,7 +352,9 @@ void main() {
           anchor: Anchor.discharge,
           timing: const OffsetTiming(Duration(hours: 2)),
           remind: const OffsetRemind(Duration(minutes: 30)),
+          id: 'step',
           allowNight: false,
+          pastDue: PastDue.critical,
         ), discharged());
         expectReminder(
           r,
@@ -371,7 +368,9 @@ void main() {
           anchor: Anchor.discharge,
           timing: const OffsetTiming(Duration.zero),
           remind: const OffsetRemind(Duration(hours: 1)),
+          id: 'step',
           allowNight: false,
+          pastDue: PastDue.critical,
         ), discharged());
         expectReminder(
           r,
@@ -388,7 +387,9 @@ void main() {
         anchor: Anchor.appointment,
         timing: const DayTiming(0, Lasts.oneDay),
         remind: const DayAtRemind(0, (hour: 7, minute: 0)),
+        id: 'step',
         allowNight: false,
+        pastDue: PastDue.critical,
       ), appointment(local(ny, 2026, 11, 19, 9)));
       expectReminder(
         r,
@@ -403,7 +404,9 @@ void main() {
         anchor: Anchor.appointment,
         timing: const DayTiming(2, Lasts.oneDay),
         remind: const DayAtRemind(2, (hour: 7, minute: 0)),
+        id: 'step',
         allowNight: false,
+        pastDue: PastDue.critical,
       ), appointment(local(ny, 2026, 11, 18, 9)));
       expectReminder(
         r,
@@ -439,7 +442,9 @@ void main() {
         anchor: Anchor.appointment,
         timing: OffsetTiming(Duration.zero),
         remind: OffsetRemind(Duration.zero),
+        id: 'step',
         allowNight: false,
+        pastDue: PastDue.critical,
       );
       test('a 03:00 reminder moves to 00:29', () {
         final r = remind(
@@ -478,7 +483,9 @@ void main() {
             anchor: Anchor.appointment,
             timing: const OffsetTiming(Duration(hours: -1)),
             remind: const OffsetRemind(Duration(hours: -2)),
+            id: 'step',
             allowNight: false,
+            pastDue: PastDue.critical,
           ),
           appointment(local(ny, 2026, 11, 18, 12)),
           at: local(ny, 2026, 11, 18, 10, 30, 20),
@@ -530,7 +537,9 @@ void main() {
       anchor: Anchor.appointment,
       timing: OffsetTiming(Duration.zero),
       remind: OffsetRemind(Duration.zero),
+      id: 'step',
       allowNight: true,
+      pastDue: PastDue.critical,
     );
     TimedStep dose2() =>
         fixtureStep('colo-golytely-split-bmc/base.json', 'dose2');

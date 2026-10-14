@@ -2,42 +2,13 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'calendar.dart';
 import 'clock.dart';
-import 'duration.dart';
 import 'offset.dart';
+import 'step.dart';
 import 'timing.dart';
-
-sealed class Remind {
-  const Remind();
-}
-
-final class OffsetRemind extends Remind {
-  const OffsetRemind(this.offset);
-  final Duration offset;
-}
-
-final class DayAtRemind extends Remind {
-  const DayAtRemind(this.day, this.time);
-  final int day;
-  final ({int hour, int minute}) time;
-}
 
 /// Why a reminder was moved earlier. Publishing fails on any move; on the
 /// phone the move is only a safety net.
 enum MoveReason { afterEffect, quietHours }
-
-/// Local clock times from inclusive to exclusive, wrapping midnight when
-/// [to] is earlier than [from].
-typedef QuietHours = ({
-  ({int hour, int minute}) from,
-  ({int hour, int minute}) to,
-});
-
-typedef TimedStep = ({
-  Anchor anchor,
-  Timing timing,
-  Remind remind,
-  bool allowNight,
-});
 
 /// When the patient is notified, the effect time its text states, and any
 /// moves that put it there.
@@ -46,25 +17,6 @@ typedef Reminder = ({
   tz.TZDateTime effect,
   Set<MoveReason> moves,
 });
-
-/// A step's remind from its JSON. [day] turns a day number into days, usually
-/// through [resolveDay]. "defaulted" must be present, though only the
-/// validator uses it.
-Remind parseRemind(
-  Map<String, Object?> json,
-  int Function(Object? dayNumber) day,
-) => switch (json) {
-  {'kind': 'offset', 'offset': final String offset, 'defaulted': bool()} =>
-    OffsetRemind(parseElapsed(offset)),
-  {
-    'kind': 'dayAt',
-    'day': final d,
-    'time': final String time,
-    'defaulted': bool(),
-  } =>
-    DayAtRemind(day(d), parseClockTime(time)),
-  _ => throw FormatException('Not a remind', json),
-};
 
 /// What the phone does about [step] when computed at [now]. The stored remind
 /// is rounded down to the whole minute, then moved to before the effect if

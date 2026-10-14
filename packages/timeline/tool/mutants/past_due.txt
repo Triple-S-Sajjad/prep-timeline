@@ -1,0 +1,47 @@
+# Mutants of lib/src/past_due.dart (slice 4c). The first two survive; see
+# MUTATION.md for why each is equivalent.
+tests: test/offset_test.dart test/past_due_test.dart test/protocol_test.dart test/reminder_test.dart test/timing_test.dart
+
+find: discharge: null,
+replace: discharge: appointment,
+name: discharge set to the appointment
+
+find: final effect = effectOf(step.anchor, step.timing, (
+replace: final effect = effectOf(Anchor.appointment, step.timing, (
+name: every step counted from the appointment
+
+find: if (step.anchor == Anchor.discharge) return null;
+replace:
+name: discharge steps judged at QR creation
+
+find: if (step.anchor == Anchor.discharge) return null;
+replace: if (step.anchor == Anchor.arrival) return null;
+name: arrival steps never past due
+
+find: arrival: appointment,
+replace: arrival: null,
+name: arrival unknown at QR creation
+
+find: return effect.isAfter(createdAt) ? null : step.pastDue;
+replace: return effect.isBefore(createdAt) ? step.pastDue : null;
+name: effect exactly at createdAt not past due
+
+find: effect.isAfter(createdAt) ? null : step.pastDue
+replace: effect.isAfter(createdAt) ? step.pastDue : null
+name: past due inverted
+
+find: return effect.isAfter(createdAt) ? null : step.pastDue;
+replace: return null;
+name: never past due
+
+find: ? null : step.pastDue
+replace: ? null : PastDue.critical
+name: level ignored, always critical
+
+find: PastDue.values.asNameMap()[json] ??
+replace: PastDue.values.asNameMap()[json] ?? PastDue.ignore ??
+name: missing level defaults to ignore
+
+find: PastDue.values.asNameMap()[json] ??
+replace: PastDue.values.asNameMap()[json] ?? PastDue.critical ??
+name: missing level defaults to critical

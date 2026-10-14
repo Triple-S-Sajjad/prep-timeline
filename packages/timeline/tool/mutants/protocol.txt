@@ -1,0 +1,176 @@
+# Mutants of lib/src/protocol.dart (slice 5a). The sha256, group module ID,
+# "minutes ignored", parameter range, unit, chosen-value and "timed by remind
+# instead of timing" mutants survived the first run in MUTATION.md.
+tests: test/protocol_test.dart
+
+find: RegExp(r'^[0-9a-f]{64}$')
+replace: RegExp(r'^[0-9a-f]+$')
+name: sha256 of any length accepted
+
+find: [0-9a-f]{64}
+replace: [0-9a-fA-F]{64}
+name: uppercase sha256 accepted
+
+find: {64}$')
+replace: {64}')
+name: sha256 end anchor dropped
+
+find: r'^[0-9a-f]
+replace: r'[0-9a-f]
+name: sha256 start anchor dropped
+
+find: when _sha256.hasMatch(sha256) =>
+replace: when true =>
+name: sha256 not checked
+
+find: for (final m in modules)
+replace: for (final m in const <Object?>[])
+name: group module IDs dropped
+
+find: m is String ? m : throw FormatException('Not a module ID', m),
+replace: m.toString(),
+name: non-string group module IDs accepted
+
+find: clock.hour * 60 + clock.minute;
+replace: clock.hour * 60;
+name: minutes ignored
+
+find: _minutes((hour: appointment.hour, minute: appointment.minute));
+replace: _minutes((hour: appointment.hour, minute: 0));
+name: appointment minutes ignored
+
+find: const _day = 24 * 60;
+replace: const _day = 24 * 60 - 1;
+name: 24:00 read as 23:59
+
+find: return range.from <= clock && clock < range.to;
+replace: return range.from < clock && clock < range.to;
+name: appliesWhen start excluded
+
+find: return range.from <= clock && clock < range.to;
+replace: return range.from <= clock && clock <= range.to;
+name: appliesWhen end included
+
+find: key: {'min': p.min, 'max': p.max, 'unit': p.unit},
+replace: key: {'min': p.max, 'max': p.max, 'unit': p.unit},
+name: parameter range min read as max
+
+find: key: {'min': p.min, 'max': p.max, 'unit': p.unit},
+replace: key: {'min': p.min, 'max': p.min, 'unit': p.unit},
+name: parameter range max read as min
+
+find: 'unit': p.unit},
+replace: 'unit': 'days'},
+name: parameter unit always days
+
+find: min: min,
+replace: min: max,
+name: declared min read as max
+
+find: int day(Object? d) => resolveDay(d, declared, chosen);
+replace: int day(Object? d) => resolveDay(d, declared, const {});
+name: chosen values ignored
+
+find: if (s.containsKey('timing'))
+replace: if (s.containsKey('remind'))
+name: timed by remind instead of timing
+
+find: if (s.containsKey('timing'))
+replace: if (true)
+name: untimed items parsed as timed
+
+find: timing: parseTiming(timing, day),
+replace: timing: parseTiming(remind, day),
+name: timing read from remind
+
+find: allowNight: allowNight,
+replace: allowNight: false,
+name: allowNight ignored
+
+find: pastDue: parsePastDue(json['pastDue']),
+replace: pastDue: PastDue.ignore,
+name: pastDue ignored
+
+find: anchor: _enum(Anchor.values, anchor),
+replace: anchor: Anchor.appointment,
+name: anchor ignored
+
+find: if (json.containsKey('timezone')) {
+replace: if (false) {
+name: module time zone accepted
+
+find: 'rule': 'anySubset',
+replace: 'rule': _,
+name: combination rule not checked
+
+find: base: _moduleRef(base, base: true),
+replace: base: _moduleRef(base, base: false),
+name: base module needs selectedAt
+
+find: _moduleRef(ref, base: false)
+replace: _moduleRef(ref, base: true)
+name: optional selectedAt not read
+
+find: selectedAt: base ? null : _enum(SelectedAt.values, json['selectedAt']),
+replace: selectedAt: null,
+name: selectedAt always null
+
+find: quiet: _clockRange(quiet)
+replace: quiet: _clockRange(bookable)
+name: quiet hours read from bookableHours
+
+find: bookable: _clockRange(bookable),
+replace: bookable: _clockRange(quiet),
+name: bookableHours read from quiet hours
+
+find: exactlyOneOf: [for (final group in groups) _group(group)],
+replace: exactlyOneOf: [],
+name: exactlyOneOf groups dropped
+
+find: from: parseClockTime(from),
+replace: from: parseClockTime(to),
+name: clock range from read from to
+
+find: to: parseClockTime(to),
+replace: to: parseClockTime(from),
+name: clock range to read from from
+
+find: from: _minutes(parseClockTime(from)),
+replace: from: _minutes(parseClockTime(to)),
+name: appliesWhen from read from to
+
+find: zone: _location(zone),
+replace: zone: tz.UTC,
+name: time zone ignored
+
+find: else if (_timedOnly.any(s.containsKey))
+replace: else if (false)
+name: timed fields without timing dropped
+
+find: ['anchor', 'remind', 'allowNight', 'pastDue']
+replace: ['remind', 'allowNight', 'pastDue']
+name: anchor without timing dropped
+
+find: ['anchor', 'remind', 'allowNight', 'pastDue']
+replace: ['anchor', 'allowNight', 'pastDue']
+name: remind without timing dropped
+
+find: ['anchor', 'remind', 'allowNight', 'pastDue']
+replace: ['anchor', 'remind', 'pastDue']
+name: allowNight without timing dropped
+
+find: ['anchor', 'remind', 'allowNight', 'pastDue']
+replace: ['anchor', 'remind', 'allowNight']
+name: pastDue without timing dropped
+
+find: _ when !module.containsKey('parameters') => const {},
+replace: null => const {},
+name: explicit null parameters read as none
+
+find: _ when !module.containsKey('parameters') => const {},
+replace: _ when false => const {},
+name: absent parameters rejected
+
+find: final other => throw FormatException('Not a parameter list', other),
+replace: _ => const {},
+name: malformed parameters read as none
