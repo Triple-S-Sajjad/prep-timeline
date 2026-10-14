@@ -12,14 +12,17 @@ Flutter app for iOS and Android, plus the static web page used as a fallback. Th
 | --- | --- | --- |
 | Spoofing | Fake app or phishing QR code sends the patient to a look-alike site | QR codes resolve only to the hospital's own domain, and the app always displays that domain. Printed materials show what the real address looks like. OPEN: who owns the app-store developer account (the spec lists this as an open question) |
 | Tampering | Bundle changed in transit or in storage | The app refuses any unsigned or mis-signed bundle |
-| Tampering | QR code edited to change modules or parameter values | Each parameter value is checked against its declared range when the QR code is decoded and again in the calculator. For an appointmentTime group, the app rejects a code whose ticked module doesn't match the appointment time. OPEN: whether the QR code itself is signed |
-| Tampering | Older, validly signed bundle served in place of the current one | OPEN: whether the app rejects a version older than the one it holds, and whether it checks the review date itself |
+| Tampering | QR code edited to change modules or parameter values | Each parameter value is checked against its declared range when the QR code is decoded and again in the calculator. For an appointmentTime group, the app rejects a code whose ticked module doesn't match the appointment time. OPEN, decide before Phase 3: whether the QR code itself is signed |
+| Tampering | Older, validly signed bundle served in place of the current one | OPEN, decide before Phase 3: whether the app rejects a version older than the one it holds. OPEN: whether it checks the review date itself |
+| Tampering | Device clock or time zone set wrong, so the app reads the wrong current time | OPEN: reminder times, reminder lateness and the newly-past-due check on a reschedule all trust the device's current time; nothing checks it against another source |
+| Tampering | Time zone rules on the device are out of date, so local times after a rule change are wrong | OPEN: how the app's time zone rules get updated. The calculator's data is IANA 2025c and ends in 2037 ([ADR 1, Known limitations](adr/0001-repository-tooling.md#known-limitations)) |
 | Repudiation | Not applicable on the server: no patient actions reach it | OPEN: where "Done" and "I missed this" taps are stored |
 | Information disclosure | Lock screen shows the procedure | Notifications say "Prep step due" by default; the patient can opt into detailed text |
 | Information disclosure | Lost or shared phone exposes the appointment date | OPEN: whether data on the device is encrypted beyond the OS default |
 | Information disclosure | Third-party trackers on patient pages | No third-party JavaScript, analytics, ad SDKs or CDNs on patient pages. All assets are self-hosted on the hospital's domain, enforced by Content Security Policy and a CI check |
 | Information disclosure | Caregiver mode shares the timeline | OPEN: how sharing works and what data it sends |
 | Denial of service | Server outage the night before a procedure | The protocol is cached offline once downloaded, and reminders are scheduled on the device |
+| Denial of service | The OS limits or drops scheduled local notifications: iOS keeps only a capped number pending per app, and Android battery optimization can delay or drop them | OPEN: how the app stays under the iOS cap and what it does when Android holds back a reminder |
 | Elevation of privilege | Client secret extracted from the app | The app holds no secrets; it only reads public, signed bundles |
 
 ## Static bundle delivery
