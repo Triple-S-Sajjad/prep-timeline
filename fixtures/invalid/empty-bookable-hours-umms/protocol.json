@@ -21,7 +21,7 @@
   "baseModule": {
     "moduleId": "empty-bookable-hours-umms-base",
     "version": 1,
-    "sha256": "820d1104c411a146ad037d428575e82ec481f4a40a35205a879db7b925cda545"
+    "sha256": "c1ad1997e6e9bd6a9a782a861fe68ded70ba926a36a8a96e6e2c57efb0ac9757"
   },
   "optionalModules": [],
   "allowedCombinations": {

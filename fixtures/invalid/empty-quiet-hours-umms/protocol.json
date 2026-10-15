@@ -21,7 +21,7 @@
   "baseModule": {
     "moduleId": "empty-quiet-hours-umms-base",
     "version": 1,
-    "sha256": "7a86ddad6473c4148388ffdbf906eacedbad42b46694096bdf813c7ba8298f14"
+    "sha256": "e5a038efe27d77da6202dc4da85d76619d138fc93d845553bf1fc2a3551a86cb"
   },
   "optionalModules": [],
   "allowedCombinations": {

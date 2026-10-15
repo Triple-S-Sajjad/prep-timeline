@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "moduleId": "base-parameters-bmc-base",
+  "version": 1,
+  "owner": "Test fixture",
+  "reviewBy": "2027-04-10",
+  "appliesWhen": {
+    "appointmentTime": {
+      "fromInclusive": "00:00",
+      "toExclusive": "24:00"
+    }
+  },
+  "parameters": {
+    "holdDays": {
+      "min": 5,
+      "max": 7,
+      "unit": "days"
+    }
+  },
+  "steps": [
+    {
+      "id": "check-first",
+      "type": "checklist",
+      "text": "Before stopping it, you must check with your heart doctor or primary doctor."
+    },
+    {
+      "id": "p2y12",
+      "type": "medication_hold",
+      "anchor": "appointment",
+      "timing": {
+        "kind": "day",
+        "day": {
+          "param": "holdDays",
+          "before": true
+        },
+        "lasts": "untilAnchor"
+      },
+      "remind": {
+        "kind": "dayAt",
+        "day": {
+          "param": "holdDays",
+          "before": true
+        },
+        "time": "07:00",
+        "defaulted": true
+      },
+      "allowNight": false,
+      "pastDue": "critical",
+      "text": "Stop taking Plavix (clopidogrel), Effient (prasugrel) or Brilinta (ticagrelor) today."
+    }
+  ],
+  "source": "https://www.bmc.org/files/gastro-prep/english/MEDICATION%20MANAGEMENT%20INSTRUCTIONS%20FOR%20ENDOSCOPY%20-%20update%203.4.25.pdf",
+  "accessed": "2026-10-10",
+  "note": "Test data only. Not clinical guidance."
+}

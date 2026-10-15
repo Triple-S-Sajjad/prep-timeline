@@ -11,9 +11,13 @@ INVALID = Path(__file__).parent.parent / "fixtures" / "invalid"
 # them, so a calculator test sees the conflict and nothing else.
 CALCULATOR_FAILURES = {"conflictingCutoffs"}
 
+# Codes a fixture's one defect also causes. A misspelled field is both an
+# unknown property and a missing required one, and the schema reports each.
+ALSO_CAUSED = {"misspelled-field-umms": {"required:defaulted"}}
+
 
 @pytest.mark.parametrize("name", sorted(p.name for p in INVALID.iterdir()))
-def test_invalid_fixture_fails_for_its_expected_reason(name: str) -> None:
+def test_invalid_fixture_fails_for_its_expected_reason_only(name: str) -> None:
     protocol_dir = INVALID / name
     text = (protocol_dir / "protocol.json").read_text(encoding="utf-8")
     manifest = json.loads(text)
@@ -22,7 +26,7 @@ def test_invalid_fixture_fails_for_its_expected_reason(name: str) -> None:
     if expected in CALCULATOR_FAILURES:
         assert codes == set()
     else:
-        assert expected in codes
+        assert codes == {expected} | ALSO_CAUSED.get(name, set())
 
 
 @pytest.mark.parametrize(

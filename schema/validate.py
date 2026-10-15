@@ -295,6 +295,12 @@ def manifest_problems(
     if base_id in selected_at:
         msg = f"{base_id} is also an optional module"
         yield Problem(file, "baseListedAsOptional", msg)
+    # Parameter values come only with modules ticked on a QR code, and the
+    # base is never ticked. An empty "parameters" is rejected too.
+    base = modules.get(base_id)
+    if base is not None and "parameters" in base.data:
+        msg = f"{base_id} declares parameters, but no code can give their values"
+        yield Problem(file, "baseParameters", msg)
 
     for ref in [manifest["baseModule"], *manifest["optionalModules"]]:
         module_id = ref["moduleId"]

@@ -90,7 +90,7 @@
     },
     {
       "id": "prep-only",
-      "type": "npo",
+      "type": "diet",
       "anchor": "appointment",
       "timing": {
         "kind": "day",

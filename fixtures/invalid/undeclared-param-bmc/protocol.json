@@ -21,9 +21,16 @@
   "baseModule": {
     "moduleId": "undeclared-param-bmc-base",
     "version": 1,
-    "sha256": "b9472e8b3d7ba3d83b665f929b8375babf85cb7ef136672d1ce064f06f63453c"
+    "sha256": "82f6fc70e9e9c33b82f46a6079af995e8afc2c6d324b796a1e40725596e942da"
   },
-  "optionalModules": [],
+  "optionalModules": [
+    {
+      "moduleId": "undeclared-param-bmc-p2y12-hold",
+      "version": 1,
+      "sha256": "c8f0b4e2bb6731ef03cc7e2f7eed95dc8df8a48d6cca25dc88832aeae8869df4",
+      "selectedAt": "scheduling"
+    }
+  ],
   "allowedCombinations": {
     "rule": "anySubset",
     "exactlyOneOf": []

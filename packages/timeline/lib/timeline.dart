@@ -5,5 +5,6 @@ export 'src/offset.dart';
 export 'src/past_due.dart';
 export 'src/protocol.dart';
 export 'src/reminder.dart';
+export 'src/selection.dart';
 export 'src/step.dart';
 export 'src/timing.dart';

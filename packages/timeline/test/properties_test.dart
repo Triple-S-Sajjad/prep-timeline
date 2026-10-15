@@ -5,6 +5,8 @@ import 'package:timeline/timeline.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'support.dart';
+
 /// Each zone stresses a different kind of clock change.
 const zones = [
   'America/New_York', // northern-hemisphere DST
@@ -439,15 +441,3 @@ Set<DateTime> changeDays(tz.Location loc) => {
 
 /// Counts failing cases and keeps the first, so a broken property reports one
 /// readable counterexample instead of millions of failures.
-final class Failures {
-  var count = 0;
-  String? first;
-
-  void check(bool ok, String Function() describe) {
-    if (ok) return;
-    count++;
-    first ??= describe();
-  }
-
-  void expectNone() => expect(count, 0, reason: 'first counterexample: $first');
-}

@@ -21,7 +21,7 @@
   "baseModule": {
     "moduleId": "defaulted-same-day-dayat-umms-base",
     "version": 1,
-    "sha256": "bfde30a621e073bc5ba301616fbeb61d093842bc5e82b0b02c570e200bf16831"
+    "sha256": "da29f0962f60210c65085a5c2091c003ed338d7fe441c862184522160463021c"
   },
   "optionalModules": [],
   "allowedCombinations": {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:test/test.dart';
 import 'package:timeline/timeline.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -25,6 +26,17 @@ tz.TZDateTime local(
 /// Anchors with only the appointment known.
 Anchors appointment(tz.TZDateTime a) =>
     (appointment: a, arrival: null, discharge: null);
+
+const protocols = '../../fixtures/protocols';
+
+/// A fresh copy each call, so a test can change it.
+Map<String, Object?> readJson(String path) =>
+    jsonDecode(File(path).readAsStringSync()) as Map<String, Object?>;
+
+Map<String, Object?> fixture(String path) => readJson('$protocols/$path');
+
+List<Directory> protocolDirs() =>
+    Directory(protocols).listSync().whereType<Directory>().toList();
 
 /// Fixture module [path] and its step [id], as JSON.
 ({Map<String, Object?> module, Map<String, Object?> step}) fixtureJson(
@@ -118,6 +130,16 @@ Iterable<SampledStep> everyFixtureStep() sync* {
   }
 }
 
+/// The publish check's dates: an ordinary one, then each 2026-2027 clock
+/// change of the fixtures' US zones.
+const publishDates = [
+  (2026, 11, 18),
+  (2026, 3, 8),
+  (2026, 11, 1),
+  (2027, 3, 14),
+  (2027, 11, 7),
+];
+
 /// The publish check's samples (docs/spec.md, Conflict check at publish):
 /// every 15 minutes inside bookable hours, with arrival at the appointment,
 /// or across the whole day for discharge; on an ordinary date and on each
@@ -125,15 +147,8 @@ Iterable<SampledStep> everyFixtureStep() sync* {
 void forEverySample(
   void Function(SampledStep f, Anchors anchors, tz.TZDateTime sample) check,
 ) {
-  const dates = [
-    (2026, 11, 18),
-    (2026, 3, 8),
-    (2026, 11, 1),
-    (2027, 3, 14),
-    (2027, 11, 7),
-  ];
   for (final f in everyFixtureStep()) {
-    for (final (y, m, d) in dates) {
+    for (final (y, m, d) in publishDates) {
       for (var minute = 0; minute < 24 * 60; minute += 15) {
         final clock = (hour: minute ~/ 60, minute: minute % 60);
         final discharge = f.step.anchor == Anchor.discharge;
@@ -156,4 +171,19 @@ void forEverySample(
       }
     }
   }
+}
+
+/// Counts failures across a sample space and keeps the first, so a property
+/// reports one counterexample instead of thousands.
+final class Failures {
+  var count = 0;
+  String? first;
+
+  void check(bool ok, String Function() describe) {
+    if (ok) return;
+    count++;
+    first ??= describe();
+  }
+
+  void expectNone() => expect(count, 0, reason: 'first counterexample: $first');
 }

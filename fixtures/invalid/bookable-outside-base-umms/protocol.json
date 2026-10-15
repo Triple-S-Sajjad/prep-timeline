@@ -21,7 +21,7 @@
   "baseModule": {
     "moduleId": "bookable-outside-base-umms-base",
     "version": 1,
-    "sha256": "0b04a69311b85a6e91982fbc9c64d6be12658f73d0f10f8a6cb13e9a51879c79"
+    "sha256": "7ac3cfa0d13c519e028b4156acdb0ad315c39d800df8d52b864541aed35f2f25"
   },
   "optionalModules": [],
   "allowedCombinations": {

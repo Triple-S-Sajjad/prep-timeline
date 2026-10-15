@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:test/test.dart';
@@ -6,17 +5,6 @@ import 'package:timeline/timeline.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 
 import 'support.dart';
-
-const protocols = '../../fixtures/protocols';
-
-/// A fresh copy each call, so a test can change it.
-Map<String, Object?> readJson(String path) =>
-    jsonDecode(File(path).readAsStringSync()) as Map<String, Object?>;
-
-Map<String, Object?> fixture(String path) => readJson('$protocols/$path');
-
-List<Directory> protocolDirs() =>
-    Directory(protocols).listSync().whereType<Directory>().toList();
 
 void main() {
   setUpAll(tzdata.initializeTimeZones);
@@ -41,7 +29,7 @@ void main() {
         moduleId: 'colo-golytely-split-am-umms-base',
         version: 1,
         sha256:
-            'ba0dd89a121313a49f3896e396769d51f847241e0a241400cc949697bc8be8ca',
+            '7e4300b6bd62267b290b8110bd43764be18e0a13b6ff6d7158ce5f5efd3e0758',
         selectedAt: null,
       ));
       expect(m.optional, [

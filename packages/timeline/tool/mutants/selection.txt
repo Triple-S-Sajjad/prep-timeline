@@ -1,0 +1,162 @@
+# Mutants of lib/src/selection.dart (slice 5b).
+tests: test/selection_test.dart
+
+find: code.protocolId != manifest.protocolId ||
+replace: false ||
+name: protocol ID not checked
+
+find: code.version != manifest.version)
+replace: false)
+name: protocol version not checked
+
+find: if (stageOf[id] != code.stage) {
+replace: if (false) {
+name: unknown, base or other-code module accepted
+
+find: if (!ticked.add(id)) {
+replace: if (!ticked.add(id) && false) {
+name: duplicate module accepted
+
+find: if (stageOf[group.modules.first] != code.stage) continue;
+replace:
+name: groups checked on both codes
+
+find: .length != 1) {
+replace: .length > 1) {
+name: a group with none ticked accepted
+
+find: .where(ticked.contains).length
+replace: .where(code.ticked.contains).length
+name: group counted from the code list
+
+find:     if (!ticked.contains(id)) {
+replace:     if (false) {
+name: values for an unticked module accepted
+
+find: code.parameters[id] ?? const {}
+replace: const {}
+name: chosen values ignored
+
+find: if (!declared.containsKey(name)) {
+replace: if (false) {
+name: undeclared parameter accepted
+
+find: value == null ||
+replace:
+name: missing value accepted
+
+find: value < range.min
+replace: value <= range.min
+name: lowest value rejected
+
+find: value > range.max
+replace: value >= range.max
+name: highest value rejected
+
+find: key: value is int
+replace: key: value is num
+name: non-integer value accepted
+
+find: d{2}Z$');
+replace: d{2}Z');
+name: createdAt end anchor dropped
+
+find: T\d{2}:\d{2}:\d{2}Z
+replace: T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})
+name: createdAt with an offset accepted
+
+find: tz.TZDateTime.from(DateTime.parse(text), zone)
+replace: tz.TZDateTime.from(DateTime.parse(text), tz.UTC)
+name: createdAt left in UTC
+
+find: if (appointment.location.name != manifest.zone.name) {
+replace: if (appointment.location.name != manifest.zone.name && appointment.timeZoneOffset != manifest.zone.timeZone(appointment.millisecondsSinceEpoch).offset) {
+name: zone compared by offset, not name
+
+find: scheduling.stage != SelectedAt.scheduling ||
+replace: false ||
+name: discharge code accepted as the scheduling code
+
+find: discharge?.stage == SelectedAt.scheduling
+replace: false
+name: scheduling code accepted as the discharge code
+
+find: if (!_inRange(manifest.bookable, appointment)) {
+replace: if (false) {
+name: bookable hours not checked
+
+find: return to < from ? clock >= from || clock < to : from <= clock && clock < to;
+replace: return from <= clock && clock < to;
+name: bookable hours never wrap midnight
+
+find: from <= clock && clock < to;
+replace: from <= clock && clock <= to;
+name: bookable end included
+
+find: ? clock >= from || clock < to
+replace: ? clock > from || clock < to
+name: wrapping bookable start excluded
+
+find: final clock = time.hour * 60 + time.minute;
+replace: final clock = time.hour * 60;
+name: bookable minutes ignored
+
+find: if (!selected.every((s) => appliesAt(s.module.appliesWhen, appointment))) {
+replace: if (!appliesAt(selected.first.module.appliesWhen, appointment)) {
+name: only the base appliesWhen checked
+
+find:       if (ticked.contains(ref.moduleId))
+replace:       if (ticked.contains(ref.moduleId) || ref.selectedAt == SelectedAt.discharge)
+name: every discharge module selected
+
+find: chosen: chosen[ref.moduleId] ?? const <String, int>{},
+replace: chosen: const <String, int>{},
+name: chosen values dropped from the selection
+
+find: arrival: anchors.arrival ?? anchors.appointment,
+replace: arrival: anchors.arrival,
+name: pending arrival steps have no sort time
+
+find: discharge: anchors.discharge ?? anchors.appointment,
+replace: discharge: anchors.discharge ?? anchors.appointment.add(const Duration(days: 1)),
+name: pending discharge sorted a day late
+
+find: effect: effectOf(step.anchor, step.timing, anchors),
+replace: effect: effectOf(step.anchor, step.timing, bound),
+name: pending steps show the bound time
+
+find: return byTime != 0 ? byTime : a.compareTo(b);
+replace: return byTime;
+name: ties left to an unstable sort
+
+find: return byTime != 0 ? byTime : a.compareTo(b);
+replace: return byTime != 0 ? byTime : b.compareTo(a);
+name: ties reversed
+
+find: return byTime != 0 ? byTime : a.compareTo(b);
+replace: return byTime != 0 ? byTime : 0;
+name: ties compare equal
+
+find: _module(modules, id).parameters,
+replace: modules[id]!.parameters,
+name: decodeQr: a missing module is a null-check crash
+
+find: final base = _module(modules, manifest.base.moduleId);
+replace: final base = modules[manifest.base.moduleId]!;
+name: a missing base module is a null-check crash
+
+find: module: _module(modules, ref.moduleId),
+replace: module: modules[ref.moduleId]!,
+name: a missing optional module is a null-check crash
+
+find: (throw ArgumentError.value(id, 'modules', 'Not in the bundle'));
+replace: (throw ArgumentError.value('module', 'modules', 'Not in the bundle'));
+name: the missing module not named
+
+find: if (base.parameters.isNotEmpty) {
+replace: if (false) {
+name: a base module with parameters accepted
+
+find:   final base = _module(modules, manifest.base.moduleId);
+replace:   if (!_inRange(manifest.bookable, appointment)) return const NeedsNewInstructions(NewInstructionsReason.outsideBookableHours); final base = _module(modules, manifest.base.moduleId);
+name: a broken bundle hidden outside bookable hours

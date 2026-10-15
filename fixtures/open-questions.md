@@ -65,3 +65,17 @@ Each step tied to a calendar day now says whether it lasts one day or until the 
 This comes from the app's design, not a source sheet, and applies to every protocol. Decide before the arrival-entry screen is built.
 
 - Arrival lower bound: `arrivalAt` rejects an arrival after the appointment but accepts any earlier one, so a wrong date the patient types (a day or a year early) moves every arrival-anchored step. Proposed: the protocol states an explicit maximum lead, such as arrival no more than `PT12H` before the appointment, written in the manifest rather than hardcoded. Open: the value per department, and whether it belongs in `departmentDefaults` or per protocol.
+
+## Stop-drinking step to confirm
+
+The calculator's safety tests check that every protocol has an `npo` step (nothing by mouth, no exceptions) that takes effect before the appointment.
+
+- UMMC GoLytely split dose: the sheet gives no time to stop drinking. The patient starts the last liter of prep 4 hours before the procedure ("This will take approximately 1 hour"), and the only morning rule is "Do not eat or drink anything other the prep the morning of the procedure". That step is now type `diet`, not `npo`, because it has an exception. UMMC is left out of the stop-drinking test by name until the clinical owner gives a final stop-drinking time. [UMMC](https://www.umms.org/ummc/-/media/files/ummc/health-services/digestive-health/colonos-prep-instr-golytely-split-dose.pdf)
+- Future publish check, not yet in the validator: every protocol has an `npo` step.
+- The publish check must compute every allowed combination of modules, not a sample. The calculator's property tests sample combinations for speed (for BMC's 13 optional modules: every set of at most 2, plus all 13), which is enough to test the calculator but not to publish a protocol.
+
+## For the signature slice
+
+Not a clinical question; recorded here so it isn't lost.
+
+- On loading a bundle, check that every module the manifest lists is present and matches its hash, before any code is decoded. Until then, `decodeQr` and `selectedModules` reject a missing module with an ArgumentError naming it, and only when they look it up.
