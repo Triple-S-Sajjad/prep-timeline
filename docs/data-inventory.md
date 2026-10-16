@@ -10,7 +10,7 @@ Every piece of data in v1, where it lives and whether the hospital or a vendor h
 | Version metadata: owner, review date, wording-only or safety-relevant flag | PostgreSQL | Yes; not patient data | |
 | Approvals | PostgreSQL | Yes; not patient data | The author and the approver are different clinicians |
 | Audit log: who, what, when, from where | PostgreSQL | Yes; staff data, not patient data | Append-only; no patient data. Holds staff identity |
-| Signature | Published bundle | Yes; not patient data | One per protocol version, covering the module hashes |
+| Signature (protocol.sig) | Published bundle | Yes; not patient data | One per protocol version: Ed25519 over the label "prep-timeline/manifest/v1" and the SHA-256 of the manifest's exact bytes; the manifest lists each module's hash |
 | Signing private key | AWS KMS | Yes; not patient data | Never exported |
 | Staff identity and sessions | Hospital identity provider; session cookie | Yes; staff data, not patient data | No passwords stored anywhere in the app. OPEN: where roles and departments are stored |
 | Server secrets | Secrets manager | Yes; not patient data | None in client code |

@@ -62,7 +62,7 @@ With no patient data on the server, the biggest threat shifts from *data theft* 
 
 | Attack class | Control |
 | --- | --- |
-| Tampered or malicious protocol content | Two-person rule: an author drafts, a different clinician approves. Approved bundles are cryptographically signed (e.g., Ed25519). The patient app refuses any unsigned or mis-signed bundle. Every publish triggers an alert to the clinical owner |
+| Tampered or malicious protocol content | Two-person rule: an author drafts, a different clinician approves. Approved bundles are signed with Ed25519: a detached protocol.sig signs the manifest's exact bytes, and the manifest lists each module's hash (see Changeability). The patient app refuses any unsigned or mis-signed bundle, a version older than the one it holds, and the same version with different bytes. Every publish triggers an alert to the clinical owner |
 | Staff account takeover (phishing, credential stuffing) | No local passwords. Sign in only through the hospital's identity provider (SAML/OIDC) with phishing-resistant MFA (passkeys/FIDO2). Short sessions; re-authenticate before approving or publishing |
 | Broken object-level authorization (BOLA/IDOR) | Every request checks the user's role *and* department against the specific object, server-side. Random IDs, never sequential. An automated test for every endpoint proves a user from department A cannot touch department B's protocols |
 | Injection (SQL, XSS through protocol text) | Parameterized queries only. Protocol content is structured fields plus a tiny sanitized Markdown subset, never raw HTML. Strict Content Security Policy with no inline scripts |
@@ -113,7 +113,7 @@ A nurse should be able to create a correct protocol in under 10 minutes with no 
 
 Most future changes should be content edits done by clinicians in minutes, not code releases done by developers in weeks. That only works if content and logic are separated from day one.
 
-**1. Protocols are versioned data, built from modules.** A protocol is a base module plus optional modules such as "warfarin hold", "diabetes", "afternoon schedule" or "stent". Each module is a JSON document validated against a published schema and written once per institution, so one hospital's warfarin module serves its colonoscopy, surgery and cardiac cath protocols. Modules are never shared across institutions. Each protocol has a manifest, protocol.json, listing the base module, the allowed optional modules and the allowed combinations; the manifest is versioned and signed as one unit with its modules. It records each module's version and the SHA-256 hash of its file, and the single signature covers those hashes. The time zone is written only in the manifest. When creating the patient's QR code at scheduling, the clinician ticks which optional modules apply and fills any parameters. After-procedure modules (stent, insertion site, sedation) are ticked by the discharge nurse on a second QR code; the manifest marks each optional module with selectedAt: scheduling or discharge. Each code carries only the protocol ID and version, whether it is the scheduling or the discharge code, the module IDs, the parameter values and the instant the code was created, never identity. The app never decides which modules apply. Clinical changes never touch code. (Values below are illustrative, not clinical guidance.)
+**1. Protocols are versioned data, built from modules.** A protocol is a base module plus optional modules such as "warfarin hold", "diabetes", "afternoon schedule" or "stent". Each module is a JSON document validated against a published schema and written once per institution, so one hospital's warfarin module serves its colonoscopy, surgery and cardiac cath protocols. Modules are never shared across institutions. Each protocol has a manifest, protocol.json, listing the base module, the allowed optional modules and the allowed combinations; the manifest is versioned and signed as one unit with its modules. It records each module's version and the SHA-256 hash of its file, and the single signature covers the manifest's exact bytes, so through those hashes it covers every module. The signature is a separate file, protocol.sig, next to protocol.json: exactly 88 characters of standard base64 with padding and no line break, encoding a 64-byte Ed25519 signature. The signed message is the ASCII label "prep-timeline/manifest/v1" followed by the 32-byte SHA-256 of protocol.json's bytes. The app treats a missing or malformed protocol.sig as unsigned and refuses the bundle. The time zone is written only in the manifest. When creating the patient's QR code at scheduling, the clinician ticks which optional modules apply and fills any parameters. After-procedure modules (stent, insertion site, sedation) are ticked by the discharge nurse on a second QR code; the manifest marks each optional module with selectedAt: scheduling or discharge. Each code carries only the protocol ID and version, whether it is the scheduling or the discharge code, the module IDs, the parameter values and the instant the code was created, never identity. The app never decides which modules apply. Clinical changes never touch code. (Values below are illustrative, not clinical guidance.)
 
 - **Explicit values.** Every clinically meaningful value is written explicitly; absence is never a default.
 - **Step types.** A step of type npo means nothing by mouth, with no exceptions; a restriction with exceptions (such as "except your prep") is type diet.
@@ -158,8 +158,7 @@ A manifest:
   ],
   "allowedCombinations": { "rule": "anySubset", "exactlyOneOf": [
     { "selectBy": "appointmentTime", "modules": ["colo-split-am", "colo-split-pm"] }
-  ] },
-  "signature": "…"
+  ] }
 }
 ```
 
@@ -231,7 +230,7 @@ Clinical content flows one way, from server to phone. The appointment date and r
 | API | Python (FastAPI) | Pick one language and keep it boring |
 | Database | PostgreSQL (AWS RDS), encrypted at rest | Protocols, versions, approvals, audit log |
 | Protocol delivery | Signed static JSON on S3 + CloudFront under the hospital's domain | Read-only, cacheable, keeps working during API outages |
-| Signing key | Held in AWS KMS, never exported | Only the approval service may request a signature, and every request is logged |
+| Signing key | Held in AWS KMS, never exported. KMS Sign with SigningAlgorithm ED25519_SHA_512 and MessageType RAW, over the 57-byte message: the 25-byte ASCII label 'prep-timeline/manifest/v1' then the manifest's 32-byte SHA-256. The base64 of the 64-byte result is protocol.sig | Only the approval service may request a signature, and every request is logged |
 | Staff login | OIDC to the hospital identity provider; Keycloak for local development | No passwords stored anywhere in the app |
 | Infrastructure | Terraform; separate dev, staging and prod AWS accounts; GitHub Actions deploying via OIDC | No long-lived cloud keys exist to leak |
 | Monitoring | CloudWatch + OpenTelemetry; alerts on every publish and on login failures | Detects tampering fast; no PHI in logs |

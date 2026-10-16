@@ -36,6 +36,8 @@ GitHub Actions are pinned by commit SHA, and npm packages by exact version, each
 | `tzdata` | 2026.4, Windows only | IANA time zone database (release 2026d) for `zoneinfo`, which the validator uses to reject unknown time zones. Windows has no system copy; Linux and macOS use their own |
 | `test` | 1.32.0 | Dart test runner for the timeline calculator; dev only |
 | `timezone` | 0.11.1 | IANA time zones and `TZDateTime` for the calculator, since Dart's `DateTime` knows only UTC and the device's zone. Bundles IANA 2025c (stated in the generated headers of `lib/data/*.dart`); see Known limitations |
+| `crypto` | 3.0.7 | SHA-256 of the raw manifest and module bytes, the same hex digest as `hashlib.sha256` in `schema/validate.py`. Already in the lockfile through `test`; now a pinned direct dependency |
+| `cryptography` | 2.9.0 | Ed25519 verification of `protocol.sig`, in pure Dart on the phone and through Web Crypto in browsers. Adds `ffi` (dart.dev) to the lockfile. `webcrypto` 0.6.1 was rejected because it has no Ed25519 |
 | `actions/checkout` | v7.0.1 | Check out the repo in CI |
 | `actions/setup-node` | v7.0.0 | Node for npm tools in CI |
 | `actions/setup-python` | v7.0.0 | Python in CI, only once `.py` files exist |

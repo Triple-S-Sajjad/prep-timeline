@@ -23,8 +23,6 @@ const detroit = 'America/Detroit';
 /// confirm").
 const noStopDrinking = {umms};
 
-typedef Bundle = ({Manifest manifest, Map<String, Module> modules});
-
 /// A fixture protocol's manifest and modules, as the app loads them.
 Bundle bundle(String protocol) {
   final dir = '$protocols/$protocol';

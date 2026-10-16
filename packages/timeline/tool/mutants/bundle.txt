@@ -1,0 +1,110 @@
+# Mutants of lib/src/bundle.dart (slice 6).
+tests: test/bundle_test.dart
+
+find: if (publicKey.length != 32) {
+replace: if (false) {
+name: key length not checked
+
+find: publicKey.length != 32
+replace: publicKey.length > 32
+name: short key accepted
+
+find: publicKey.length != 32
+replace: publicKey.length < 32
+name: long key accepted
+
+find: 'prep-timeline/manifest/v1'
+replace: 'prep-timeline/manifest/v2'
+name: label version changed
+
+find: [..._label, ...digest.bytes]
+replace: digest.bytes
+name: message without the label
+
+find: [..._label, ...digest.bytes]
+replace: [..._label, ...manifest]
+name: raw manifest signed instead of its hash
+
+find: if (!signed) throw
+replace: if (false) throw
+name: signature result ignored
+
+find: r'^[A-Za-z0-9+/]{85}[AQgw]==$'
+replace: r'^[A-Za-z0-9+/]{85}[A-Za-z0-9+/]==$'
+name: non-zero padding bits accepted
+
+find: r'^[A-Za-z0-9+/]{85}[AQgw]==$'
+replace: r'^[A-Za-z0-9+/_-]{85}[AQgw]==$'
+name: URL-safe alphabet accepted
+
+find: r'^[A-Za-z0-9+/]{85}[AQgw]==$'
+replace: r'^[A-Za-z0-9+/]{85}[AQgw]={0,2}$'
+name: missing padding accepted
+
+find: r'^[A-Za-z0-9+/]{85}[AQgw]==$'
+replace: r'^[A-Za-z0-9+/]{85}[AQgw]=='
+name: sig end anchor dropped
+
+find: r'^[A-Za-z0-9+/]{85}[AQgw]==$'
+replace: r'[A-Za-z0-9+/]{85}[AQgw]==$'
+name: sig start anchor dropped
+
+find: r'^[A-Za-z0-9+/]{85}[AQgw]==$'
+replace: r'^\s*[A-Za-z0-9+/]{85}[AQgw]==\s*$'
+name: whitespace around the sig accepted
+
+find: if (held != null) {
+replace: if (held != null && false) {
+name: held record ignored
+
+find: if (held.protocolId != parsed.protocolId) {
+replace: if (false) {
+name: held record for another protocol accepted
+
+find: parsed.version < held.version
+replace: parsed.version <= held.version
+name: same version refused as older
+
+find: parsed.version < held.version
+replace: false
+name: older version accepted
+
+find: digest.toString() != held.sha256
+replace: false
+name: same version with other bytes accepted
+
+find: parsed.version == held.version && digest
+replace: digest
+name: newer version refused for its new hash
+
+find: (BundleRefusal.moduleNotMatched, ref.moduleId)
+replace: (BundleRefusal.moduleNotMatched)
+name: unmatched module not named
+
+find: files.removeAt(i).bytes
+replace: files[i].bytes
+name: matched file not consumed
+
+find: if (files.isNotEmpty) throw
+replace: if (false) throw
+name: unlisted files accepted
+
+find: module.moduleId != ref.moduleId ||
+replace: false ||
+name: module ID not compared
+
+find: || module.version != ref.version
+replace: || false
+name: module version not compared
+
+find: (BundleRefusal.moduleMismatch, ref.moduleId)
+replace: (BundleRefusal.moduleMismatch)
+name: mismatched module not named
+
+find: if (byId.containsKey(ref.moduleId)) {
+replace: if (false) {
+name: module listed twice accepted
+
+find: final other => throw FormatException('Not a JSON object', other),
+replace: final other => other as Map<String, Object?>,
+name: JSON that isn't an object crashes with a TypeError

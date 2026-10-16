@@ -187,3 +187,23 @@ final class Failures {
 
   void expectNone() => expect(count, 0, reason: 'first counterexample: $first');
 }
+
+/// The order L of the Ed25519 base point.
+final ed25519Order =
+    BigInt.two.pow(252) +
+    BigInt.parse('27742317777372353535851937790883648493');
+
+/// [signature] with S replaced by S + L: the same scalar mod L, so only a
+/// verifier that checks S < L (RFC 8032, section 5.1.7) rejects it.
+List<int> nonCanonicalS(List<int> signature) {
+  final s = signature
+      .sublist(32)
+      .reversed
+      .fold(BigInt.zero, (n, b) => (n << 8) | BigInt.from(b));
+  final big = s + ed25519Order;
+  expect(big.bitLength, lessThanOrEqualTo(256));
+  return [
+    ...signature.sublist(0, 32),
+    for (var i = 0; i < 32; i++) ((big >> (8 * i)) & BigInt.from(0xff)).toInt(),
+  ];
+}

@@ -23,6 +23,7 @@ Mutation runs so far:
   - the anchors after a move and after a block
   - the reported reason
 - Re-run after first entry (`selectedModules`) took the current time and returned `TimeNotAhead`: 57 mutants, the same 2 survive. The time check moved from `reschedule` into `selectedModules`, so the 2 mutants on it were moved there too. 3 new mutants are killed by test 48 in `test/selection_test.dart`: bookable hours checked before the time, appliesWhen checked before the time, and a broken bundle hidden by a time not after now.
+- Slice 6 (`bundle.dart`): 27 mutants, none survive. "Long key accepted" survived the first run: with a valid signature the library itself rejects a 33-byte key, so only test 10's 1-byte key with protocol.sig missing reached our check. Test 10 now also passes a 33-byte key with protocol.sig missing, which kills it.
 
 Each `tool/mutants/<source>.txt` starts with a `tests:` line naming the test files run for its mutants: every file that uses the source directly, through a source that imports it, or through `test/support.dart`.
 

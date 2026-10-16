@@ -78,4 +78,4 @@ The calculator's safety tests check that every protocol has an `npo` step (nothi
 
 Not a clinical question; recorded here so it isn't lost.
 
-- On loading a bundle, check that every module the manifest lists is present and matches its hash, before any code is decoded. Until then, `decodeQr` and `selectedModules` reject a missing module with an ArgumentError naming it, and only when they look it up.
+- Done in slice 6: on loading a bundle, `verifyBundle` checks that every module the manifest lists is present and matches its hash, before any code is decoded. `decodeQr` and `selectedModules` still reject a missing module with an ArgumentError naming it; slice 6b makes them accept only a verified bundle.

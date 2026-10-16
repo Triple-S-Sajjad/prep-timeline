@@ -13,7 +13,7 @@ Flutter app for iOS and Android, plus the static web page used as a fallback. Th
 | Spoofing | Fake app or phishing QR code sends the patient to a look-alike site | QR codes resolve only to the hospital's own domain, and the app always displays that domain. Printed materials show what the real address looks like. OPEN: who owns the app-store developer account (the spec lists this as an open question) |
 | Tampering | Bundle changed in transit or in storage | The app refuses any unsigned or mis-signed bundle |
 | Tampering | QR code edited to change modules or parameter values | Each parameter value is checked against its declared range when the QR code is decoded and again in the calculator. For an appointmentTime group, the app rejects a code whose ticked module doesn't match the appointment time. OPEN, decide before Phase 3: whether the QR code itself is signed |
-| Tampering | Older, validly signed bundle served in place of the current one | OPEN, decide before Phase 3: whether the app rejects a version older than the one it holds. OPEN: whether it checks the review date itself |
+| Tampering | Older, validly signed bundle served in place of the current one | The app rejects a version older than the one it holds, and the same version with different manifest bytes, since published versions are immutable. OPEN: whether it checks the review date itself |
 | Tampering | Device clock or time zone set wrong, so the app reads the wrong current time | OPEN: reminder times, reminder lateness and the newly-past-due check on a reschedule all trust the device's current time; nothing checks it against another source |
 | Tampering | Time zone rules on the device are out of date, so local times after a rule change are wrong | OPEN: how the app's time zone rules get updated. The calculator's data is IANA 2025c and ends in 2037 ([ADR 1, Known limitations](adr/0001-repository-tooling.md#known-limitations)) |
 | Repudiation | Not applicable on the server: no patient actions reach it | OPEN: where "Done" and "I missed this" taps are stored |
@@ -27,12 +27,12 @@ Flutter app for iOS and Android, plus the static web page used as a fallback. Th
 
 ## Static bundle delivery
 
-Signed static JSON on S3 and CloudFront, under the hospital's domain. A protocol's manifest and modules are versioned and signed as one unit: the manifest records each module's version and SHA-256, and one signature covers those hashes.
+Signed static JSON on S3 and CloudFront, under the hospital's domain. A protocol's manifest and modules are versioned and signed as one unit: the manifest records each module's version and SHA-256, and a detached signature, protocol.sig, signs the ASCII label "prep-timeline/manifest/v1" followed by the SHA-256 of the manifest's exact bytes.
 
 | STRIDE | Threat | Control |
 | --- | --- | --- |
 | Spoofing | Bundles served from a domain the attacker controls | Served only under the hospital's domain; the app checks the signature whatever the source |
-| Tampering | A file changed in S3 or at the CDN | The signature covers every module's hash, so a changed or swapped module fails verification |
+| Tampering | A file changed in S3 or at the CDN | The signature covers every byte of the manifest, and the manifest lists every module's hash, so a changed or swapped manifest or module fails verification |
 | Repudiation | A publish nobody admits to | Every publish alerts the clinical owner, and the audit log records who, what, when and from where |
 | Information disclosure | Bundle contents read by anyone | Bundles are public protocol content with no patient data |
 | Information disclosure | Access logs link an IP address to a protocol ID | OPEN: whether CDN access logs are kept, and for how long |
@@ -83,7 +83,7 @@ The signing key is held in AWS KMS and never exported. Only the approval service
 | STRIDE | Threat | Control |
 | --- | --- | --- |
 | Spoofing | Another service requests a signature | Only the approval service may request one. OPEN: how that restriction is enforced |
-| Tampering | Unapproved content signed | Signing follows two-person approval; the signature covers the manifest's module hashes. OPEN: signature algorithm (the spec gives Ed25519 as an example) |
+| Tampering | Unapproved content signed | Signing follows two-person approval. The signature is Ed25519 over the label and the SHA-256 of the manifest's exact bytes, and the manifest lists each module's hash |
 | Repudiation | Signature nobody admits to | Every signature request is logged; every publish alerts the clinical owner |
 | Information disclosure | Private key stolen | Never exported from KMS |
 | Denial of service | KMS unavailable | Publishing needs a signature; bundles already published keep being served |

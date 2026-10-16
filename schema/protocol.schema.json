@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Protocol manifest",
-  "description": "protocol.json: lists a protocol's modules and is signed as one unit with them. Rules: docs/spec.md, Changeability.",
+  "description": "protocol.json: lists a protocol's modules and is signed as one unit with them; the signature is the separate file protocol.sig. Rules: docs/spec.md, Changeability.",
   "type": "object",
   "required": [
     "schemaVersion",
@@ -14,8 +14,7 @@
     "bookableHours",
     "baseModule",
     "optionalModules",
-    "allowedCombinations",
-    "signature"
+    "allowedCombinations"
   ],
   "additionalProperties": false,
   "properties": {
@@ -98,7 +97,6 @@
         }
       }
     },
-    "signature": { "type": "string" },
     "source": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^https://\\S+$" } },
     "accessed": { "$ref": "#/$defs/date" },
     "note": { "$ref": "#/$defs/text" }

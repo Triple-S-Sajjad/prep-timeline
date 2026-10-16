@@ -2,3 +2,8 @@
 *.png binary
 *.jpg binary
 *.pdf binary
+
+# Signed bytes: a protocol's manifest and modules are hashed and signed exactly
+# as stored, so git must never convert their line endings.
+fixtures/**/*.json -text
+*.sig -text
