@@ -1,5 +1,6 @@
 import 'package:timezone/timezone.dart' as tz;
 
+import 'bundle.dart';
 import 'clock.dart';
 import 'past_due.dart';
 import 'protocol.dart';
@@ -53,14 +54,11 @@ final class TimeNotAhead extends SelectionResult {
   const TimeNotAhead();
 }
 
-/// The code in [json], checked against [manifest] and its [modules]. Throws
-/// FormatException for a malformed code and ArgumentError for one that breaks
-/// a manifest rule.
-QrCode decodeQr(
-  Map<String, Object?> json,
-  Manifest manifest,
-  Map<String, Module> modules,
-) {
+/// The code in [json], checked against [bundle]'s manifest and modules.
+/// Throws FormatException for a malformed code and ArgumentError for one that
+/// breaks a manifest rule.
+QrCode decodeQr(Map<String, Object?> json, Bundle bundle) {
+  final Bundle(:manifest, :modules) = bundle;
   final code = switch (json) {
     {
       'protocolId': final String protocolId,
@@ -135,8 +133,8 @@ QrCode decodeQr(
   );
 }
 
-/// Publishing checks the bundle, but a module missing from it on the phone
-/// would otherwise crash or leave its steps off the timeline.
+/// verifyBundle refuses a bundle that lacks a listed module, so this never
+/// throws; it stays so a lookup fails closed instead of crashing.
 Module _module(Map<String, Module> modules, String id) =>
     modules[id] ??
     (throw ArgumentError.value(id, 'modules', 'Not in the bundle'));
@@ -185,16 +183,16 @@ tz.TZDateTime _instant(String text, tz.Location zone) {
 /// [NeedsNewInstructions] when it is outside the bookable hours or a selected
 /// module's appliesWhen. The app never picks a module itself.
 /// Throws ArgumentError for an appointment in another zone, a code passed in
-/// the wrong stage, a module missing from [modules] or a base module with
-/// parameters, even when the time alone would need new instructions.
+/// the wrong stage or a base module with parameters, even when the time
+/// alone would need new instructions.
 SelectionResult selectedModules(
-  Manifest manifest,
-  Map<String, Module> modules,
+  Bundle bundle,
   QrCode scheduling,
   QrCode? discharge,
   tz.TZDateTime appointment, {
   required tz.TZDateTime now,
 }) {
+  final Bundle(:manifest, :modules) = bundle;
   // By name, because the same zone can be loaded more than once.
   if (appointment.location.name != manifest.zone.name) {
     throw ArgumentError("The appointment must be in the protocol's zone.");
@@ -247,22 +245,20 @@ typedef Rescheduled = ({SelectionResult result, Anchors anchors});
 /// ArgumentError as [selectedModules] does, and for a [current] appointment in
 /// another zone.
 Rescheduled reschedule(
-  Manifest manifest,
-  Map<String, Module> modules,
+  Bundle bundle,
   QrCode scheduling,
   QrCode? discharge,
   Anchors current,
   tz.TZDateTime appointment, {
   required tz.TZDateTime now,
 }) {
-  if (current.appointment.location.name != manifest.zone.name) {
+  if (current.appointment.location.name != bundle.manifest.zone.name) {
     throw ArgumentError("The appointment must be in the protocol's zone.");
   }
   // First, so a wrong zone, stage or bundle throws before any result is
   // chosen.
   final selection = selectedModules(
-    manifest,
-    modules,
+    bundle,
     scheduling,
     discharge,
     appointment,

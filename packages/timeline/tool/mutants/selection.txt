@@ -1,5 +1,5 @@
 # Mutants of lib/src/selection.dart (slice 5b).
-tests: test/selection_test.dart
+tests: test/bundle_test.dart test/selection_test.dart
 
 find: code.protocolId != manifest.protocolId ||
 replace: false ||
@@ -161,7 +161,7 @@ find:   final base = _module(modules, manifest.base.moduleId);
 replace:   if (!_inRange(manifest.bookable, appointment)) return const NeedsNewInstructions(NewInstructionsReason.outsideBookableHours); final base = _module(modules, manifest.base.moduleId);
 name: a broken bundle hidden outside bookable hours
 
-find: if (current.appointment.location.name != manifest.zone.name) {
+find: if (current.appointment.location.name != bundle.manifest.zone.name) {
 replace: if (false) {
 name: reschedule: old appointment zone not checked
 

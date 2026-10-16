@@ -9,6 +9,11 @@ import 'support.dart';
 void main() {
   setUpAll(tzdata.initializeTimeZones);
 
+  Map<String, Object?> stepJson(Map<String, Object?> json, String id) =>
+      (json['steps']! as List<Object?>)
+          .cast<Map<String, Object?>>()
+          .singleWhere((s) => s['id'] == id);
+
   group('parseManifest', () {
     test('1. UMMC: zone, defaults, base and optional modules', () {
       final m = parseManifest(
@@ -225,10 +230,6 @@ void main() {
   group('timedSteps', () {
     List<TimedStep> steps(String path, [Map<String, int> chosen = const {}]) =>
         timedSteps(parseModule(fixture(path)), chosen);
-    Map<String, Object?> stepJson(Map<String, Object?> json, String id) =>
-        (json['steps']! as List<Object?>)
-            .cast<Map<String, Object?>>()
-            .singleWhere((s) => s['id'] == id);
 
     test('10. UMMC dose1 carries its id and pastDue level', () {
       final dose1 = steps('colo-golytely-split-am-umms/base.json')
@@ -387,5 +388,83 @@ void main() {
         throwsFormatException,
       );
     });
+  });
+
+  group('26. a parsed manifest or module cannot be changed, at any depth', () {
+    Manifest karmanos() =>
+        parseManifest(fixture('colo-miralax-split-karmanos/protocol.json'));
+
+    /// BMC P2Y12 hold, with a list of maps added to its p2y12 step so the
+    /// freeze is checked inside lists too.
+    Module p2y12() {
+      final json = fixture('colo-golytely-split-bmc/p2y12-hold.json');
+      stepJson(json, 'p2y12')['extra'] = <Object?>[
+        <String, Object?>{'key': 'value'},
+      ];
+      return parseModule(json);
+    }
+
+    Map<String, Object?> stepOf(Module m) => m.steps.last;
+    Map<String, Object?> mapAt(Map<String, Object?> json, String key) =>
+        json[key]! as Map<String, Object?>;
+
+    for (final (name, change) in <(String, void Function())>[
+      (
+        'Manifest.optional, add',
+        () {
+          final m = karmanos();
+          m.optional.add(m.optional.first);
+        },
+      ),
+      (
+        'Manifest.optional, replace',
+        () {
+          final m = karmanos();
+          m.optional[0] = m.optional.last;
+        },
+      ),
+      (
+        'Manifest.exactlyOneOf, add',
+        () {
+          final m = karmanos();
+          m.exactlyOneOf.add(m.exactlyOneOf.first);
+        },
+      ),
+      (
+        'Manifest.exactlyOneOf, a group remove',
+        () => karmanos().exactlyOneOf.first.modules.removeLast(),
+      ),
+      (
+        'Module.parameters, add',
+        () {
+          final m = p2y12();
+          m.parameters['holdWeeks'] = m.parameters['holdDays']!;
+        },
+      ),
+      ('Module.steps, add', () => p2y12().steps.add({})),
+      ('a step map, set', () => stepOf(p2y12())['pastDue'] = 'ignore'),
+      ('a step map, remove', () => stepOf(p2y12()).remove('pastDue')),
+      (
+        "a step's timing, set",
+        () => mapAt(stepOf(p2y12()), 'timing')['lasts'] = 'oneDay',
+      ),
+      (
+        "a step's timing day parameter, set",
+        () => mapAt(mapAt(stepOf(p2y12()), 'timing'), 'day')['before'] = false,
+      ),
+      (
+        'a list in a step, add',
+        () => (stepOf(p2y12())['extra']! as List<Object?>).add(1),
+      ),
+      (
+        'a map in a list in a step, set',
+        () =>
+            ((stepOf(p2y12())['extra']! as List<Object?>).first!
+                    as Map<String, Object?>)['key'] =
+                'changed',
+      ),
+    ]) {
+      test(name, () => expect(change, throwsUnsupportedError));
+    }
   });
 }

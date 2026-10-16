@@ -8,7 +8,13 @@ import 'package:cryptography/dart.dart' show DartEd25519;
 import 'protocol.dart';
 
 /// A protocol whose signature, version and module hashes have been checked.
-typedef Bundle = ({Manifest manifest, Map<String, Module> modules});
+/// Only [verifyBundle] makes one, so nothing unverified reaches selection.
+final class Bundle {
+  Bundle._(this.manifest, Map<String, Module> modules)
+    : modules = Map.unmodifiable(modules);
+  final Manifest manifest;
+  final Map<String, Module> modules;
+}
 
 /// The version the app already holds, with its manifest's SHA-256 in
 /// lowercase hex.
@@ -106,7 +112,7 @@ Future<Bundle> verifyBundle({
     }
     byId[ref.moduleId] = module;
   }
-  return (manifest: parsed, modules: byId);
+  return Bundle._(parsed, byId);
 }
 
 List<int> _signatureBytes(List<int>? file) {

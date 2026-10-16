@@ -76,8 +76,12 @@ Manifest parseManifest(Map<String, Object?> json) => switch (json) {
       defaults: (evening: parseClockTime(evening), quiet: _clockRange(quiet)),
       bookable: _clockRange(bookable),
       base: _moduleRef(base, base: true),
-      optional: [for (final ref in optional) _moduleRef(ref, base: false)],
-      exactlyOneOf: [for (final group in groups) _group(group)],
+      optional: List.unmodifiable([
+        for (final ref in optional) _moduleRef(ref, base: false),
+      ]),
+      exactlyOneOf: List.unmodifiable([
+        for (final group in groups) _group(group),
+      ]),
     ),
   _ => throw FormatException('Not a manifest', json),
 };
@@ -119,10 +123,10 @@ ModuleRef _moduleRef(Object? json, {required bool base}) => switch (json) {
 Group _group(Object? json) => switch (json) {
   {'selectBy': final selectBy, 'modules': final List<Object?> modules} => (
     selectBy: _enum(SelectBy.values, selectBy),
-    modules: [
+    modules: List.unmodifiable([
       for (final m in modules)
         m is String ? m : throw FormatException('Not a module ID', m),
-    ],
+    ]),
   ),
   _ => throw FormatException('Not an exactlyOneOf group', json),
 };
@@ -156,12 +160,12 @@ Module parseModule(Map<String, Object?> json) {
           to: to == '24:00' ? _day : _minutes(parseClockTime(to)),
         ),
         parameters: _params(json),
-        steps: [
+        steps: List.unmodifiable([
           for (final s in steps)
             s is Map<String, Object?>
-                ? s
+                ? _frozen(s)
                 : throw FormatException('Not a step', s),
-        ],
+        ]),
       ),
     _ => throw FormatException('Not a module', json),
   };
@@ -176,11 +180,24 @@ int _minutes(({int hour, int minute}) clock) => clock.hour * 60 + clock.minute;
 Map<String, ParamRange> _params(Map<String, Object?> module) =>
     switch (module['parameters']) {
       _ when !module.containsKey('parameters') => const {},
-      final Map<String, Object?> params => {
+      final Map<String, Object?> params => Map.unmodifiable({
         for (final MapEntry(:key, :value) in params.entries) key: _param(value),
-      },
+      }),
       final other => throw FormatException('Not a parameter list', other),
     };
+
+/// A deep copy that cannot be changed, so a step stays as it was signed.
+Map<String, Object?> _frozen(Map<String, Object?> json) => Map.unmodifiable({
+  for (final MapEntry(:key, :value) in json.entries) key: _frozenValue(value),
+});
+
+Object? _frozenValue(Object? json) => switch (json) {
+  final Map<String, Object?> map => _frozen(map),
+  final List<Object?> list => List<Object?>.unmodifiable(
+    list.map(_frozenValue),
+  ),
+  _ => json,
+};
 
 ParamRange _param(Object? json) => switch (json) {
   {'min': final int min, 'max': final int max, 'unit': final String unit} => (

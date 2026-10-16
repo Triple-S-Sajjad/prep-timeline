@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:test/test.dart';
 import 'package:timeline/timeline.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
@@ -22,19 +20,6 @@ const detroit = 'America/Detroit';
 /// they have one (fixtures/open-questions.md, "Stop-drinking step to
 /// confirm").
 const noStopDrinking = {umms};
-
-/// A fixture protocol's manifest and modules, as the app loads them.
-Bundle bundle(String protocol) {
-  final dir = '$protocols/$protocol';
-  final modules = [
-    for (final f in Directory(dir).listSync().whereType<File>())
-      if (!f.path.endsWith('protocol.json')) parseModule(readJson(f.path)),
-  ];
-  return (
-    manifest: parseManifest(readJson('$dir/protocol.json')),
-    modules: {for (final m in modules) m.moduleId: m},
-  );
-}
 
 /// A code's JSON with full module IDs, fresh each call so a test can change
 /// it.
@@ -73,8 +58,7 @@ Map<String, Object?> code(
 String hhmm(int hour, int minute) =>
     '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
 
-QrCode decode(Bundle b, Map<String, Object?> json) =>
-    decodeQr(json, b.manifest, b.modules);
+QrCode decode(Bundle b, Map<String, Object?> json) => decodeQr(json, b);
 
 /// Before every appointment in these tests, for those that don't test the
 /// current time.
@@ -82,14 +66,12 @@ final longAgo = tz.TZDateTime.utc(2020);
 
 /// The selected modules, failing the test if the time needs new instructions.
 List<SelectedModule> selectedOrFail(
-  Manifest manifest,
-  Map<String, Module> modules,
+  Bundle bundle,
   QrCode scheduling,
   QrCode? discharge,
   tz.TZDateTime appointment,
 ) => switch (selectedModules(
-  manifest,
-  modules,
+  bundle,
   scheduling,
   discharge,
   appointment,
@@ -210,17 +192,17 @@ List<List<String>> allowedSets(
 /// appointment: every 15 minutes inside bookable hours on [publishDates],
 /// each parameter at its lowest and then its highest value, without and with
 /// each allowed discharge code.
-void forEverySelection(
+Future<void> forEverySelection(
   void Function(
     String protocol,
     List<SelectedModule> selected,
     tz.TZDateTime appointment,
   )
   check,
-) {
+) async {
   for (final dir in protocolDirs()) {
     final protocol = dir.uri.pathSegments.lastWhere((s) => s.isNotEmpty);
-    final b = bundle(protocol);
+    final b = await signedBundle(protocol);
     final hasDischarge = b.manifest.optional.any(
       (r) => r.selectedAt == SelectedAt.discharge,
     );
@@ -255,11 +237,7 @@ void forEverySelection(
           for (final s in allowedSets(b, SelectedAt.scheduling, a)) {
             final scheduling = qr(SelectedAt.scheduling, s);
             for (final discharge in discharges) {
-              check(
-                protocol,
-                selectedOrFail(b.manifest, b.modules, scheduling, discharge, a),
-                a,
-              );
+              check(protocol, selectedOrFail(b, scheduling, discharge, a), a);
             }
           }
         }
@@ -278,8 +256,8 @@ void main() {
 
   group('decodeQr and selectedModules', () {
     test('15. UMMC scheduling code with the iron hold: base, then the iron '
-        'hold; the creation instant is read in the manifest zone', () {
-      final b = bundle(umms);
+        'hold; the creation instant is read in the manifest zone', () async {
+      final b = await signedBundle(umms);
       final qr = decode(b, code(umms, scheduling, ['iron-hold']));
       expect(qr.protocolId, umms);
       expect(qr.protocolVersion, 1);
@@ -289,13 +267,7 @@ void main() {
       // 14:00 UTC on 2026-11-01 is after that day's fall-back change.
       expect(qr.createdAt.location.name, ny);
       expect(qr.createdAt.toIso8601String(), '2026-11-01T09:00:00.000-0500');
-      final selected = selectedOrFail(
-        b.manifest,
-        b.modules,
-        qr,
-        null,
-        local(ny, 2026, 11, 18, 9),
-      );
+      final selected = selectedOrFail(b, qr, null, local(ny, 2026, 11, 18, 9));
       expect(ids(selected), ['$umms-base', '$umms-iron-hold']);
       expect(selected[0].chosen, isEmpty);
       expect(selected[1].chosen, isEmpty);
@@ -303,9 +275,10 @@ void main() {
 
     group('16. a code for another protocol or version is rejected', () {
       for (final (key, value) in const [('protocolId', bmc), ('version', 2)]) {
-        test('$key $value', () {
+        test('$key $value', () async {
           final json = code(umms, scheduling, [])..[key] = value;
-          expect(() => decode(bundle(umms), json), throwsArgumentError);
+          final b = await signedBundle(umms);
+          expect(() => decode(b, json), throwsArgumentError);
         });
       }
     });
@@ -316,9 +289,10 @@ void main() {
         ('the base module', ['base']),
         ('a duplicate', ['iron-hold', 'iron-hold']),
       ]) {
-        test('$name is rejected', () {
+        test('$name is rejected', () async {
+          final b = await signedBundle(umms);
           expect(
-            () => decode(bundle(umms), code(umms, scheduling, modules)),
+            () => decode(b, code(umms, scheduling, modules)),
             throwsArgumentError,
           );
         });
@@ -326,37 +300,31 @@ void main() {
     });
 
     group('18. each module only on the code of its selectedAt', () {
-      test('a discharge module on a scheduling code is rejected', () {
+      test('a discharge module on a scheduling code is rejected', () async {
+        final b = await signedBundle(uw);
         expect(
-          () => decode(bundle(uw), code(uw, scheduling, ['sedation'])),
+          () => decode(b, code(uw, scheduling, ['sedation'])),
           throwsArgumentError,
         );
       });
-      test('a scheduling module on a discharge code is rejected', () {
+      test('a scheduling module on a discharge code is rejected', () async {
+        final b = await signedBundle(umms);
         expect(
-          () => decode(bundle(umms), code(umms, discharge, ['iron-hold'])),
+          () => decode(b, code(umms, discharge, ['iron-hold'])),
           throwsArgumentError,
         );
       });
-      test('a code passed in the other stage is rejected', () {
-        final b = bundle(uw);
+      test('a code passed in the other stage is rejected', () async {
+        final b = await signedBundle(uw);
         final s = decode(b, code(uw, scheduling, []));
         final d = decode(b, code(uw, discharge, ['groin-site']));
         final appt = local(la, 2026, 11, 18, 10);
         expect(
-          () => selectedModules(
-            b.manifest,
-            b.modules,
-            d,
-            null,
-            appt,
-            now: longAgo,
-          ),
+          () => selectedModules(b, d, null, appt, now: longAgo),
           throwsArgumentError,
         );
         expect(
-          () =>
-              selectedModules(b.manifest, b.modules, s, s, appt, now: longAgo),
+          () => selectedModules(b, s, s, appt, now: longAgo),
           throwsArgumentError,
         );
       });
@@ -364,10 +332,9 @@ void main() {
 
     group('19. UW discharge code: exactly one insertion site', () {
       for (final site in const ['groin-site', 'arm-site']) {
-        test('$site alone is accepted', () {
-          expect(decode(bundle(uw), code(uw, discharge, [site])).modules, {
-            '$uw-$site',
-          });
+        test('$site alone is accepted', () async {
+          final b = await signedBundle(uw);
+          expect(decode(b, code(uw, discharge, [site])).modules, {'$uw-$site'});
         });
       }
       for (final modules in const [
@@ -375,9 +342,10 @@ void main() {
         ['sedation'],
         ['groin-site', 'arm-site'],
       ]) {
-        test('$modules is rejected', () {
+        test('$modules is rejected', () async {
+          final b = await signedBundle(uw);
           expect(
-            () => decode(bundle(uw), code(uw, discharge, modules)),
+            () => decode(b, code(uw, discharge, modules)),
             throwsArgumentError,
           );
         });
@@ -385,11 +353,10 @@ void main() {
     });
 
     test('20. UW scheduling code needs no insertion site: its group is chosen '
-        'at discharge', () {
-      final b = bundle(uw);
+        'at discharge', () async {
+      final b = await signedBundle(uw);
       final selected = selectedOrFail(
-        b.manifest,
-        b.modules,
+        b,
         decode(b, code(uw, scheduling, [])),
         null,
         local(la, 2026, 11, 18, 10),
@@ -406,11 +373,10 @@ void main() {
       ];
       for (final (module, hour, minute, accepted) in cases) {
         test('$module at ${hhmm(hour, minute)}: '
-            '${accepted ? 'accepted' : 'rejected'}', () {
-          final b = bundle(karmanos);
+            '${accepted ? 'accepted' : 'rejected'}', () async {
+          final b = await signedBundle(karmanos);
           SelectionResult select() => selectedModules(
-            b.manifest,
-            b.modules,
+            b,
             decode(b, code(karmanos, scheduling, [module])),
             null,
             local(detroit, 2026, 11, 18, hour, minute),
@@ -434,9 +400,10 @@ void main() {
         <String>[],
         ['am-schedule', 'pm-schedule'],
       ]) {
-        test('$modules is rejected', () {
+        test('$modules is rejected', () async {
+          final b = await signedBundle(karmanos);
           expect(
-            () => decode(bundle(karmanos), code(karmanos, scheduling, modules)),
+            () => decode(b, code(karmanos, scheduling, modules)),
             throwsArgumentError,
           );
         });
@@ -444,8 +411,8 @@ void main() {
     });
 
     test('23. every subset of the 13 BMC optional modules is accepted, base '
-        'first, then manifest order', () {
-      final b = bundle(bmc);
+        'first, then manifest order', () async {
+      final b = await signedBundle(bmc);
       final optional = [for (final r in b.manifest.optional) r.moduleId];
       expect(optional, hasLength(13));
       final appt = local(ny, 2026, 11, 18, 10);
@@ -457,8 +424,7 @@ void main() {
         ];
         final params = picked(b, ticked, (p) => p.min);
         final selected = selectedOrFail(
-          b.manifest,
-          b.modules,
+          b,
           decode(
             b,
             codeJson(bmc, scheduling, ticked.reversed.toList(), params),
@@ -481,31 +447,33 @@ void main() {
 
     group('24. parameter values: BMC P2Y12 hold, holdDays 5 to 7', () {
       for (final days in const [5, 7]) {
-        test('holdDays $days is accepted and carried to the selection', () {
-          final b = bundle(bmc);
-          final qr = decode(
-            b,
-            code(
-              bmc,
-              scheduling,
-              ['p2y12-hold'],
-              {
-                'p2y12-hold': {'holdDays': days},
-              },
-            ),
-          );
-          expect(qr.parameters, {
-            '$bmc-p2y12-hold': {'holdDays': days},
-          });
-          final selected = selectedOrFail(
-            b.manifest,
-            b.modules,
-            qr,
-            null,
-            local(ny, 2026, 11, 18, 10),
-          );
-          expect(selected.last.chosen, {'holdDays': days});
-        });
+        test(
+          'holdDays $days is accepted and carried to the selection',
+          () async {
+            final b = await signedBundle(bmc);
+            final qr = decode(
+              b,
+              code(
+                bmc,
+                scheduling,
+                ['p2y12-hold'],
+                {
+                  'p2y12-hold': {'holdDays': days},
+                },
+              ),
+            );
+            expect(qr.parameters, {
+              '$bmc-p2y12-hold': {'holdDays': days},
+            });
+            final selected = selectedOrFail(
+              b,
+              qr,
+              null,
+              local(ny, 2026, 11, 18, 10),
+            );
+            expect(selected.last.chosen, {'holdDays': days});
+          },
+        );
       }
       final rejected =
           <(String, List<String>, Map<String, Map<String, Object?>>)>[
@@ -549,9 +517,10 @@ void main() {
             ),
           ];
       for (final (name, modules, params) in rejected) {
-        test('$name: rejected', () {
+        test('$name: rejected', () async {
+          final b = await signedBundle(bmc);
           expect(
-            () => decode(bundle(bmc), code(bmc, scheduling, modules, params)),
+            () => decode(b, code(bmc, scheduling, modules, params)),
             throwsArgumentError,
           );
         });
@@ -559,10 +528,11 @@ void main() {
       // Not 5.0: compiled to JavaScript it is an int, and the preview must agree
       // with the app.
       for (final value in const <Object?>[5.5, '5', null]) {
-        test('holdDays $value is not an integer: malformed', () {
+        test('holdDays $value is not an integer: malformed', () async {
+          final b = await signedBundle(bmc);
           expect(
             () => decode(
-              bundle(bmc),
+              b,
               code(
                 bmc,
                 scheduling,
@@ -582,12 +552,11 @@ void main() {
       // Detroit keeps New York's offsets, so only the zone name tells them
       // apart.
       for (final zone in const [detroit, 'America/Chicago']) {
-        test(zone, () {
-          final b = bundle(umms);
+        test(zone, () async {
+          final b = await signedBundle(umms);
           expect(
             () => selectedModules(
-              b.manifest,
-              b.modules,
+              b,
               decode(b, code(umms, scheduling, [])),
               null,
               local(zone, 2026, 11, 18, 9),
@@ -600,21 +569,23 @@ void main() {
     });
 
     test('26. an appointment outside the base appliesWhen needs new '
-        'instructions, even inside bookable hours', () {
-      final b = bundle(umms);
-      final base = fixture('$umms/base.json');
-      final times =
-          (base['appliesWhen']! as Map<String, Object?>)['appointmentTime']!
-              as Map<String, Object?>;
+        'instructions, even inside bookable hours', () async {
       // Publishing rejects bookable hours outside the base appliesWhen
       // (fixtures/invalid/bookable-outside-base-umms); this checks the phone
       // still refuses such an appointment if one gets through.
-      times['fromInclusive'] = '08:00';
-      final modules = {...b.modules, '$umms-base': parseModule(base)};
+      final b = await signedBundle(
+        umms,
+        modules: {
+          'base': (base) =>
+              ((base['appliesWhen']!
+                          as Map<String, Object?>)['appointmentTime']!
+                      as Map<String, Object?>)['fromInclusive'] =
+                  '08:00',
+        },
+      );
       final qr = decode(b, code(umms, scheduling, []));
       SelectionResult at(int hour, int minute) => selectedModules(
-        b.manifest,
-        modules,
+        b,
         qr,
         null,
         local(ny, 2026, 11, 18, hour, minute),
@@ -628,17 +599,14 @@ void main() {
     group(
       '32. an appointment outside bookableHours needs new instructions',
       () {
-        SelectionResult select(Manifest manifest, int hour, int minute) {
-          final b = bundle(bmc);
-          return selectedModules(
-            manifest,
-            b.modules,
-            decode(b, code(bmc, scheduling, [])),
-            null,
-            local(ny, 2026, 11, 18, hour, minute),
-            now: longAgo,
-          );
-        }
+        SelectionResult select(Bundle b, int hour, int minute) =>
+            selectedModules(
+              b,
+              decode(b, code(bmc, scheduling, [])),
+              null,
+              local(ny, 2026, 11, 18, hour, minute),
+              now: longAgo,
+            );
 
         // A null range keeps BMC's own bookable hours, 07:00 to 17:00.
         for (final (label, range, cases) in const [
@@ -660,11 +628,14 @@ void main() {
         ]) {
           for (final (hour, minute, accepted) in cases) {
             test('$label: ${hhmm(hour, minute)} '
-                '${accepted ? 'accepted' : 'rejected'}', () {
-              final json = fixture('$bmc/protocol.json');
-              if (range != null) json['bookableHours'] = {...range};
-              final manifest = parseManifest(json);
-              final result = select(manifest, hour, minute);
+                '${accepted ? 'accepted' : 'rejected'}', () async {
+              final b = await signedBundle(
+                bmc,
+                manifest: range == null
+                    ? null
+                    : (json) => json['bookableHours'] = {...range},
+              );
+              final result = select(b, hour, minute);
               if (accepted) {
                 expect(ids((result as Selected).modules), ['$bmc-base']);
               } else {
@@ -688,9 +659,10 @@ void main() {
         'parameters',
         'createdAt',
       ]) {
-        test('without $key', () {
+        test('without $key', () async {
           final json = code(umms, scheduling, [])..remove(key);
-          expect(() => decode(bundle(umms), json), throwsFormatException);
+          final b = await signedBundle(umms);
+          expect(() => decode(b, json), throwsFormatException);
         });
       }
       for (final (key, value) in const <(String, Object?)>[
@@ -702,9 +674,10 @@ void main() {
         ('createdAt', '2026-11-01T09:00:00-05:00'),
         ('createdAt', 'yesterday'),
       ]) {
-        test('$key $value', () {
+        test('$key $value', () async {
           final json = code(umms, scheduling, [])..[key] = value;
-          expect(() => decode(bundle(umms), json), throwsFormatException);
+          final b = await signedBundle(umms);
+          expect(() => decode(b, json), throwsFormatException);
         });
       }
     });
@@ -713,21 +686,25 @@ void main() {
     // even at 13:00, where the time alone would need new instructions.
     const hours = [9, 13];
 
+    /// UMMC with a base module that declares a parameter, signed.
+    Future<Bundle> baseWithParameters() => signedBundle(
+      umms,
+      modules: {
+        'base': (base) => base['parameters'] = {
+          'holdDays': {'min': 5, 'max': 7, 'unit': 'days'},
+        },
+      },
+    );
+
     group('36. a base module with parameters is rejected', () {
       for (final hour in hours) {
-        test('at ${hhmm(hour, 0)}', () {
-          final b = bundle(umms);
+        test('at ${hhmm(hour, 0)}', () async {
           // Publishing rejects this (fixtures/invalid/base-parameters-bmc);
           // the codes carry no values for the base, so the phone refuses it.
-          final base = fixture('$umms/base.json')
-            ..['parameters'] = {
-              'holdDays': {'min': 5, 'max': 7, 'unit': 'days'},
-            };
-          final modules = {...b.modules, '$umms-base': parseModule(base)};
+          final b = await baseWithParameters();
           expect(
             () => selectedModules(
-              b.manifest,
-              modules,
+              b,
               decode(b, code(umms, scheduling, [])),
               null,
               local(ny, 2026, 11, 18, hour),
@@ -739,58 +716,20 @@ void main() {
       }
     });
 
-    group('37. a module the manifest lists but the bundle lacks is rejected, '
-        'naming it', () {
-      Map<String, Module> without(String name) =>
-          {...bundle(umms).modules}..remove('$umms-$name');
-
-      test('decodeQr, the ticked iron hold', () {
-        final b = bundle(umms);
-        expect(
-          () => decodeQr(
-            code(umms, scheduling, ['iron-hold']),
-            b.manifest,
-            without('iron-hold'),
-          ),
-          throwsNaming('$umms-iron-hold'),
-        );
-      });
-      for (final name in const ['base', 'iron-hold']) {
-        for (final hour in hours) {
-          test('selectedModules, the $name at ${hhmm(hour, 0)}', () {
-            final b = bundle(umms);
-            expect(
-              () => selectedModules(
-                b.manifest,
-                without(name),
-                decode(b, code(umms, scheduling, ['iron-hold'])),
-                null,
-                local(ny, 2026, 11, 18, hour),
-                now: longAgo,
-              ),
-              throwsNaming('$umms-$name'),
-            );
-          });
-        }
-      }
-    });
-
     group('48. first entry: an appointment not after now is refused, after '
         'setup errors and before bookable hours', () {
-      final b = bundle(umms);
       final at9 = local(ny, 2026, 11, 18, 9);
       final at13 = local(ny, 2026, 11, 18, 13);
-      SelectionResult select(
+      Future<SelectionResult> select(
         tz.TZDateTime appointment,
         tz.TZDateTime now, {
-        Map<String, Module>? modules,
+        Bundle? bundle,
         String protocol = umms,
         List<String> ticked = const [],
-      }) {
-        final p = bundle(protocol);
+      }) async {
+        final p = bundle ?? await signedBundle(protocol);
         return selectedModules(
-          p.manifest,
-          modules ?? p.modules,
+          p,
           decode(p, code(protocol, scheduling, ticked)),
           null,
           appointment,
@@ -811,24 +750,26 @@ void main() {
           local(ny, 2026, 11, 18, 14),
         ),
       ]) {
-        test('$label: "Choose a time after now."', () {
-          expect(select(appointment, now), isA<TimeNotAhead>());
+        test('$label: "Choose a time after now."', () async {
+          expect(await select(appointment, now), isA<TimeNotAhead>());
         });
       }
-      test('UMMC 09:00 at 08:59:59.999: selected', () {
+      test('UMMC 09:00 at 08:59:59.999: selected', () async {
         final now = at9.subtract(const Duration(milliseconds: 1));
-        expect(ids((select(at9, now) as Selected).modules), ['$umms-base']);
+        expect(ids((await select(at9, now) as Selected).modules), [
+          '$umms-base',
+        ]);
       });
-      test('UMMC 13:00 at 12:00: outside bookable hours', () {
+      test('UMMC 13:00 at 12:00: outside bookable hours', () async {
         expect(
-          select(at13, local(ny, 2026, 11, 18, 12)),
+          await select(at13, local(ny, 2026, 11, 18, 12)),
           needsNew(NewInstructionsReason.outsideBookableHours),
         );
       });
       test('Karmanos am-schedule 13:00, outside its appliesWhen too, at '
-          '14:00: "Choose a time after now."', () {
+          '14:00: "Choose a time after now."', () async {
         expect(
-          select(
+          await select(
             local(detroit, 2026, 11, 18, 13),
             local(detroit, 2026, 11, 18, 14),
             protocol: karmanos,
@@ -838,41 +779,25 @@ void main() {
         );
       });
       final later = local(ny, 2026, 11, 18, 10);
-      test('09:00 Detroit at 10:00: another zone, an ArgumentError', () {
-        expect(
-          () => select(local(detroit, 2026, 11, 18, 9), later),
+      test('09:00 Detroit at 10:00: another zone, an ArgumentError', () async {
+        await expectLater(
+          select(local(detroit, 2026, 11, 18, 9), later),
           throwsArgumentError,
         );
       });
-      test('09:00 at 10:00, the base missing: an ArgumentError naming it', () {
-        expect(
-          () =>
-              select(at9, later, modules: {...b.modules}..remove('$umms-base')),
-          throwsNaming('$umms-base'),
-        );
-      });
       test('09:00 at 10:00, the base with parameters: an ArgumentError '
-          'naming it', () {
-        final base = fixture('$umms/base.json')
-          ..['parameters'] = {
-            'holdDays': {'min': 5, 'max': 7, 'unit': 'days'},
-          };
-        expect(
-          () => select(
-            at9,
-            later,
-            modules: {...b.modules, '$umms-base': parseModule(base)},
-          ),
+          'naming it', () async {
+        await expectLater(
+          select(at9, later, bundle: await baseWithParameters()),
           throwsNaming('$umms-base'),
         );
       });
       test('UW 10:00 at 11:00, a discharge code passed as the scheduling '
-          'code: an ArgumentError', () {
-        final u = bundle(uw);
+          'code: an ArgumentError', () async {
+        final u = await signedBundle(uw);
         expect(
           () => selectedModules(
-            u.manifest,
-            u.modules,
+            u,
             decode(u, code(uw, discharge, ['groin-site'])),
             null,
             local(la, 2026, 11, 18, 10),
@@ -897,19 +822,18 @@ void main() {
 
     /// Reschedules [protocol]'s scheduling code with [ticked], and its
     /// discharge code with [discharged] if given, from [current] to [to].
-    Rescheduled move(
+    Future<Rescheduled> move(
       String protocol,
       List<String> ticked,
       Anchors current,
       tz.TZDateTime to, {
       required tz.TZDateTime now,
-      Map<String, Module>? modules,
+      Bundle? bundle,
       List<String>? discharged,
-    }) {
-      final b = bundle(protocol);
+    }) async {
+      final b = bundle ?? await signedBundle(protocol);
       return reschedule(
-        b.manifest,
-        modules ?? b.modules,
+        b,
         decode(b, code(protocol, scheduling, ticked)),
         discharged == null
             ? null
@@ -945,19 +869,12 @@ void main() {
       expect(r.anchors, anchors(to));
     }
 
-    /// [protocol]'s modules with module file [name]'s JSON changed by [edit].
-    Map<String, Module> changed(
+    /// [protocol] with module file [name]'s JSON changed by [edit], signed.
+    Future<Bundle> changed(
       String protocol,
       String name,
       void Function(Map<String, Object?> json) edit,
-    ) {
-      final json = fixture('$protocol/$name.json');
-      edit(json);
-      return {
-        ...bundle(protocol).modules,
-        '$protocol-$name': parseModule(json),
-      };
-    }
+    ) => signedBundle(protocol, modules: {name: edit});
 
     /// Step [id] of a module's JSON.
     Map<String, Object?> stepOf(Map<String, Object?> module, String id) =>
@@ -976,22 +893,29 @@ void main() {
         ),
         ('to 11-09 10:00, before now too', local(la, 2026, 11, 9, 10)),
       ]) {
-        test('UW, discharge code scanned, $label', () {
+        test('UW, discharge code scanned, $label', () async {
           final current = anchors(old);
           expectBlocked(
-            move(uw, [], current, to, now: now, discharged: ['groin-site']),
+            await move(
+              uw,
+              [],
+              current,
+              to,
+              now: now,
+              discharged: ['groin-site'],
+            ),
             NewInstructionsReason.afterDischarge,
             current,
           );
         });
       }
-      test('UMMC, no discharge code but "I\'m home" tapped', () {
+      test('UMMC, no discharge code but "I\'m home" tapped', () async {
         final current = anchors(
           local(ny, 2026, 11, 18, 9),
           home: local(ny, 2026, 11, 18, 11),
         );
         expectBlocked(
-          move(
+          await move(
             umms,
             [],
             current,
@@ -1008,10 +932,10 @@ void main() {
         "module's appliesWhen; the app never switches modules", () {
       final now = local(ny, 2026, 11, 1, 12);
       test('Karmanos am-schedule, 10:00 to 13:00: outside appliesWhen, not '
-          'switched to pm-schedule', () {
+          'switched to pm-schedule', () async {
         final current = anchors(local(detroit, 2026, 11, 18, 10));
         expectBlocked(
-          move(
+          await move(
             karmanos,
             ['am-schedule'],
             current,
@@ -1022,10 +946,10 @@ void main() {
           current,
         );
       });
-      test('Karmanos am-schedule, 10:00 to 11:59: moved', () {
+      test('Karmanos am-schedule, 10:00 to 11:59: moved', () async {
         final to = local(detroit, 2026, 11, 18, 11, 59);
         expectMoved(
-          move(
+          await move(
             karmanos,
             ['am-schedule'],
             anchors(local(detroit, 2026, 11, 18, 10)),
@@ -1036,19 +960,19 @@ void main() {
           to,
         );
       });
-      test('UMMC, 09:00 to 13:00: outside bookable hours', () {
+      test('UMMC, 09:00 to 13:00: outside bookable hours', () async {
         final current = anchors(local(ny, 2026, 11, 18, 9));
         expectBlocked(
-          move(umms, [], current, local(ny, 2026, 11, 18, 13), now: now),
+          await move(umms, [], current, local(ny, 2026, 11, 18, 13), now: now),
           NewInstructionsReason.outsideBookableHours,
           current,
         );
       });
       test('UMMC, 11-18 09:00 to 11-17 06:00 at 11-16 12:00: outside bookable '
-          'hours, reported before clear liquids newly past due', () {
+          'hours, reported before clear liquids newly past due', () async {
         final current = anchors(local(ny, 2026, 11, 18, 9));
         expectBlocked(
-          move(
+          await move(
             umms,
             [],
             current,
@@ -1069,43 +993,45 @@ void main() {
         final ironNow = local(ny, 2026, 11, 12, 12);
         final ironTo = local(ny, 2026, 11, 17, 9);
         test('UMMC iron hold (doNow), 11-18 to 11-17 09:00 at 11-12 12:00: its '
-            'start moves from 11-13 to 11-12 00:00', () {
+            'start moves from 11-13 to 11-12 00:00', () async {
           final current = anchors(old);
           expectBlocked(
-            move(umms, ['iron-hold'], current, ironTo, now: ironNow),
+            await move(umms, ['iron-hold'], current, ironTo, now: ironNow),
             NewInstructionsReason.newlyPastDue,
             current,
           );
         });
-        test('the same, with the iron hold set to ignore: moved', () {
-          final modules = changed(
+        test('the same, with the iron hold set to ignore: moved', () async {
+          final modules = await changed(
             umms,
             'iron-hold',
             (m) => stepOf(m, 'iron')['pastDue'] = 'ignore',
           );
           expectMoved(
-            move(
+            await move(
               umms,
               ['iron-hold'],
               anchors(old),
               ironTo,
               now: ironNow,
-              modules: modules,
+              bundle: modules,
             ),
             ['$umms-base', '$umms-iron-hold'],
             ironTo,
           );
         });
-        test('the same, without the iron hold: moved', () {
-          expectMoved(move(umms, [], anchors(old), ironTo, now: ironNow), [
-            '$umms-base',
-          ], ironTo);
+        test('the same, without the iron hold: moved', () async {
+          expectMoved(
+            await move(umms, [], anchors(old), ironTo, now: ironNow),
+            ['$umms-base'],
+            ironTo,
+          );
         });
         test('UMMC dose2 (critical, 4 hours before), 09:00 to 08:00 at 04:30: '
-            'moves from 05:00 to 04:00', () {
+            'moves from 05:00 to 04:00', () async {
           final current = anchors(old);
           expectBlocked(
-            move(
+            await move(
               umms,
               [],
               current,
@@ -1148,9 +1074,9 @@ void main() {
           true,
         ),
       ]) {
-        test('$label: ${blocked ? 'blocked' : 'moved'}', () {
+        test('$label: ${blocked ? 'blocked' : 'moved'}', () async {
           final current = anchors(old);
-          final r = move(umms, [], current, to, now: now);
+          final r = await move(umms, [], current, to, now: now);
           if (blocked) {
             expectBlocked(r, NewInstructionsReason.newlyPastDue, current);
           } else {
@@ -1191,9 +1117,9 @@ void main() {
           false,
         ),
       ]) {
-        test('$label: ${blocked ? 'blocked' : 'moved'}', () {
+        test('$label: ${blocked ? 'blocked' : 'moved'}', () async {
           final current = anchors(old, arrival: arrival);
-          final r = move(msk, [], current, to, now: now);
+          final r = await move(msk, [], current, to, now: now);
           if (blocked) {
             expectBlocked(r, NewInstructionsReason.newlyPastDue, current);
           } else {
@@ -1206,7 +1132,7 @@ void main() {
     group('43. a discharge step never blocks', () {
       // One step 48 hours before its anchor. With the discharge put at the
       // appointment it would move from 11-18 09:00 to 11-16 09:00, past now.
-      Map<String, Module> only(String anchor) => changed(
+      Future<Bundle> only(String anchor) => changed(
         umms,
         'base',
         (m) => m['steps'] = [step('home', anchor, '-PT48H')],
@@ -1214,24 +1140,31 @@ void main() {
       final old = local(ny, 2026, 11, 20, 9);
       final to = local(ny, 2026, 11, 18, 9);
       final now = local(ny, 2026, 11, 17, 12);
-      test('counted from discharge: moved', () {
+      test('counted from discharge: moved', () async {
         expectMoved(
-          move(
+          await move(
             umms,
             [],
             anchors(old),
             to,
             now: now,
-            modules: only('discharge'),
+            bundle: await only('discharge'),
           ),
           ['$umms-base'],
           to,
         );
       });
-      test('the same step counted from the appointment: blocked', () {
+      test('the same step counted from the appointment: blocked', () async {
         final current = anchors(old);
         expectBlocked(
-          move(umms, [], current, to, now: now, modules: only('appointment')),
+          await move(
+            umms,
+            [],
+            current,
+            to,
+            now: now,
+            bundle: await only('appointment'),
+          ),
           NewInstructionsReason.newlyPastDue,
           current,
         );
@@ -1242,10 +1175,10 @@ void main() {
       final old = local(ny, 2026, 11, 18, 9);
       final arrival = local(ny, 2026, 11, 18, 8);
       test('UMMC iron hold, 11-18 09:00 to 11-19 10:00 at 11-10 12:00: moved, '
-          'arrival cleared', () {
+          'arrival cleared', () async {
         final to = local(ny, 2026, 11, 19, 10);
         expectMoved(
-          move(
+          await move(
             umms,
             ['iron-hold'],
             anchors(old, arrival: arrival),
@@ -1257,10 +1190,10 @@ void main() {
         );
       });
       test('UMMC iron hold, 11-18 to 11-17 09:00 at 11-12 12:00: blocked, '
-          'arrival kept', () {
+          'arrival kept', () async {
         final current = anchors(old, arrival: arrival);
         expectBlocked(
-          move(
+          await move(
             umms,
             ['iron-hold'],
             current,
@@ -1285,9 +1218,9 @@ void main() {
           local(ny, 2026, 11, 17, 6),
         ),
       ]) {
-        test('$label: "Choose a time after now."', () {
+        test('$label: "Choose a time after now."', () async {
           final current = anchors(old, arrival: local(ny, 2026, 11, 18, 8));
-          expectNotAhead(move(umms, [], current, to, now: now), current);
+          expectNotAhead(await move(umms, [], current, to, now: now), current);
         });
       }
       for (final (label, current, to) in [
@@ -1302,19 +1235,18 @@ void main() {
           local(detroit, 2026, 11, 19, 9),
         ),
       ]) {
-        test(label, () {
-          expect(
-            () => move(umms, [], current, to, now: now),
+        test(label, () async {
+          await expectLater(
+            move(umms, [], current, to, now: now),
             throwsArgumentError,
           );
         });
       }
-      test('a discharge code passed as the scheduling code', () {
-        final b = bundle(uw);
+      test('a discharge code passed as the scheduling code', () async {
+        final b = await signedBundle(uw);
         expect(
           () => reschedule(
-            b.manifest,
-            b.modules,
+            b,
             decode(b, code(uw, discharge, ['groin-site'])),
             null,
             anchors(local(la, 2026, 11, 18, 10)),
@@ -1330,8 +1262,8 @@ void main() {
       final old = local(ny, 2026, 11, 18, 9);
       final current = anchors(old, arrival: local(ny, 2026, 11, 18, 8));
       test('UMMC iron hold, 11-18 09:00 to 11-18 09:00 at 11-10 12:00: '
-          'selected, arrival kept', () {
-        final r = move(
+          'selected, arrival kept', () async {
+        final r = await move(
           umms,
           ['iron-hold'],
           current,
@@ -1348,9 +1280,9 @@ void main() {
         expect(r.anchors, current);
       });
       test('the same once 09:00 has passed, at 11-18 10:00: '
-          '"Choose a time after now."', () {
+          '"Choose a time after now."', () async {
         expectNotAhead(
-          move(
+          await move(
             umms,
             ['iron-hold'],
             current,
@@ -1368,7 +1300,7 @@ void main() {
         'a time not after now is refused; the same or a later time is never '
         'newly past due; a day earlier is exactly when a step that is not '
         'ignore goes from not past due to past due (pastDueOf); a move clears '
-        'the arrival, anything else keeps the anchors', () {
+        'the arrival, anything else keeps the anchors', () async {
       tz.TZDateTime days(tz.TZDateTime t, int n) {
         final d = DateTime.utc(t.year, t.month, t.day + n);
         return localTime(t.location, d.year, d.month, d.day, t.hour, t.minute);
@@ -1378,7 +1310,7 @@ void main() {
       var earlierBlocks = 0;
       for (final dir in protocolDirs()) {
         final protocol = dir.uri.pathSegments.lastWhere((s) => s.isNotEmpty);
-        final b = bundle(protocol);
+        final b = await signedBundle(protocol);
         final picks = [
           (ParamRange p) => p.min,
           if (b.modules.values.any((m) => m.parameters.isNotEmpty))
@@ -1401,13 +1333,7 @@ void main() {
                 codeJson(protocol, scheduling, ticked, picked(b, ticked, pick)),
               );
               final steps = [
-                for (final s in selectedOrFail(
-                  b.manifest,
-                  b.modules,
-                  qr,
-                  null,
-                  old,
-                ))
+                for (final s in selectedOrFail(b, qr, null, old))
                   ...timedSteps(s.module, s.chosen),
               ];
               final nows = {
@@ -1437,23 +1363,8 @@ void main() {
                         pastDueOf(s, old, createdAt: now) == null &&
                         pastDueOf(s, to, createdAt: now) != null,
                   );
-                  final r = reschedule(
-                    b.manifest,
-                    b.modules,
-                    qr,
-                    null,
-                    anchors(old),
-                    to,
-                    now: now,
-                  );
-                  final selection = selectedModules(
-                    b.manifest,
-                    b.modules,
-                    qr,
-                    null,
-                    to,
-                    now: now,
-                  );
+                  final r = reschedule(b, qr, null, anchors(old), to, now: now);
+                  final selection = selectedModules(b, qr, null, to, now: now);
                   final ahead = to.isAfter(now);
                   final ok = !ahead
                       ? r.result is TimeNotAhead
@@ -1496,13 +1407,12 @@ void main() {
 
   group('timelineOf', () {
     // 2026-11-18 is after the fall-back change, so New York is at -05:00.
-    List<TimelineEntry> bmcTimeline(List<String> ticked) {
-      final b = bundle(bmc);
+    Future<List<TimelineEntry>> bmcTimeline(List<String> ticked) async {
+      final b = await signedBundle(bmc);
       final full = [for (final m in ticked) '$bmc-$m'];
       final appt = local(ny, 2026, 11, 18, 10);
       final selected = selectedOrFail(
-        b.manifest,
-        b.modules,
+        b,
         decode(
           b,
           codeJson(bmc, scheduling, full, picked(b, full, (p) => p.min)),
@@ -1552,12 +1462,15 @@ void main() {
     ];
 
     test('27. BMC, every module, 2026-11-18 10:00: sorted by effect time; '
-        'ties in module order, then step order', () {
-      expect(rows(bmc, bmcTimeline(everyBmcModule)), bmcRows);
+        'ties in module order, then step order', () async {
+      expect(rows(bmc, await bmcTimeline(everyBmcModule)), bmcRows);
     });
 
-    test('28. ties follow the manifest, not the order on the code', () {
-      expect(rows(bmc, bmcTimeline(everyBmcModule.reversed.toList())), bmcRows);
+    test('28. ties follow the manifest, not the order on the code', () async {
+      expect(
+        rows(bmc, await bmcTimeline(everyBmcModule.reversed.toList())),
+        bmcRows,
+      );
     });
 
     group('29. a pending step sorts with its unknown anchor at the '
@@ -1598,12 +1511,11 @@ void main() {
         ]);
       });
 
-      test('MSK, arrival unknown: npo is pending, after stop-eating', () {
-        final b = bundle(msk);
+      test('MSK, arrival unknown: npo is pending, after stop-eating', () async {
+        final b = await signedBundle(msk);
         final appt = local(ny, 2026, 11, 18, 10);
         final chosen = selectedOrFail(
-          b.manifest,
-          b.modules,
+          b,
           decode(b, code(msk, scheduling, [])),
           null,
           appt,
@@ -1636,14 +1548,14 @@ void main() {
       );
     });
 
-    test('30. UW: the discharge code adds its modules once scanned', () {
-      final b = bundle(uw);
+    test('30. UW: the discharge code adds its modules once scanned', () async {
+      final b = await signedBundle(uw);
       final appt = local(la, 2026, 11, 18, 10);
       final s = decode(b, code(uw, scheduling, []));
       final d = decode(b, code(uw, discharge, ['groin-site', 'sedation']));
-      final before = selectedOrFail(b.manifest, b.modules, s, null, appt);
+      final before = selectedOrFail(b, s, null, appt);
       expect(ids(before), ['$uw-base']);
-      final after = selectedOrFail(b.manifest, b.modules, s, d, appt);
+      final after = selectedOrFail(b, s, d, appt);
       expect(ids(after), ['$uw-base', '$uw-sedation', '$uw-groin-site']);
       final anchors = (
         appointment: appt,
@@ -1666,10 +1578,10 @@ void main() {
 
     test('31. every fixture protocol, every allowed selection, every publish '
         'sample: each timed step once, sorted, ties in module order, and '
-        'pending exactly when its anchor is unknown', () {
+        'pending exactly when its anchor is unknown', () async {
       final failures = Failures();
       final seen = <String>{};
-      forEverySelection((protocol, selected, a) {
+      await forEverySelection((protocol, selected, a) {
         seen.add(protocol);
         final input = [
           for (final s in selected)
@@ -1723,10 +1635,10 @@ void main() {
     group('33. liquids stop before the procedure', () {
       test('every protocol but $noStopDrinking, every allowed selection, '
           'every publish sample, arrival at the appointment: an npo step '
-          'takes effect before the appointment', () {
+          'takes effect before the appointment', () async {
         final failures = Failures();
         final seen = <String>{};
-        forEverySelection((protocol, selected, a) {
+        await forEverySelection((protocol, selected, a) {
           if (noStopDrinking.contains(protocol)) return;
           seen.add(protocol);
           final npo = {
@@ -1754,10 +1666,10 @@ void main() {
       });
 
       test('$noStopDrinking still has no npo step; take it out of '
-          'noStopDrinking once it has one', () {
+          'noStopDrinking once it has one', () async {
         for (final protocol in noStopDrinking) {
           final types = [
-            for (final m in bundle(protocol).modules.values)
+            for (final m in (await signedBundle(protocol)).modules.values)
               for (final s in m.steps) s['type'],
           ];
           expect(types, isNot(contains('npo')), reason: protocol);

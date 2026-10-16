@@ -1,7 +1,7 @@
 # Mutants of lib/src/protocol.dart (slice 5a). The sha256, group module ID,
 # "minutes ignored", parameter range, unit, chosen-value and "timed by remind
 # instead of timing" mutants survived the first run in MUTATION.md.
-tests: test/protocol_test.dart
+tests: test/bundle_test.dart test/protocol_test.dart test/selection_test.dart
 
 find: RegExp(r'^[0-9a-f]{64}$')
 replace: RegExp(r'^[0-9a-f]+$')
@@ -123,8 +123,8 @@ find: bookable: _clockRange(bookable),
 replace: bookable: _clockRange(quiet),
 name: bookableHours read from quiet hours
 
-find: exactlyOneOf: [for (final group in groups) _group(group)],
-replace: exactlyOneOf: [],
+find:         for (final group in groups) _group(group),
+replace:         for (final group in groups.take(0)) _group(group),
 name: exactlyOneOf groups dropped
 
 find: from: parseClockTime(from),
@@ -174,3 +174,45 @@ name: absent parameters rejected
 find: final other => throw FormatException('Not a parameter list', other),
 replace: _ => const {},
 name: malformed parameters read as none
+
+# Slice 6b: parsed manifests and modules are frozen at every depth.
+
+find:       optional: List.unmodifiable([
+replace:       optional: List.of([
+name: Manifest.optional modifiable
+
+find:       exactlyOneOf: List.unmodifiable([
+replace:       exactlyOneOf: List.of([
+name: Manifest.exactlyOneOf modifiable
+
+find:     modules: List.unmodifiable([
+replace:     modules: List.of([
+name: a group's module list modifiable
+
+find:         steps: List.unmodifiable([
+replace:         steps: List.of([
+name: Module.steps modifiable
+
+find:                 ? _frozen(s)
+replace:                 ? s
+name: step maps left as parsed
+
+find:       final Map<String, Object?> params => Map.unmodifiable({
+replace:       final Map<String, Object?> params => Map.of({
+name: Module.parameters modifiable
+
+find: Map<String, Object?> _frozen(Map<String, Object?> json) => Map.unmodifiable({
+replace: Map<String, Object?> _frozen(Map<String, Object?> json) => Map.of({
+name: frozen maps modifiable
+
+find:   final Map<String, Object?> map => _frozen(map),
+replace:   final Map<String, Object?> map => map,
+name: nested maps not frozen
+
+find:   final List<Object?> list => List<Object?>.unmodifiable(
+replace:   final List<Object?> list => List<Object?>.of(
+name: nested lists modifiable
+
+find:     list.map(_frozenValue),
+replace:     list,
+name: maps inside lists not frozen

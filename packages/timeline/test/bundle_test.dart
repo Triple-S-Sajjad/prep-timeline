@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:cryptography/cryptography.dart';
@@ -13,32 +12,11 @@ import 'support.dart';
 const umms = 'colo-golytely-split-am-umms';
 const uw = 'cardiac-cath-uw';
 
-/// The label the signed message starts with (docs/spec.md, Changeability).
-final label = ascii.encode('prep-timeline/manifest/v1');
-
-typedef Files = ({List<int> manifest, List<List<int>> modules});
-
-/// A protocol directory's manifest bytes and module bytes, by file name.
-Files filesIn(String dir) {
-  final paths = [
-    for (final f in Directory(dir).listSync().whereType<File>()) f.path,
-  ]..sort();
-  return (
-    manifest: File('$dir/protocol.json').readAsBytesSync(),
-    modules: [
-      for (final p in paths)
-        if (!p.endsWith('protocol.json')) File(p).readAsBytesSync(),
-    ],
-  );
-}
-
 Files files(String protocol) => filesIn('$protocols/$protocol');
 
 String moduleIdOf(List<int> module) =>
     (jsonDecode(utf8.decode(module)) as Map<String, Object?>)['moduleId']!
         as String;
-
-String hexSha(List<int> bytes) => sha256.convert(bytes).toString();
 
 /// [bytes] as UTF-8 with [from], which must occur exactly once, replaced.
 List<int> edit(List<int> bytes, String from, String to) {
@@ -46,9 +24,6 @@ List<int> edit(List<int> bytes, String from, String to) {
   expect(from.allMatches(text), hasLength(1), reason: from);
   return utf8.encode(text.replaceFirst(from, to));
 }
-
-List<int> sigText(List<int> signature) =>
-    ascii.encode(base64.encode(signature));
 
 /// Whether [run] refused the bundle and why; null when it was accepted. Any
 /// other exception fails the test.
@@ -76,22 +51,17 @@ void main() {
   late List<int> publicKey;
 
   setUpAll(() async {
-    key = await ed25519.newKeyPairFromSeed(List.filled(32, 1));
-    otherKey = await ed25519.newKeyPairFromSeed(List.filled(32, 2));
+    key = await testKey();
+    otherKey = await testKey(2);
     publicKey = (await key.extractPublicKey()).bytes;
   });
 
   Future<List<int>> rawSign(List<int> message, [SimpleKeyPair? by]) async =>
       (await ed25519.sign(message, keyPair: by ?? key)).bytes;
 
-  /// The 64-byte signature protocol.sig encodes: over the label, then the
-  /// SHA-256 of the manifest's bytes.
-  Future<List<int>> signatureOf(List<int> manifest, [SimpleKeyPair? by]) =>
-      rawSign([...label, ...sha256.convert(manifest).bytes], by);
-
   /// protocol.sig's contents for [manifest].
   Future<List<int>> sigFor(List<int> manifest, [SimpleKeyPair? by]) async =>
-      sigText(await signatureOf(manifest, by));
+      sigText(await signatureOf(manifest, by ?? key));
 
   Future<Bundle> verify(
     List<int> manifest,
@@ -173,7 +143,7 @@ void main() {
       ]) {
         test(name, () async {
           final f = files(umms);
-          final sig = make(await signatureOf(f.manifest));
+          final sig = make(await signatureOf(f.manifest, key));
           await expectLater(
             verify(f.manifest, sig, f.modules),
             refused(BundleRefusal.unsigned),
@@ -213,7 +183,7 @@ void main() {
 
     test('6. any one signature bit flipped is a bad signature', () async {
       final f = files(umms);
-      final signature = await signatureOf(f.manifest);
+      final signature = await signatureOf(f.manifest, key);
       final notRefused = <int>[];
       for (var bit = 0; bit < 64 * 8; bit++) {
         final flipped = [...signature]..[bit ~/ 8] ^= 1 << (bit % 8);
@@ -283,7 +253,7 @@ void main() {
 
     test('9. a non-canonical S (S + L) is a bad signature', () async {
       final f = files(umms);
-      final sig = sigText(nonCanonicalS(await signatureOf(f.manifest)));
+      final sig = sigText(nonCanonicalS(await signatureOf(f.manifest, key)));
       await expectLater(
         verify(f.manifest, sig, f.modules),
         refused(BundleRefusal.badSignature),
@@ -338,15 +308,21 @@ void main() {
           ),
         ]) {
       group(name, () {
-        final f = files(uw);
-        for (var i = 0; i < f.modules.length; i++) {
-          final id = moduleIdOf(f.modules[i]);
-          test(id, () async {
-            await expectLater(
-              verify(f.manifest, await sigFor(f.manifest), alter(f.modules, i)),
-              refused(BundleRefusal.moduleNotMatched, id),
-            );
-          });
+        for (final protocol in const [uw, umms]) {
+          final f = files(protocol);
+          for (var i = 0; i < f.modules.length; i++) {
+            final id = moduleIdOf(f.modules[i]);
+            test(id, () async {
+              await expectLater(
+                verify(
+                  f.manifest,
+                  await sigFor(f.manifest),
+                  alter(f.modules, i),
+                ),
+                refused(BundleRefusal.moduleNotMatched, id),
+              );
+            });
+          }
         }
       });
     }
@@ -574,21 +550,16 @@ void main() {
 
   test('27. a verified bundle feeds selection as before', () async {
     final b = await verifySigned(files(umms));
-    final qr = decodeQr(
-      {
-        'protocolId': umms,
-        'version': 1,
-        'stage': 'scheduling',
-        'modules': ['$umms-iron-hold'],
-        'parameters': <String, Object?>{},
-        'createdAt': '2026-11-01T14:00:00Z',
-      },
-      b.manifest,
-      b.modules,
-    );
+    final qr = decodeQr({
+      'protocolId': umms,
+      'version': 1,
+      'stage': 'scheduling',
+      'modules': ['$umms-iron-hold'],
+      'parameters': <String, Object?>{},
+      'createdAt': '2026-11-01T14:00:00Z',
+    }, b);
     final result = selectedModules(
-      b.manifest,
-      b.modules,
+      b,
       qr,
       null,
       local('America/New_York', 2026, 11, 18, 8),
@@ -625,4 +596,14 @@ void main() {
       );
     },
   );
+
+  test("29. a verified bundle's modules can't be changed afterwards", () async {
+    final b = await verifySigned(files(umms));
+    final base = b.modules['$umms-base']!;
+    expect(() => b.modules.remove('$umms-iron-hold'), throwsUnsupportedError);
+    expect(() => b.modules['$umms-base'] = base, throwsUnsupportedError);
+    expect(() => b.modules['$umms-x'] = base, throwsUnsupportedError);
+    expect(b.modules.clear, throwsUnsupportedError);
+    expect(b.modules.keys, unorderedEquals(['$umms-base', '$umms-iron-hold']));
+  });
 }

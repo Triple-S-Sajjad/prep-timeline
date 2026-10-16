@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart' show sha256;
+import 'package:cryptography/cryptography.dart' show SimpleKeyPair;
+import 'package:cryptography/dart.dart' show DartEd25519;
 import 'package:test/test.dart';
 import 'package:timeline/timeline.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
@@ -37,6 +40,88 @@ Map<String, Object?> fixture(String path) => readJson('$protocols/$path');
 
 List<Directory> protocolDirs() =>
     Directory(protocols).listSync().whereType<Directory>().toList();
+
+/// The label the signed message starts with (docs/spec.md, Changeability).
+final label = ascii.encode('prep-timeline/manifest/v1');
+
+typedef Files = ({List<int> manifest, List<List<int>> modules});
+
+/// A protocol directory's manifest bytes and module bytes, by file name.
+Files filesIn(String dir) {
+  final paths = [
+    for (final f in Directory(dir).listSync().whereType<File>()) f.path,
+  ]..sort();
+  return (
+    manifest: File('$dir/protocol.json').readAsBytesSync(),
+    modules: [
+      for (final p in paths)
+        if (!p.endsWith('protocol.json')) File(p).readAsBytesSync(),
+    ],
+  );
+}
+
+String hexSha(List<int> bytes) => sha256.convert(bytes).toString();
+
+/// The tests' signing key, from a fixed seed; another [seed] gives another
+/// key.
+Future<SimpleKeyPair> testKey([int seed = 1]) =>
+    DartEd25519().newKeyPairFromSeed(List.filled(32, seed));
+
+/// The 64-byte signature protocol.sig encodes: over the label, then the
+/// SHA-256 of the manifest's bytes.
+Future<List<int>> signatureOf(List<int> manifest, SimpleKeyPair by) async =>
+    (await DartEd25519().sign([
+      ...label,
+      ...sha256.convert(manifest).bytes,
+    ], keyPair: by)).bytes;
+
+List<int> sigText(List<int> signature) =>
+    ascii.encode(base64.encode(signature));
+
+/// Fixture [protocol] as the app gets it: signed with [testKey] and checked
+/// by verifyBundle. [manifest] and [modules], by file name such as 'base',
+/// change the JSON first; a changed module's new SHA-256 replaces its old one
+/// in the manifest, so only a test that means to break the bundle does.
+Future<Bundle> signedBundle(
+  String protocol, {
+  void Function(Map<String, Object?> json)? manifest,
+  Map<String, void Function(Map<String, Object?> json)> modules = const {},
+}) async {
+  final dir = '$protocols/$protocol';
+  var manifestText = File('$dir/protocol.json').readAsStringSync();
+  final moduleFiles = <List<int>>[];
+  final edited = <String>{};
+  for (final f in Directory(dir).listSync().whereType<File>()) {
+    final name = f.uri.pathSegments.last.replaceFirst(RegExp(r'\.json$'), '');
+    if (name == 'protocol') continue;
+    var bytes = f.readAsBytesSync();
+    if (modules[name] case final edit?) {
+      final json = jsonDecode(utf8.decode(bytes)) as Map<String, Object?>;
+      edit(json);
+      final changed = utf8.encode(jsonEncode(json));
+      expect(hexSha(bytes).allMatches(manifestText), hasLength(1));
+      manifestText = manifestText.replaceFirst(hexSha(bytes), hexSha(changed));
+      bytes = changed;
+      edited.add(name);
+    }
+    moduleFiles.add(bytes);
+  }
+  // A misspelt file name would otherwise leave the fixture unchanged.
+  expect(edited, modules.keys.toSet());
+  if (manifest != null) {
+    final json = jsonDecode(manifestText) as Map<String, Object?>;
+    manifest(json);
+    manifestText = jsonEncode(json);
+  }
+  final bytes = utf8.encode(manifestText);
+  final key = await testKey();
+  return verifyBundle(
+    manifest: bytes,
+    signature: sigText(await signatureOf(bytes, key)),
+    modules: moduleFiles,
+    publicKey: (await key.extractPublicKey()).bytes,
+  );
+}
 
 /// Fixture module [path] and its step [id], as JSON.
 ({Map<String, Object?> module, Map<String, Object?> step}) fixtureJson(

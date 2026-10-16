@@ -1,5 +1,5 @@
 # Mutants of lib/src/bundle.dart (slice 6).
-tests: test/bundle_test.dart
+tests: test/bundle_test.dart test/selection_test.dart
 
 find: if (publicKey.length != 32) {
 replace: if (false) {
@@ -108,3 +108,9 @@ name: module listed twice accepted
 find: final other => throw FormatException('Not a JSON object', other),
 replace: final other => other as Map<String, Object?>,
 name: JSON that isn't an object crashes with a TypeError
+
+# Slice 6b: a verified bundle cannot be changed.
+
+find:     : modules = Map.unmodifiable(modules);
+replace:     : modules = modules;
+name: verified modules map left modifiable
