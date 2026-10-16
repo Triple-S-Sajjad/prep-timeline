@@ -14,6 +14,15 @@ Mutation runs so far:
   - "Ties left to an unstable sort": Dart's `List.sort` is stable only up to 32 entries. The new test 35, with 40 steps, kills it.
   - The other two are the survivors listed below.
 - Re-run after a missing module and a base module with parameters became an ArgumentError: 40 mutants, the same 2 survive. The 6 new mutants (a null-check crash at each of the three module lookups, the missing module not named, a base module with parameters accepted, and a broken bundle hidden outside bookable hours) are killed by tests 36 and 37 in `test/selection_test.dart`.
+- Slice 5c (`reschedule` in `selection.dart`): 54 mutants, the same 2 survive. The 14 new mutants are killed on the first run by tests 38 to 47 in `test/selection_test.dart`. They cover:
+  - each zone, discharge and not-after-now check
+  - the same-time no-op
+  - the ignore level and the old-time and new-time past-due tests
+  - the old time judged with the entered arrival
+  - a discharge step judged with the discharge at the appointment
+  - the anchors after a move and after a block
+  - the reported reason
+- Re-run after first entry (`selectedModules`) took the current time and returned `TimeNotAhead`: 57 mutants, the same 2 survive. The time check moved from `reschedule` into `selectedModules`, so the 2 mutants on it were moved there too. 3 new mutants are killed by test 48 in `test/selection_test.dart`: bookable hours checked before the time, appliesWhen checked before the time, and a broken bundle hidden by a time not after now.
 
 Each `tool/mutants/<source>.txt` starts with a `tests:` line naming the test files run for its mutants: every file that uses the source directly, through a source that imports it, or through `test/support.dart`.
 

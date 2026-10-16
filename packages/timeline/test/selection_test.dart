@@ -78,6 +78,10 @@ String hhmm(int hour, int minute) =>
 QrCode decode(Bundle b, Map<String, Object?> json) =>
     decodeQr(json, b.manifest, b.modules);
 
+/// Before every appointment in these tests, for those that don't test the
+/// current time.
+final longAgo = tz.TZDateTime.utc(2020);
+
 /// The selected modules, failing the test if the time needs new instructions.
 List<SelectedModule> selectedOrFail(
   Manifest manifest,
@@ -91,11 +95,13 @@ List<SelectedModule> selectedOrFail(
   scheduling,
   discharge,
   appointment,
+  now: longAgo,
 )) {
   Selected(:final modules) => modules,
   NeedsNewInstructions(:final reason) => fail(
     'Needs new instructions: $reason',
   ),
+  TimeNotAhead() => fail('Time not after now'),
 };
 
 /// An ArgumentError whose invalid value is [moduleId].
@@ -265,7 +271,9 @@ void forEverySelection(
 }
 
 void main() {
-  setUpAll(tzdata.initializeTimeZones);
+  // Not setUpAll: the reschedule groups build their times while declaring
+  // their tests, before any setUpAll runs.
+  tzdata.initializeTimeZones();
 
   const scheduling = SelectedAt.scheduling;
   const discharge = SelectedAt.discharge;
@@ -338,11 +346,19 @@ void main() {
         final d = decode(b, code(uw, discharge, ['groin-site']));
         final appt = local(la, 2026, 11, 18, 10);
         expect(
-          () => selectedModules(b.manifest, b.modules, d, null, appt),
+          () => selectedModules(
+            b.manifest,
+            b.modules,
+            d,
+            null,
+            appt,
+            now: longAgo,
+          ),
           throwsArgumentError,
         );
         expect(
-          () => selectedModules(b.manifest, b.modules, s, s, appt),
+          () =>
+              selectedModules(b.manifest, b.modules, s, s, appt, now: longAgo),
           throwsArgumentError,
         );
       });
@@ -400,6 +416,7 @@ void main() {
             decode(b, code(karmanos, scheduling, [module])),
             null,
             local(detroit, 2026, 11, 18, hour, minute),
+            now: longAgo,
           );
           expect(
             select(),
@@ -576,6 +593,7 @@ void main() {
               decode(b, code(umms, scheduling, [])),
               null,
               local(zone, 2026, 11, 18, 9),
+              now: longAgo,
             ),
             throwsArgumentError,
           );
@@ -602,6 +620,7 @@ void main() {
         qr,
         null,
         local(ny, 2026, 11, 18, hour, minute),
+        now: longAgo,
       );
       // Bookable hours are 07:00 to 12:00.
       expect(at(7, 30), needsNew(NewInstructionsReason.outsideAppliesWhen));
@@ -619,6 +638,7 @@ void main() {
             decode(b, code(bmc, scheduling, [])),
             null,
             local(ny, 2026, 11, 18, hour, minute),
+            now: longAgo,
           );
         }
 
@@ -713,6 +733,7 @@ void main() {
               decode(b, code(umms, scheduling, [])),
               null,
               local(ny, 2026, 11, 18, hour),
+              now: longAgo,
             ),
             throwsNaming('$umms-base'),
           );
@@ -747,12 +768,731 @@ void main() {
                 decode(b, code(umms, scheduling, ['iron-hold'])),
                 null,
                 local(ny, 2026, 11, 18, hour),
+                now: longAgo,
               ),
               throwsNaming('$umms-$name'),
             );
           });
         }
       }
+    });
+
+    group('48. first entry: an appointment not after now is refused, after '
+        'setup errors and before bookable hours', () {
+      final b = bundle(umms);
+      final at9 = local(ny, 2026, 11, 18, 9);
+      final at13 = local(ny, 2026, 11, 18, 13);
+      SelectionResult select(
+        tz.TZDateTime appointment,
+        tz.TZDateTime now, {
+        Map<String, Module>? modules,
+        String protocol = umms,
+        List<String> ticked = const [],
+      }) {
+        final p = bundle(protocol);
+        return selectedModules(
+          p.manifest,
+          modules ?? p.modules,
+          decode(p, code(protocol, scheduling, ticked)),
+          null,
+          appointment,
+          now: now,
+        );
+      }
+
+      for (final (label, appointment, now) in [
+        ('UMMC 09:00 at exactly 09:00', at9, at9),
+        (
+          'UMMC 09:00 at 09:00:00.001',
+          at9,
+          at9.add(const Duration(milliseconds: 1)),
+        ),
+        (
+          'UMMC 13:00, outside bookable hours too, at 14:00',
+          at13,
+          local(ny, 2026, 11, 18, 14),
+        ),
+      ]) {
+        test('$label: "Choose a time after now."', () {
+          expect(select(appointment, now), isA<TimeNotAhead>());
+        });
+      }
+      test('UMMC 09:00 at 08:59:59.999: selected', () {
+        final now = at9.subtract(const Duration(milliseconds: 1));
+        expect(ids((select(at9, now) as Selected).modules), ['$umms-base']);
+      });
+      test('UMMC 13:00 at 12:00: outside bookable hours', () {
+        expect(
+          select(at13, local(ny, 2026, 11, 18, 12)),
+          needsNew(NewInstructionsReason.outsideBookableHours),
+        );
+      });
+      test('Karmanos am-schedule 13:00, outside its appliesWhen too, at '
+          '14:00: "Choose a time after now."', () {
+        expect(
+          select(
+            local(detroit, 2026, 11, 18, 13),
+            local(detroit, 2026, 11, 18, 14),
+            protocol: karmanos,
+            ticked: ['am-schedule'],
+          ),
+          isA<TimeNotAhead>(),
+        );
+      });
+      final later = local(ny, 2026, 11, 18, 10);
+      test('09:00 Detroit at 10:00: another zone, an ArgumentError', () {
+        expect(
+          () => select(local(detroit, 2026, 11, 18, 9), later),
+          throwsArgumentError,
+        );
+      });
+      test('09:00 at 10:00, the base missing: an ArgumentError naming it', () {
+        expect(
+          () =>
+              select(at9, later, modules: {...b.modules}..remove('$umms-base')),
+          throwsNaming('$umms-base'),
+        );
+      });
+      test('09:00 at 10:00, the base with parameters: an ArgumentError '
+          'naming it', () {
+        final base = fixture('$umms/base.json')
+          ..['parameters'] = {
+            'holdDays': {'min': 5, 'max': 7, 'unit': 'days'},
+          };
+        expect(
+          () => select(
+            at9,
+            later,
+            modules: {...b.modules, '$umms-base': parseModule(base)},
+          ),
+          throwsNaming('$umms-base'),
+        );
+      });
+      test('UW 10:00 at 11:00, a discharge code passed as the scheduling '
+          'code: an ArgumentError', () {
+        final u = bundle(uw);
+        expect(
+          () => selectedModules(
+            u.manifest,
+            u.modules,
+            decode(u, code(uw, discharge, ['groin-site'])),
+            null,
+            local(la, 2026, 11, 18, 10),
+            now: local(la, 2026, 11, 18, 11),
+          ),
+          throwsArgumentError,
+        );
+      });
+    });
+  });
+
+  group('reschedule', () {
+    // Every date here is after 2026-11-01's fall-back change, so New York and
+    // Detroit are at -05:00 and Los Angeles at -08:00.
+    const ms = Duration(milliseconds: 1);
+
+    Anchors anchors(
+      tz.TZDateTime appointment, {
+      tz.TZDateTime? arrival,
+      tz.TZDateTime? home,
+    }) => (appointment: appointment, arrival: arrival, discharge: home);
+
+    /// Reschedules [protocol]'s scheduling code with [ticked], and its
+    /// discharge code with [discharged] if given, from [current] to [to].
+    Rescheduled move(
+      String protocol,
+      List<String> ticked,
+      Anchors current,
+      tz.TZDateTime to, {
+      required tz.TZDateTime now,
+      Map<String, Module>? modules,
+      List<String>? discharged,
+    }) {
+      final b = bundle(protocol);
+      return reschedule(
+        b.manifest,
+        modules ?? b.modules,
+        decode(b, code(protocol, scheduling, ticked)),
+        discharged == null
+            ? null
+            : decode(b, code(protocol, discharge, discharged)),
+        current,
+        to,
+        now: now,
+      );
+    }
+
+    /// Blocked for [reason], with [current] given back unchanged.
+    void expectBlocked(
+      Rescheduled r,
+      NewInstructionsReason reason,
+      Anchors current,
+    ) {
+      expect(r.result, needsNew(reason));
+      expect(r.anchors, current);
+    }
+
+    /// Refused as not after now, with [current] given back unchanged.
+    void expectNotAhead(Rescheduled r, Anchors current) {
+      expect(r.result, isA<TimeNotAhead>());
+      expect(r.anchors, current);
+    }
+
+    /// Moved to [to] with [modules] selected; an entered arrival is cleared.
+    void expectMoved(Rescheduled r, List<String> modules, tz.TZDateTime to) {
+      expect(
+        r.result,
+        isA<Selected>().having((s) => ids(s.modules), 'modules', modules),
+      );
+      expect(r.anchors, anchors(to));
+    }
+
+    /// [protocol]'s modules with module file [name]'s JSON changed by [edit].
+    Map<String, Module> changed(
+      String protocol,
+      String name,
+      void Function(Map<String, Object?> json) edit,
+    ) {
+      final json = fixture('$protocol/$name.json');
+      edit(json);
+      return {
+        ...bundle(protocol).modules,
+        '$protocol-$name': parseModule(json),
+      };
+    }
+
+    /// Step [id] of a module's JSON.
+    Map<String, Object?> stepOf(Map<String, Object?> module, String id) =>
+        (module['steps']! as List<Object?>)
+            .cast<Map<String, Object?>>()
+            .singleWhere((s) => s['id'] == id);
+
+    group('38. blocked once the procedure is over', () {
+      final old = local(la, 2026, 11, 18, 10);
+      final now = local(la, 2026, 11, 10, 12);
+      for (final (label, to) in [
+        ('to 11-19 10:00', local(la, 2026, 11, 19, 10)),
+        (
+          'to 11-19 18:00, outside bookable hours too',
+          local(la, 2026, 11, 19, 18),
+        ),
+        ('to 11-09 10:00, before now too', local(la, 2026, 11, 9, 10)),
+      ]) {
+        test('UW, discharge code scanned, $label', () {
+          final current = anchors(old);
+          expectBlocked(
+            move(uw, [], current, to, now: now, discharged: ['groin-site']),
+            NewInstructionsReason.afterDischarge,
+            current,
+          );
+        });
+      }
+      test('UMMC, no discharge code but "I\'m home" tapped', () {
+        final current = anchors(
+          local(ny, 2026, 11, 18, 9),
+          home: local(ny, 2026, 11, 18, 11),
+        );
+        expectBlocked(
+          move(
+            umms,
+            [],
+            current,
+            local(ny, 2026, 11, 25, 9),
+            now: local(ny, 2026, 11, 18, 12),
+          ),
+          NewInstructionsReason.afterDischarge,
+          current,
+        );
+      });
+    });
+
+    group('39. the new time must fit the bookable hours and every selected '
+        "module's appliesWhen; the app never switches modules", () {
+      final now = local(ny, 2026, 11, 1, 12);
+      test('Karmanos am-schedule, 10:00 to 13:00: outside appliesWhen, not '
+          'switched to pm-schedule', () {
+        final current = anchors(local(detroit, 2026, 11, 18, 10));
+        expectBlocked(
+          move(
+            karmanos,
+            ['am-schedule'],
+            current,
+            local(detroit, 2026, 11, 18, 13),
+            now: now,
+          ),
+          NewInstructionsReason.outsideAppliesWhen,
+          current,
+        );
+      });
+      test('Karmanos am-schedule, 10:00 to 11:59: moved', () {
+        final to = local(detroit, 2026, 11, 18, 11, 59);
+        expectMoved(
+          move(
+            karmanos,
+            ['am-schedule'],
+            anchors(local(detroit, 2026, 11, 18, 10)),
+            to,
+            now: now,
+          ),
+          ['$karmanos-base', '$karmanos-am-schedule'],
+          to,
+        );
+      });
+      test('UMMC, 09:00 to 13:00: outside bookable hours', () {
+        final current = anchors(local(ny, 2026, 11, 18, 9));
+        expectBlocked(
+          move(umms, [], current, local(ny, 2026, 11, 18, 13), now: now),
+          NewInstructionsReason.outsideBookableHours,
+          current,
+        );
+      });
+      test('UMMC, 11-18 09:00 to 11-17 06:00 at 11-16 12:00: outside bookable '
+          'hours, reported before clear liquids newly past due', () {
+        final current = anchors(local(ny, 2026, 11, 18, 9));
+        expectBlocked(
+          move(
+            umms,
+            [],
+            current,
+            local(ny, 2026, 11, 17, 6),
+            now: local(ny, 2026, 11, 16, 12),
+          ),
+          NewInstructionsReason.outsideBookableHours,
+          current,
+        );
+      });
+    });
+
+    group(
+      '40. a step that is not ignore and becomes newly past due blocks',
+      () {
+        // UMMC iron hold: day -5 until the appointment, doNow.
+        final old = local(ny, 2026, 11, 18, 9);
+        final ironNow = local(ny, 2026, 11, 12, 12);
+        final ironTo = local(ny, 2026, 11, 17, 9);
+        test('UMMC iron hold (doNow), 11-18 to 11-17 09:00 at 11-12 12:00: its '
+            'start moves from 11-13 to 11-12 00:00', () {
+          final current = anchors(old);
+          expectBlocked(
+            move(umms, ['iron-hold'], current, ironTo, now: ironNow),
+            NewInstructionsReason.newlyPastDue,
+            current,
+          );
+        });
+        test('the same, with the iron hold set to ignore: moved', () {
+          final modules = changed(
+            umms,
+            'iron-hold',
+            (m) => stepOf(m, 'iron')['pastDue'] = 'ignore',
+          );
+          expectMoved(
+            move(
+              umms,
+              ['iron-hold'],
+              anchors(old),
+              ironTo,
+              now: ironNow,
+              modules: modules,
+            ),
+            ['$umms-base', '$umms-iron-hold'],
+            ironTo,
+          );
+        });
+        test('the same, without the iron hold: moved', () {
+          expectMoved(move(umms, [], anchors(old), ironTo, now: ironNow), [
+            '$umms-base',
+          ], ironTo);
+        });
+        test('UMMC dose2 (critical, 4 hours before), 09:00 to 08:00 at 04:30: '
+            'moves from 05:00 to 04:00', () {
+          final current = anchors(old);
+          expectBlocked(
+            move(
+              umms,
+              [],
+              current,
+              local(ny, 2026, 11, 18, 8),
+              now: local(ny, 2026, 11, 18, 4, 30),
+            ),
+            NewInstructionsReason.newlyPastDue,
+            current,
+          );
+        });
+      },
+    );
+
+    group('41. newly past due: after now for the old time, at or before now '
+        'for the new one (UMMC dose2, 4 hours before)', () {
+      final now = local(ny, 2026, 11, 18, 4);
+      for (final (label, old, to, blocked) in [
+        (
+          '09:00 to 08:00: new effect exactly now',
+          local(ny, 2026, 11, 18, 9),
+          local(ny, 2026, 11, 18, 8),
+          true,
+        ),
+        (
+          '09:00 to 08:00:00.001: new effect 1 ms after now',
+          local(ny, 2026, 11, 18, 9),
+          local(ny, 2026, 11, 18, 8).add(ms),
+          false,
+        ),
+        (
+          '08:00 to 07:30: old effect exactly now, already past due',
+          local(ny, 2026, 11, 18, 8),
+          local(ny, 2026, 11, 18, 7, 30),
+          false,
+        ),
+        (
+          '08:00:00.001 to 07:30: old effect 1 ms after now',
+          local(ny, 2026, 11, 18, 8).add(ms),
+          local(ny, 2026, 11, 18, 7, 30),
+          true,
+        ),
+      ]) {
+        test('$label: ${blocked ? 'blocked' : 'moved'}', () {
+          final current = anchors(old);
+          final r = move(umms, [], current, to, now: now);
+          if (blocked) {
+            expectBlocked(r, NewInstructionsReason.newlyPastDue, current);
+          } else {
+            expectMoved(r, ['$umms-base'], to);
+          }
+        });
+      }
+    });
+
+    group('42. an arrival step is judged with the arrival at each '
+        'appointment, never the arrival entered (MSK npo, 2 hours before '
+        'arrival)', () {
+      final old = local(ny, 2026, 11, 18, 10);
+      final now = local(ny, 2026, 11, 18, 7, 30);
+      for (final (label, arrival, to, blocked) in [
+        (
+          'arrival 07:00 entered, 10:00 to 09:00: 08:00 to 07:00',
+          local(ny, 2026, 11, 18, 7),
+          local(ny, 2026, 11, 18, 9),
+          true,
+        ),
+        (
+          'arrival unknown, 10:00 to 09:00',
+          null,
+          local(ny, 2026, 11, 18, 9),
+          true,
+        ),
+        (
+          'arrival 07:00 entered, 10:00 to 09:30: new effect exactly now',
+          local(ny, 2026, 11, 18, 7),
+          local(ny, 2026, 11, 18, 9, 30),
+          true,
+        ),
+        (
+          'arrival 07:00 entered, 10:00 to 09:31: arrival cleared',
+          local(ny, 2026, 11, 18, 7),
+          local(ny, 2026, 11, 18, 9, 31),
+          false,
+        ),
+      ]) {
+        test('$label: ${blocked ? 'blocked' : 'moved'}', () {
+          final current = anchors(old, arrival: arrival);
+          final r = move(msk, [], current, to, now: now);
+          if (blocked) {
+            expectBlocked(r, NewInstructionsReason.newlyPastDue, current);
+          } else {
+            expectMoved(r, ['$msk-base'], to);
+          }
+        });
+      }
+    });
+
+    group('43. a discharge step never blocks', () {
+      // One step 48 hours before its anchor. With the discharge put at the
+      // appointment it would move from 11-18 09:00 to 11-16 09:00, past now.
+      Map<String, Module> only(String anchor) => changed(
+        umms,
+        'base',
+        (m) => m['steps'] = [step('home', anchor, '-PT48H')],
+      );
+      final old = local(ny, 2026, 11, 20, 9);
+      final to = local(ny, 2026, 11, 18, 9);
+      final now = local(ny, 2026, 11, 17, 12);
+      test('counted from discharge: moved', () {
+        expectMoved(
+          move(
+            umms,
+            [],
+            anchors(old),
+            to,
+            now: now,
+            modules: only('discharge'),
+          ),
+          ['$umms-base'],
+          to,
+        );
+      });
+      test('the same step counted from the appointment: blocked', () {
+        final current = anchors(old);
+        expectBlocked(
+          move(umms, [], current, to, now: now, modules: only('appointment')),
+          NewInstructionsReason.newlyPastDue,
+          current,
+        );
+      });
+    });
+
+    group('44. a move clears an entered arrival; a block keeps it', () {
+      final old = local(ny, 2026, 11, 18, 9);
+      final arrival = local(ny, 2026, 11, 18, 8);
+      test('UMMC iron hold, 11-18 09:00 to 11-19 10:00 at 11-10 12:00: moved, '
+          'arrival cleared', () {
+        final to = local(ny, 2026, 11, 19, 10);
+        expectMoved(
+          move(
+            umms,
+            ['iron-hold'],
+            anchors(old, arrival: arrival),
+            to,
+            now: local(ny, 2026, 11, 10, 12),
+          ),
+          ['$umms-base', '$umms-iron-hold'],
+          to,
+        );
+      });
+      test('UMMC iron hold, 11-18 to 11-17 09:00 at 11-12 12:00: blocked, '
+          'arrival kept', () {
+        final current = anchors(old, arrival: arrival);
+        expectBlocked(
+          move(
+            umms,
+            ['iron-hold'],
+            current,
+            local(ny, 2026, 11, 17, 9),
+            now: local(ny, 2026, 11, 12, 12),
+          ),
+          NewInstructionsReason.newlyPastDue,
+          current,
+        );
+      });
+    });
+
+    group('45. a new time not after now is refused; zone and stage errors '
+        'are an ArgumentError', () {
+      final old = local(ny, 2026, 11, 18, 9);
+      final now = local(ny, 2026, 11, 17, 9);
+      for (final (label, to) in [
+        ('a new time exactly now', now),
+        ('a new time 1 ms before now', now.subtract(ms)),
+        (
+          'a new time before now and outside bookable hours too',
+          local(ny, 2026, 11, 17, 6),
+        ),
+      ]) {
+        test('$label: "Choose a time after now."', () {
+          final current = anchors(old, arrival: local(ny, 2026, 11, 18, 8));
+          expectNotAhead(move(umms, [], current, to, now: now), current);
+        });
+      }
+      for (final (label, current, to) in [
+        (
+          'the old time in another zone',
+          anchors(local('America/Chicago', 2026, 11, 18, 8)),
+          local(ny, 2026, 11, 19, 9),
+        ),
+        (
+          'the new time in another zone',
+          anchors(old),
+          local(detroit, 2026, 11, 19, 9),
+        ),
+      ]) {
+        test(label, () {
+          expect(
+            () => move(umms, [], current, to, now: now),
+            throwsArgumentError,
+          );
+        });
+      }
+      test('a discharge code passed as the scheduling code', () {
+        final b = bundle(uw);
+        expect(
+          () => reschedule(
+            b.manifest,
+            b.modules,
+            decode(b, code(uw, discharge, ['groin-site'])),
+            null,
+            anchors(local(la, 2026, 11, 18, 10)),
+            local(la, 2026, 11, 19, 10),
+            now: local(la, 2026, 11, 10, 12),
+          ),
+          throwsArgumentError,
+        );
+      });
+    });
+
+    group('47. a reschedule to the same time changes nothing', () {
+      final old = local(ny, 2026, 11, 18, 9);
+      final current = anchors(old, arrival: local(ny, 2026, 11, 18, 8));
+      test('UMMC iron hold, 11-18 09:00 to 11-18 09:00 at 11-10 12:00: '
+          'selected, arrival kept', () {
+        final r = move(
+          umms,
+          ['iron-hold'],
+          current,
+          local(ny, 2026, 11, 18, 9),
+          now: local(ny, 2026, 11, 10, 12),
+        );
+        expect(
+          r.result,
+          isA<Selected>().having((s) => ids(s.modules), 'modules', [
+            '$umms-base',
+            '$umms-iron-hold',
+          ]),
+        );
+        expect(r.anchors, current);
+      });
+      test('the same once 09:00 has passed, at 11-18 10:00: '
+          '"Choose a time after now."', () {
+        expectNotAhead(
+          move(
+            umms,
+            ['iron-hold'],
+            current,
+            local(ny, 2026, 11, 18, 9),
+            now: local(ny, 2026, 11, 18, 10),
+          ),
+          current,
+        );
+      });
+    });
+
+    test('46. every fixture protocol, its fullest allowed selections, '
+        'parameters at their lowest and then highest, every bookable hour of '
+        'each publish date, now at and 1 ms either side of each step effect: '
+        'a time not after now is refused; the same or a later time is never '
+        'newly past due; a day earlier is exactly when a step that is not '
+        'ignore goes from not past due to past due (pastDueOf); a move clears '
+        'the arrival, anything else keeps the anchors', () {
+      tz.TZDateTime days(tz.TZDateTime t, int n) {
+        final d = DateTime.utc(t.year, t.month, t.day + n);
+        return localTime(t.location, d.year, d.month, d.day, t.hour, t.minute);
+      }
+
+      final failures = Failures();
+      var earlierBlocks = 0;
+      for (final dir in protocolDirs()) {
+        final protocol = dir.uri.pathSegments.lastWhere((s) => s.isNotEmpty);
+        final b = bundle(protocol);
+        final picks = [
+          (ParamRange p) => p.min,
+          if (b.modules.values.any((m) => m.parameters.isNotEmpty))
+            (ParamRange p) => p.max,
+        ];
+        for (final (y, mo, d) in publishDates) {
+          for (var hour = 0; hour < 24; hour++) {
+            if (!inRange((hour: hour, minute: 0), b.manifest.bookable)) {
+              continue;
+            }
+            final old = localTime(b.manifest.zone, y, mo, d, hour, 0);
+            final sets = allowedSets(b, scheduling, old);
+            final most = sets.fold(0, (n, s) => s.length > n ? s.length : n);
+            for (final (ticked, pick) in [
+              for (final s in sets.where((s) => s.length == most))
+                for (final pick in picks) (s, pick),
+            ]) {
+              final qr = decode(
+                b,
+                codeJson(protocol, scheduling, ticked, picked(b, ticked, pick)),
+              );
+              final steps = [
+                for (final s in selectedOrFail(
+                  b.manifest,
+                  b.modules,
+                  qr,
+                  null,
+                  old,
+                ))
+                  ...timedSteps(s.module, s.chosen),
+              ];
+              final nows = {
+                for (final s in steps)
+                  if (effectOf(s.anchor, s.timing, (
+                        appointment: old,
+                        arrival: old,
+                        discharge: null,
+                      ))?.at
+                      case final at?)
+                    for (final n in const [-1, 0, 1]) at.add(ms * n),
+              };
+              // Each new time, and whether it is the same as or later than
+              // the old one.
+              final moves = [
+                (old, true),
+                (days(old, 1), true),
+                if (inRange((hour: hour + 1, minute: 0), b.manifest.bookable))
+                  (old.add(const Duration(hours: 1)), true),
+                (days(old, -1), false),
+              ];
+              for (final now in nows) {
+                for (final (to, later) in moves) {
+                  final newly = steps.any(
+                    (s) =>
+                        s.pastDue != PastDue.ignore &&
+                        pastDueOf(s, old, createdAt: now) == null &&
+                        pastDueOf(s, to, createdAt: now) != null,
+                  );
+                  final r = reschedule(
+                    b.manifest,
+                    b.modules,
+                    qr,
+                    null,
+                    anchors(old),
+                    to,
+                    now: now,
+                  );
+                  final selection = selectedModules(
+                    b.manifest,
+                    b.modules,
+                    qr,
+                    null,
+                    to,
+                    now: now,
+                  );
+                  final ahead = to.isAfter(now);
+                  final ok = !ahead
+                      ? r.result is TimeNotAhead
+                      : switch ((selection, r.result)) {
+                          (
+                            NeedsNewInstructions(reason: final a),
+                            NeedsNewInstructions(reason: final c),
+                          ) =>
+                            a == c,
+                          (Selected(), NeedsNewInstructions(:final reason)) =>
+                            newly &&
+                                reason == NewInstructionsReason.newlyPastDue,
+                          (Selected(), Selected()) => !newly,
+                          _ => false,
+                        };
+                  final moved =
+                      r.result is Selected && !to.isAtSameMomentAs(old);
+                  if (ahead && !later && newly) earlierBlocks++;
+                  failures.check(
+                    ok &&
+                        !(ahead && later && newly) &&
+                        r.anchors == (moved ? anchors(to) : anchors(old)),
+                    () =>
+                        '$protocol $ticked ${old.toIso8601String()} to '
+                        '${to.toIso8601String()} at ${now.toIso8601String()}: '
+                        'newly $newly, got ${r.result}',
+                  );
+                }
+              }
+            }
+          }
+        }
+      }
+      failures.expectNone();
+      // The earlier moves must reach the blocking case, or the property proves
+      // nothing about it.
+      expect(earlierBlocks, greaterThan(0));
     });
   });
 

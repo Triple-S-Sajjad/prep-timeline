@@ -160,3 +160,71 @@ name: a base module with parameters accepted
 find:   final base = _module(modules, manifest.base.moduleId);
 replace:   if (!_inRange(manifest.bookable, appointment)) return const NeedsNewInstructions(NewInstructionsReason.outsideBookableHours); final base = _module(modules, manifest.base.moduleId);
 name: a broken bundle hidden outside bookable hours
+
+find: if (current.appointment.location.name != manifest.zone.name) {
+replace: if (false) {
+name: reschedule: old appointment zone not checked
+
+find: if (discharge != null || current.discharge != null) {
+replace: if (discharge != null) {
+name: reschedule: an entered discharge time ignored
+
+find: if (discharge != null || current.discharge != null) {
+replace: if (current.discharge != null) {
+name: reschedule: a scanned discharge code ignored
+
+find: if (!appointment.isAfter(now)) return const TimeNotAhead();
+replace: if (appointment.isBefore(now)) return const TimeNotAhead();
+name: a time exactly now accepted
+
+find: if (!appointment.isAfter(now)) return const TimeNotAhead();
+replace:
+name: a time not after now judged like any other
+
+find: if (!appointment.isAfter(now)) return const TimeNotAhead();
+replace: if (!appointment.isAfter(now) && _inRange(manifest.bookable, appointment)) return const TimeNotAhead();
+name: bookable hours checked before the time
+
+find: if (!appointment.isAfter(now)) return const TimeNotAhead();
+replace: if (!appointment.isAfter(now) && selected.every((s) => appliesAt(s.module.appliesWhen, appointment))) return const TimeNotAhead();
+name: appliesWhen checked before the time
+
+find:   final base = _module(modules, manifest.base.moduleId);
+replace:   if (!appointment.isAfter(now)) return const TimeNotAhead(); final base = _module(modules, manifest.base.moduleId);
+name: a broken bundle hidden by a time not after now
+
+find: appointment.isAtSameMomentAs(current.appointment)) {
+replace: false) {
+name: reschedule: the same time clears the arrival
+
+find: step.pastDue != PastDue.ignore &&
+replace:
+name: reschedule: ignore steps block
+
+find: pastDueOf(step, old, createdAt: now) == null &&
+replace:
+name: reschedule: steps already past due count as newly past due
+
+find: pastDueOf(step, old, createdAt: now) == null &&
+replace: effectOf(step.anchor, step.timing, current)?.at.isAfter(now) != false &&
+name: reschedule: the old time judged with the entered arrival
+
+find: pastDueOf(step, appointment, createdAt: now) != null,
+replace: pastDueOf(step, appointment, createdAt: now.subtract(const Duration(milliseconds: 1))) != null,
+name: reschedule: a new effect exactly now not past due
+
+find: pastDueOf(step, appointment, createdAt: now) != null,
+replace: (pastDueOf(step, appointment, createdAt: now) != null || (step.anchor == Anchor.discharge && !effectOf(step.anchor, step.timing, (appointment: appointment, arrival: appointment, discharge: appointment))!.at.isAfter(now))),
+name: reschedule: discharge steps judged with the discharge at the appointment
+
+find: anchors: (appointment: appointment, arrival: null, discharge: null),
+replace: anchors: (appointment: appointment, arrival: current.arrival, discharge: null),
+name: reschedule: a move keeps the arrival
+
+find: (result: result, anchors: current);
+replace: (result: result, anchors: (appointment: appointment, arrival: null, discharge: null));
+name: reschedule: a block clears the arrival
+
+find: return kept(const NeedsNewInstructions(NewInstructionsReason.newlyPastDue));
+replace: return kept(const NeedsNewInstructions(NewInstructionsReason.outsideAppliesWhen));
+name: reschedule: newly past due reported as outside appliesWhen

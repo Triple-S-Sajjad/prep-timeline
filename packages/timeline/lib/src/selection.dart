@@ -1,6 +1,7 @@
 import 'package:timezone/timezone.dart' as tz;
 
 import 'clock.dart';
+import 'past_due.dart';
 import 'protocol.dart';
 import 'step.dart';
 import 'timing.dart';
@@ -23,7 +24,12 @@ typedef SelectedModule = ({Module module, Map<String, int> chosen});
 /// yet and the step shows as pending.
 typedef TimelineEntry = ({String moduleId, TimedStep step, Effect? effect});
 
-enum NewInstructionsReason { outsideBookableHours, outsideAppliesWhen }
+enum NewInstructionsReason {
+  outsideBookableHours,
+  outsideAppliesWhen,
+  newlyPastDue,
+  afterDischarge,
+}
 
 /// The modules for an appointment, or why its time needs new instructions:
 /// "Your time needs new instructions. Call us."
@@ -39,6 +45,12 @@ final class Selected extends SelectionResult {
 final class NeedsNewInstructions extends SelectionResult {
   const NeedsNewInstructions(this.reason);
   final NewInstructionsReason reason;
+}
+
+/// An appointment at or before now, on first entry or on a reschedule:
+/// "Choose a time after now."
+final class TimeNotAhead extends SelectionResult {
+  const TimeNotAhead();
 }
 
 /// The code in [json], checked against [manifest] and its [modules]. Throws
@@ -168,9 +180,10 @@ tz.TZDateTime _instant(String text, tz.Location zone) {
   return tz.TZDateTime.from(DateTime.parse(text), zone);
 }
 
-/// The base module, then the ticked optional modules in manifest order, or
-/// [NeedsNewInstructions] when [appointment] is outside the bookable hours or
-/// a selected module's appliesWhen. The app never picks a module itself.
+/// The base module, then the ticked optional modules in manifest order;
+/// [TimeNotAhead] when [appointment] is at or before [now]; otherwise
+/// [NeedsNewInstructions] when it is outside the bookable hours or a selected
+/// module's appliesWhen. The app never picks a module itself.
 /// Throws ArgumentError for an appointment in another zone, a code passed in
 /// the wrong stage, a module missing from [modules] or a base module with
 /// parameters, even when the time alone would need new instructions.
@@ -179,8 +192,9 @@ SelectionResult selectedModules(
   Map<String, Module> modules,
   QrCode scheduling,
   QrCode? discharge,
-  tz.TZDateTime appointment,
-) {
+  tz.TZDateTime appointment, {
+  required tz.TZDateTime now,
+}) {
   // By name, because the same zone can be loaded more than once.
   if (appointment.location.name != manifest.zone.name) {
     throw ArgumentError("The appointment must be in the protocol's zone.");
@@ -209,6 +223,7 @@ SelectionResult selectedModules(
           chosen: chosen[ref.moduleId] ?? const <String, int>{},
         ),
   ];
+  if (!appointment.isAfter(now)) return const TimeNotAhead();
   if (!_inRange(manifest.bookable, appointment)) {
     return const NeedsNewInstructions(
       NewInstructionsReason.outsideBookableHours,
@@ -218,6 +233,70 @@ SelectionResult selectedModules(
     return const NeedsNewInstructions(NewInstructionsReason.outsideAppliesWhen);
   }
   return Selected(selected);
+}
+
+/// What a reschedule gives: the selection at the new time with its
+/// [anchors], or why it is blocked with the [anchors] it was given.
+typedef Rescheduled = ({SelectionResult result, Anchors anchors});
+
+/// Moves [current]'s appointment to [appointment], judged at [now]. Blocked
+/// once the procedure is over, then for any result but [Selected] that
+/// [selectedModules] gives, then for a step that is not ignore becoming newly
+/// past due. A move clears an entered arrival; the
+/// same time changes nothing. The app never switches modules. Throws
+/// ArgumentError as [selectedModules] does, and for a [current] appointment in
+/// another zone.
+Rescheduled reschedule(
+  Manifest manifest,
+  Map<String, Module> modules,
+  QrCode scheduling,
+  QrCode? discharge,
+  Anchors current,
+  tz.TZDateTime appointment, {
+  required tz.TZDateTime now,
+}) {
+  if (current.appointment.location.name != manifest.zone.name) {
+    throw ArgumentError("The appointment must be in the protocol's zone.");
+  }
+  // First, so a wrong zone, stage or bundle throws before any result is
+  // chosen.
+  final selection = selectedModules(
+    manifest,
+    modules,
+    scheduling,
+    discharge,
+    appointment,
+    now: now,
+  );
+  Rescheduled kept(SelectionResult result) =>
+      (result: result, anchors: current);
+  if (discharge != null || current.discharge != null) {
+    return kept(
+      const NeedsNewInstructions(NewInstructionsReason.afterDischarge),
+    );
+  }
+  if (selection is! Selected ||
+      appointment.isAtSameMomentAs(current.appointment)) {
+    return kept(selection);
+  }
+  final old = current.appointment;
+  // pastDueOf puts the arrival at each appointment and never counts a
+  // discharge step, as a reschedule must, since it clears the arrival.
+  final newlyPastDue =
+      [for (final s in selection.modules) ...timedSteps(s.module, s.chosen)]
+          .any(
+            (step) =>
+                step.pastDue != PastDue.ignore &&
+                pastDueOf(step, old, createdAt: now) == null &&
+                pastDueOf(step, appointment, createdAt: now) != null,
+          );
+  if (newlyPastDue) {
+    return kept(const NeedsNewInstructions(NewInstructionsReason.newlyPastDue));
+  }
+  return (
+    result: selection,
+    anchors: (appointment: appointment, arrival: null, discharge: null),
+  );
 }
 
 /// Whether [time]'s local clock time is in [range], which includes its start,
