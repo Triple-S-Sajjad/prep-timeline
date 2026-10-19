@@ -72,6 +72,7 @@ The calculator's safety tests check that every protocol has an `npo` step (nothi
 
 - UMMC GoLytely split dose: the sheet gives no time to stop drinking. The patient starts the last liter of prep 4 hours before the procedure ("This will take approximately 1 hour"), and the only morning rule is "Do not eat or drink anything other the prep the morning of the procedure". That step is now type `diet`, not `npo`, because it has an exception. UMMC is left out of the stop-drinking test by name until the clinical owner gives a final stop-drinking time. [UMMC](https://www.umms.org/ummc/-/media/files/ummc/health-services/digestive-health/colonos-prep-instr-golytely-split-dose.pdf)
 - Future publish check, not yet in the validator: every protocol has an `npo` step.
+- Decided: the publish check runs as a Dart executable that the approval service calls before KMS signing (a later slice builds both). The pre-push hook doesn't run it on the fixtures until the UW first-day reminder and the UMMC stop-drinking time are settled; until then publish_test pins those two failures.
 - The publish check must compute every allowed combination of modules, not a sample. The calculator's property tests sample combinations for speed (for BMC's 13 optional modules: every set of at most 2, plus all 13), which is enough to test the calculator but not to publish a protocol.
 
 ## For the signature slice

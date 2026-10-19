@@ -1,11 +1,11 @@
-export 'src/bundle.dart';
+export 'src/bundle.dart' hide manifestOf, matchModules;
 export 'src/calendar.dart';
 export 'src/clock.dart';
 export 'src/duration.dart';
 export 'src/offset.dart';
 export 'src/past_due.dart';
 export 'src/protocol.dart';
-export 'src/reminder.dart';
+export 'src/reminder.dart' hide storedRemind;
 export 'src/selection.dart';
 export 'src/step.dart';
 export 'src/timing.dart';

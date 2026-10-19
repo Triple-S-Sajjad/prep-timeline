@@ -73,7 +73,7 @@ Future<Bundle> verifyBundle({
   );
   if (!signed) throw const BundleRefused(BundleRefusal.badSignature);
 
-  final parsed = parseManifest(_object(manifest));
+  final parsed = manifestOf(manifest);
   if (held != null) {
     if (held.protocolId != parsed.protocolId) {
       throw ArgumentError.value(held.protocolId, 'held', 'Another protocol');
@@ -87,6 +87,20 @@ Future<Bundle> verifyBundle({
     }
   }
 
+  return Bundle._(parsed, matchModules(parsed, modules));
+}
+
+/// [manifest]'s bytes, parsed. Throws FormatException for content that
+/// doesn't parse.
+Manifest manifestOf(List<int> manifest) => parseManifest(_object(manifest));
+
+/// The modules [parsed] lists, matched to the [modules] files by SHA-256 and
+/// parsed, by module ID. Checks no signature: [verifyBundle] calls it after
+/// checking one, and the publish check on content not yet signed. Throws
+/// [BundleRefused] with moduleNotMatched, unlistedFile or moduleMismatch,
+/// and FormatException for content that doesn't parse or a module listed
+/// twice.
+Map<String, Module> matchModules(Manifest parsed, List<List<int>> modules) {
   final files = [
     for (final bytes in modules)
       (sha256: sha256.convert(bytes).toString(), bytes: bytes),
@@ -112,7 +126,7 @@ Future<Bundle> verifyBundle({
     }
     byId[ref.moduleId] = module;
   }
-  return Bundle._(parsed, byId);
+  return byId;
 }
 
 List<int> _signatureBytes(List<int>? file) {

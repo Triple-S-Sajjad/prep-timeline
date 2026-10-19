@@ -1,15 +1,11 @@
 # Mutants of lib/src/reminder.dart (slice 4b). "Heads-up allowed at the
-# quiet start itself" was killed by test 41; "empty quiet hours wrap
-# midnight" survives, see MUTATION.md.
-tests: test/reminder_test.dart
+# quiet start itself" was killed by test 41. The quiet-hours range check
+# moved to inClockRange in clock.dart in slice 7 round 3, with its mutants.
+tests: test/publish_test.dart test/reminder_test.dart
 
 find: return sameDate.isBefore(quietStart)
 replace: return !sameDate.isAfter(quietStart)
 name: Heads-up allowed at the quiet start itself
-
-find: final wraps = to < from;
-replace: final wraps = to <= from;
-name: empty quiet hours wrap midnight
 
 find: if (!placed.effect.isAfter(now)) return const InEffect();
 replace: if (placed.effect.isBefore(now)) return const InEffect();
@@ -71,8 +67,8 @@ find: tz.TZDateTime.from(now, time.location)
 replace: _wholeMinute(tz.TZDateTime.from(now, time.location))
 name: late time rounded down
 
-find: var at = _wholeMinute(switch (step.remind) {
-replace: var at = (switch (step.remind) {
+find: var at = _wholeMinute(storedRemind(step, from));
+replace: var at = storedRemind(step, from);
 name: remind not rounded down
 
 find: final from = anchorTime(step.anchor, anchors);
@@ -83,13 +79,25 @@ find: final effect = effectOf(step.anchor, step.timing, anchors)!.at;
 replace: final effect = effectOf(Anchor.appointment, step.timing, anchors)!.at;
 name: effect counted from the appointment
 
-find: DayTiming(:final day) => day != 0,
-replace: DayTiming() => true,
+find: DayTiming(:final day) => day != 0 &&
+replace: DayTiming(:final day) => true &&
 name: day 0 step exempt from the after-effect move
 
-find: DayTiming(:final day) => day != 0,
+find: DayTiming(:final day) => day != 0 && at.isBefore(dayStart(from, day + 1)),
 replace: DayTiming() => false,
 name: morning reminder of a day step moved
+
+find: day != 0 && at.isBefore(dayStart(from, day + 1)),
+replace: day != 0,
+name: day step exempt after its own date
+
+find: at.isBefore(dayStart(from, day + 1)),
+replace: !at.isAfter(dayStart(from, day + 1)),
+name: day step exempt at the next day start
+
+find: at.isBefore(dayStart(from, day + 1)),
+replace: at.isBefore(effectOf(step.anchor, step.timing, anchors)!.until!),
+name: untilAnchor day step exempt until its anchor
 
 find: if (!morningOfItsDay && at.isAfter(effect)) {
 replace: if (!morningOfItsDay && !at.isBefore(effect)) {
@@ -131,28 +139,16 @@ find: ms - ms % Duration.millisecondsPerMinute,
 replace: ms - ms % Duration.millisecondsPerSecond,
 name: rounded to the second
 
-find: ? clock >= from || clock < to
-replace: ? clock > from || clock < to
-name: wrapping quiet start not quiet
+find: if (!inClockRange(quiet, time)) return null;
+replace: if (false) return null;
+name: every time quiet
 
-find: ? clock >= from || clock < to
-replace: ? clock >= from || clock <= to
-name: wrapping quiet end quiet
-
-find: : clock >= from && clock < to;
-replace: : clock > from && clock < to;
-name: quiet start not quiet
-
-find: : clock >= from && clock < to;
-replace: : clock >= from && clock <= to;
-name: quiet end quiet
-
-find: final day = wraps && clock < to ? -1 : 0;
+find: final day = clock < quiet.from.hour * 60 + quiet.from.minute ? -1 : 0;
 replace: final day = 0;
 name: after-midnight quiet period starts the same evening
 
-find: final day = wraps && clock < to ? -1 : 0;
-replace: final day = clock < to ? -1 : 0;
+find: final day = clock < quiet.from.hour * 60 + quiet.from.minute ? -1 : 0;
+replace: final day = clock < quiet.to.hour * 60 + quiet.to.minute ? -1 : 0;
 name: non-wrapping quiet period starts the day before
 
 find: return dayAtTime(time, day, quiet.from.hour, quiet.from.minute);

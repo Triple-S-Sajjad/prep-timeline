@@ -86,6 +86,7 @@ void main() {
     const bad = <Map<String, Object?>>[
       {'kind': 'window', 'offset': 'PT0H', 'defaulted': false},
       {'kind': 'offset', 'offset': '-PT4H'},
+      {'kind': 'dayAt', 'day': -1, 'time': '17:00'},
       {'kind': 'offset', 'offset': 'P1D', 'defaulted': false},
       {'kind': 'dayAt', 'day': -1, 'time': '24:00', 'defaulted': true},
     ];
@@ -415,6 +416,66 @@ void main() {
       );
     });
 
+    group('43. a day step is exempt only while its reminder is on its own '
+        'date (appointment 2026-11-18 09:00)', () {
+      Reminder? dayStep(
+        int day,
+        Lasts lasts,
+        int remindDay,
+        int hour,
+        int minute, {
+        bool allowNight = false,
+      }) => remind((
+        anchor: Anchor.appointment,
+        timing: DayTiming(day, lasts),
+        remind: DayAtRemind(remindDay, (hour: hour, minute: minute)),
+        id: 'step',
+        allowNight: allowNight,
+        pastDue: PastDue.critical,
+      ), appointment(local(ny, 2026, 11, 18, 9)));
+
+      test('day -3 reminded at 07:00 on day -1 moves to its 00:00 start, '
+          'then out of quiet hours to 22:59', () {
+        expectReminder(
+          dayStep(-3, Lasts.oneDay, -1, 7, 0),
+          at: utc(2026, 11, 15, 3, 59),
+          effect: utc(2026, 11, 15, 5),
+          moves: {MoveReason.afterEffect, MoveReason.quietHours},
+        );
+      });
+      test('day -1 reminded at 07:00 on day -1 stays', () {
+        expectReminder(
+          dayStep(-1, Lasts.oneDay, -1, 7, 0),
+          at: utc(2026, 11, 17, 12),
+          effect: utc(2026, 11, 17, 5),
+        );
+      });
+      test('day -2 reminded at 23:59 on day -2, its last minute, stays', () {
+        expectReminder(
+          dayStep(-2, Lasts.oneDay, -2, 23, 59, allowNight: true),
+          at: utc(2026, 11, 17, 4, 59),
+          effect: utc(2026, 11, 16, 5),
+        );
+      });
+      test('day -2 reminded at 00:00 on day -1, the next day start, moves', () {
+        expectReminder(
+          dayStep(-2, Lasts.oneDay, -1, 0, 0, allowNight: true),
+          at: utc(2026, 11, 16, 5),
+          effect: utc(2026, 11, 16, 5),
+          moves: {MoveReason.afterEffect},
+        );
+      });
+      test('untilAnchor day -1 reminded at 05:00 on day 0, before the anchor '
+          'but after its own date, moves', () {
+        expectReminder(
+          dayStep(-1, Lasts.untilAnchor, 0, 5, 0, allowNight: true),
+          at: utc(2026, 11, 17, 5),
+          effect: utc(2026, 11, 17, 5),
+          moves: {MoveReason.afterEffect},
+        );
+      });
+    });
+
     test('21. UW first-day, 24 h after a 02:00 discharge, is not at the '
         'discharge instant: it moves to 22:59', () {
       final r = remind(
@@ -471,32 +532,73 @@ void main() {
           effect: utc(2026, 11, 19, 1),
         );
       });
+      test('a reminder at exactly 00:30, the quiet start, moves to 00:29', () {
+        final r = remind(
+          atEffect,
+          appointment(local(ny, 2026, 11, 18, 0, 30)),
+          hours: afterMidnight,
+        );
+        expectReminder(
+          r,
+          at: utc(2026, 11, 18, 5, 29),
+          effect: utc(2026, 11, 18, 5, 30),
+          moves: {MoveReason.quietHours},
+        );
+      });
+      test('a reminder at exactly 06:00, the quiet end, stays', () {
+        final r = remind(
+          atEffect,
+          appointment(local(ny, 2026, 11, 18, 6)),
+          hours: afterMidnight,
+        );
+        expectReminder(
+          r,
+          at: utc(2026, 11, 18, 11),
+          effect: utc(2026, 11, 18, 11),
+        );
+      });
     });
   });
 
   group('lateness', () {
+    // Reminded 10:00 for an 11:00 effect, with a 12:00 appointment.
+    const lateStep = (
+      anchor: Anchor.appointment,
+      timing: OffsetTiming(Duration(hours: -1)),
+      remind: OffsetRemind(Duration(hours: -2)),
+      id: 'step',
+      allowNight: false,
+      pastDue: PastDue.critical,
+    );
+    // A function: zones load in setUpAll, after the tests are declared.
+    Anchors noon() => appointment(local(ny, 2026, 11, 18, 12));
+
     test(
       '23. a reminder whose time has passed fires at now, to the second',
       () {
-        final r = remind(
-          (
-            anchor: Anchor.appointment,
-            timing: const OffsetTiming(Duration(hours: -1)),
-            remind: const OffsetRemind(Duration(hours: -2)),
-            id: 'step',
-            allowNight: false,
-            pastDue: PastDue.critical,
-          ),
-          appointment(local(ny, 2026, 11, 18, 12)),
-          at: local(ny, 2026, 11, 18, 10, 30, 20),
-        );
         expectReminder(
-          r,
+          remind(lateStep, noon(), at: local(ny, 2026, 11, 18, 10, 30, 20)),
           at: utc(2026, 11, 18, 15, 30, 20),
           effect: utc(2026, 11, 18, 16),
         );
       },
     );
+
+    test("42. a late reminder keeps the step's zone when now is given in "
+        'UTC', () {
+      final r = remind(
+        lateStep,
+        noon(),
+        at: tz.TZDateTime.utc(2026, 11, 18, 15, 30, 20),
+      );
+      expectReminder(
+        r,
+        at: utc(2026, 11, 18, 15, 30, 20),
+        effect: utc(2026, 11, 18, 16),
+      );
+      expect(r!.at.location.name, ny);
+      expect((r.at.hour, r.at.minute), (10, 30));
+    });
 
     test('24. a move to 22:59 that is already past fires at now, even in '
         'quiet hours', () {
@@ -744,8 +846,13 @@ void main() {
           final main = s.main;
           final headsUp = s.headsUp;
           final why = '${f.name} at $t: $main, heads-up $headsUp';
+          // On its own local date: on or after its start, which is
+          // main.effect, and on the same date.
           final morningOfItsDay = switch (step.timing) {
-            DayTiming(:final day) => day != 0,
+            DayTiming(:final day) =>
+              day != 0 &&
+                  (main.at.year, main.at.month, main.at.day) ==
+                      (main.effect.year, main.effect.month, main.effect.day),
             _ => false,
           };
           final atDischarge =

@@ -1,5 +1,5 @@
-# Mutants of lib/src/bundle.dart (slice 6).
-tests: test/bundle_test.dart test/selection_test.dart
+# Mutants of lib/src/bundle.dart (slice 6; matchModules split out in slice 7).
+tests: test/bundle_test.dart test/publish_test.dart test/selection_test.dart
 
 find: if (publicKey.length != 32) {
 replace: if (false) {

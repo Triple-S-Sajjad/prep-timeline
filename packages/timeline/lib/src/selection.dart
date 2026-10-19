@@ -222,7 +222,7 @@ SelectionResult selectedModules(
         ),
   ];
   if (!appointment.isAfter(now)) return const TimeNotAhead();
-  if (!_inRange(manifest.bookable, appointment)) {
+  if (!inClockRange(manifest.bookable, appointment)) {
     return const NeedsNewInstructions(
       NewInstructionsReason.outsideBookableHours,
     );
@@ -293,15 +293,6 @@ Rescheduled reschedule(
     result: selection,
     anchors: (appointment: appointment, arrival: null, discharge: null),
   );
-}
-
-/// Whether [time]'s local clock time is in [range], which includes its start,
-/// excludes its end and may wrap midnight.
-bool _inRange(QuietHours range, tz.TZDateTime time) {
-  final clock = time.hour * 60 + time.minute;
-  final from = range.from.hour * 60 + range.from.minute;
-  final to = range.to.hour * 60 + range.to.minute;
-  return to < from ? clock >= from || clock < to : from <= clock && clock < to;
 }
 
 /// Every timed step of [selected], sorted by effect time; ties keep module

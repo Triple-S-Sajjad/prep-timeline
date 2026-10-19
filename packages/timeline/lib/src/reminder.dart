@@ -89,19 +89,11 @@ Reminder? _placed(TimedStep step, Anchors anchors, QuietHours quiet) {
   if (from == null) return null;
   final effect = effectOf(step.anchor, step.timing, anchors)!.at;
   final moves = <MoveReason>{};
-  var at = _wholeMinute(switch (step.remind) {
-    OffsetRemind(:final offset) => stepTime(from, offset),
-    DayAtRemind(:final day, :final time) => dayAtTime(
-      from,
-      day,
-      time.hour,
-      time.minute,
-    ),
-  });
-  // A day step on any day but day 0 is reminded on the morning of its day,
-  // after the day has started.
+  var at = _wholeMinute(storedRemind(step, from));
+  // A day step on any day but day 0 is reminded on the morning of its day:
+  // exempt only on its own local date, before the next day starts.
   final morningOfItsDay = switch (step.timing) {
-    DayTiming(:final day) => day != 0,
+    DayTiming(:final day) => day != 0 && at.isBefore(dayStart(from, day + 1)),
     _ => false,
   };
   if (!morningOfItsDay && at.isAfter(effect)) {
@@ -123,6 +115,19 @@ Reminder? _placed(TimedStep step, Anchors anchors, QuietHours quiet) {
   }
   return (at: at, effect: effect, moves: moves);
 }
+
+/// The instant [step]'s stored remind gives, counted from its anchor at
+/// [from], before any rounding or move.
+tz.TZDateTime storedRemind(TimedStep step, tz.TZDateTime from) =>
+    switch (step.remind) {
+      OffsetRemind(:final offset) => stepTime(from, offset),
+      DayAtRemind(:final day, :final time) => dayAtTime(
+        from,
+        day,
+        time.hour,
+        time.minute,
+      ),
+    };
 
 /// What the phone does about one step.
 sealed class StepReminders {
@@ -157,15 +162,10 @@ tz.TZDateTime _wholeMinute(tz.TZDateTime time) {
 /// The start of the quiet period [time] falls in, or null outside quiet
 /// hours. Compared on the local clock, so a clock change doesn't shift it.
 tz.TZDateTime? _quietStart(tz.TZDateTime time, QuietHours quiet) {
+  if (!inClockRange(quiet, time)) return null;
+  // Quiet before its start clock time is after midnight in a period that
+  // wraps, so it began the evening before.
   final clock = time.hour * 60 + time.minute;
-  final from = quiet.from.hour * 60 + quiet.from.minute;
-  final to = quiet.to.hour * 60 + quiet.to.minute;
-  final wraps = to < from;
-  final inQuiet = wraps
-      ? clock >= from || clock < to
-      : clock >= from && clock < to;
-  if (!inQuiet) return null;
-  // After midnight in a period that wraps, it began the evening before.
-  final day = wraps && clock < to ? -1 : 0;
+  final day = clock < quiet.from.hour * 60 + quiet.from.minute ? -1 : 0;
   return dayAtTime(time, day, quiet.from.hour, quiet.from.minute);
 }

@@ -5,17 +5,6 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'support.dart';
 
-const umms = 'colo-golytely-split-am-umms';
-const bmc = 'colo-golytely-split-bmc';
-const karmanos = 'colo-miralax-split-karmanos';
-const uw = 'cardiac-cath-uw';
-const msk = 'surgery-anesthesia-msk';
-const ccf = 'colo-sutab-low-volume-ccf';
-
-const ny = 'America/New_York';
-const la = 'America/Los_Angeles';
-const detroit = 'America/Detroit';
-
 /// Protocols with no step that stops all liquids, left out of test 33 until
 /// they have one (fixtures/open-questions.md, "Stop-drinking step to
 /// confirm").

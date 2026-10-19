@@ -1,0 +1,248 @@
+# Mutants of lib/src/publish.dart (slice 7; discharge npo compared in
+# slice 7 round 2; noAllowedSet and the day-step date limit in round 3, when
+# the range check moved to inClockRange in clock.dart with its mutants).
+tests: test/publish_test.dart
+
+find: if (!appliesAt(byId[base]!.appliesWhen, t)) {
+replace: if (false) {
+name: base appliesWhen not checked
+
+find:         continue;
+replace:         ;
+name: a sample outside the base appliesWhen judged further
+
+find: final clock = t.hour * 60 + t.minute;
+replace: final clock = t.hour;
+name: allowed sets cached by the hour
+
+find: if (!selectable.contains(id)) continue;
+replace: if (false) continue;
+name: modules no code can tick at the sample judged
+
+find: if (step.anchor == Anchor.discharge) continue;
+replace: if (false) continue;
+name: discharge steps judged at appointment samples
+
+find: in step.anchor == Anchor.arrival ? arrivals : [atAppointment]) {
+replace: in step.anchor == Anchor.arrival ? [arrivals.last] : [atAppointment]) {
+name: arrival reminders judged only with the arrival at the appointment
+
+find: if (v.npo.contains(step.id)) npo.add((v, step));
+replace: if (false) npo.add((v, step));
+name: no npo step compared
+
+find: stageOf[a] != stageOf[b] ||
+replace: stageOf[a] == null ||
+name: a scheduling and a discharge module never selected together
+
+find: s.contains(a) && s.contains(b)
+replace: s.contains(a) || s.contains(b)
+name: modules of one stage together if either can be ticked
+
+find: ? identical(va, vb)
+replace: ? true
+name: one module's npo steps compared across parameter choices
+
+find: byArrival ? arrivals : [atAppointment]
+replace: byArrival ? [arrivals.last] : [atAppointment]
+name: arrival cutoffs compared only with the arrival at the appointment
+
+find: if (!at.isAtSameMomentAs(
+replace: if (at.isAfter(
+name: a conflict counted only when the first step is later
+
+find: s.anchor != Anchor.discharge &&
+replace: true &&
+name: a discharge npo step counted as stopping drinking
+
+find: )!.at.isBefore(t),
+replace: )!.at.isAfter(t),
+name: npo after the appointment counted as stopping drinking
+
+find: variants[id]!.every(
+replace: variants[id]!.any(
+name: one parameter choice with npo counted for every choice
+
+find: if (stopsDrinking(base)) continue;
+replace: if (false) continue;
+name: a base with npo still judged for noStopDrinking
+
+find: if (r.selectedAt == SelectedAt.scheduling &&
+replace: if (true &&
+name: discharge modules counted for noStopDrinking
+
+find: appliesAt(byId[r.moduleId]!.appliesWhen, t) &&
+replace: true &&
+name: modules that don't apply named npo-free
+
+find: !stopsDrinking(r.moduleId))
+replace: true)
+name: every scheduling module named npo-free
+
+find: scheduling.where((s) => s.every(npoFree.contains))
+replace: scheduling.where((s) => s.any(npoFree.contains))
+name: a set fails if any of its modules is npo-free
+
+find: if (failing > 0) {
+replace: if (failing >= 0) {
+name: noStopDrinking with no failing set
+
+find: sample: arrivalAtAppointment,
+replace: sample: atAppointment,
+name: noStopDrinking sample without the arrival
+
+find: judgeCutoffs(dischargeNpo, setsByClock.values, (_) => [sample]);
+replace:
+name: discharge npo steps not compared
+
+find: if (step.anchor == Anchor.discharge && v.npo.contains(step.id))
+replace: if (v.npo.contains(step.id))
+name: every npo step compared at discharge samples
+
+find: if (step.anchor == Anchor.discharge) judgeReminder(v, step, sample);
+replace: judgeReminder(v, step, sample);
+name: every step judged at discharge samples
+
+find: for (var value = range.min; value <= range.max; value++)
+replace: for (var value = range.min; value < range.max; value++)
+name: highest parameter value skipped
+
+find: for (var value = range.min; value <= range.max; value++)
+replace: for (var value = range.min + 1; value <= range.max; value++)
+name: lowest parameter value skipped
+
+find: if (stageSets.isEmpty) {
+replace: if (false) {
+name: a stage with no allowed set passes
+
+find: if (stageSets.isEmpty) {
+replace: if (stageSets.length <= 1) {
+name: a stage with one allowed set fails
+
+find: stage: stage,
+replace: stage: SelectedAt.scheduling,
+name: noAllowedSet always names the scheduling stage
+
+find: if (s['type'] == 'npo') s['id'],
+replace: if (s['type'] == 'diet') s['id'],
+name: diet steps taken for npo
+
+find:       day != 0 &&
+replace:       true &&
+name: a day 0 step reminded after it starts accepted
+
+find: DayTiming(:final day) =>
+replace: DayTiming(:final day) => false &&
+name: a day step reminded on the morning of its day fails
+
+find:           at.isBefore(dayStart(anchorTime(step.anchor, anchors)!, day + 1)),
+replace:           true,
+name: a day step reminded after its own date accepted
+
+find: at.isBefore(dayStart(anchorTime(step.anchor, anchors)!, day + 1)),
+replace: !at.isAfter(dayStart(anchorTime(step.anchor, anchors)!, day + 1)),
+name: a day step reminded at the next day start accepted
+
+find: at.isBefore(dayStart(anchorTime(step.anchor, anchors)!, day + 1)),
+replace: at.isBefore(effectOf(step.anchor, step.timing, anchors)!.until!),
+name: an untilAnchor day step reminded before its anchor accepted
+
+find: if (!morningOfItsDay && at.isAfter(effect))
+replace: if (!morningOfItsDay && !at.isBefore(effect))
+name: a reminder at its effect fails
+
+find: OffsetRemind(offset: Duration.zero) => true,
+replace: OffsetRemind(offset: Duration.zero) => false,
+name: reminders at the discharge instant judged for quiet hours
+
+find:       step.anchor == Anchor.discharge &&
+replace:       true &&
+name: every reminder at its anchor exempt from quiet hours
+
+find: if (!step.allowNight && !atDischarge
+replace: if (!atDischarge
+name: allowNight ignored
+
+find: && inClockRange(quiet, at))
+replace: && false)
+name: quiet hours never judged
+
+find: const Duration(hours: 24))
+replace: const Duration(hours: 23))
+name: 23-hour dates taken as ordinary
+
+find: date.day, 12, 0), day);
+replace: date.day, 0, 0), day);
+name: a date's start found from its midnight
+
+find: for (final t in [booked.first, booked.last])
+replace: for (final t in [booked.first])
+name: appointment span from the first sample only
+
+find: for (final a in [day.first, t])
+replace: for (final a in [t])
+name: appointment span with the arrival at the appointment only
+
+find: for (final d in [day.first, day.last])
+replace: for (final d in [day.first])
+name: discharge span from the first sample only
+
+find: if (effect.until case final until?) until,
+replace: effect.at,
+name: window ends left out of the span
+
+find:     _remindAt(step, anchors),
+replace:     effect.at,
+name: reminders left out of the span
+
+find: !changes.contains(date) &&
+replace: true &&
+name: a clock-change date can be the ordinary date
+
+find: if (ordinary) ordinaryFound = true;
+replace: if (false) ordinaryFound = true;
+name: every date that crosses nothing sampled
+
+find: if (ordinary || changes.contains(date) || appointmentCrosses) {
+replace: if (ordinary || appointmentCrosses) {
+name: clock-change dates sampled only when a span crosses
+
+find: ..sort();
+replace: ;
+name: span bounds taken in listing order
+
+find: .end <= ms.last;
+replace: .start <= ms.last;
+name: every span crosses
+
+find: if (inClockRange(bookable, t)) t,
+replace: t,
+name: bookable hours ignored
+
+find: !t.isAfter(appointment);
+replace: t.isBefore(appointment);
+name: arrival at the appointment not sampled
+
+find: t.isBefore(end);
+replace: !t.isAfter(end);
+name: the next midnight sampled
+
+find: r.selectedAt == stage &&
+replace: true &&
+name: modules of the other stage tickable
+
+find: appliesAt(modules[r.moduleId]!.appliesWhen, appointment))
+replace: true)
+name: modules that don't apply tickable
+
+find: if (stageOf[g.modules.first] == stage) g.modules,
+replace: g.modules,
+name: other stage's groups required
+
+find: g.where(ticked.contains).length == 1
+replace: g.where(ticked.contains).length <= 1
+name: a group left unticked
+
+find: mask < 1 << ids.length;
+replace: mask < (1 << ids.length) - 1;
+name: the set of every module left out

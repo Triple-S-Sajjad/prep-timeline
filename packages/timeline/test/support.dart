@@ -32,6 +32,18 @@ Anchors appointment(tz.TZDateTime a) =>
 
 const protocols = '../../fixtures/protocols';
 
+/// The fixture protocols, and the zones they and the tests use.
+const umms = 'colo-golytely-split-am-umms';
+const bmc = 'colo-golytely-split-bmc';
+const karmanos = 'colo-miralax-split-karmanos';
+const uw = 'cardiac-cath-uw';
+const msk = 'surgery-anesthesia-msk';
+const ccf = 'colo-sutab-low-volume-ccf';
+
+const ny = 'America/New_York';
+const la = 'America/Los_Angeles';
+const detroit = 'America/Detroit';
+
 /// A fresh copy each call, so a test can change it.
 Map<String, Object?> readJson(String path) =>
     jsonDecode(File(path).readAsStringSync()) as Map<String, Object?>;
@@ -87,6 +99,23 @@ Future<Bundle> signedBundle(
   void Function(Map<String, Object?> json)? manifest,
   Map<String, void Function(Map<String, Object?> json)> modules = const {},
 }) async {
+  final f = editedFiles(protocol, manifest: manifest, modules: modules);
+  final key = await testKey();
+  return verifyBundle(
+    manifest: f.manifest,
+    signature: sigText(await signatureOf(f.manifest, key)),
+    modules: f.modules,
+    publicKey: (await key.extractPublicKey()).bytes,
+  );
+}
+
+/// Fixture [protocol]'s files, unsigned, changed as [signedBundle] changes
+/// them.
+Files editedFiles(
+  String protocol, {
+  void Function(Map<String, Object?> json)? manifest,
+  Map<String, void Function(Map<String, Object?> json)> modules = const {},
+}) {
   final dir = '$protocols/$protocol';
   var manifestText = File('$dir/protocol.json').readAsStringSync();
   final moduleFiles = <List<int>>[];
@@ -113,14 +142,7 @@ Future<Bundle> signedBundle(
     manifest(json);
     manifestText = jsonEncode(json);
   }
-  final bytes = utf8.encode(manifestText);
-  final key = await testKey();
-  return verifyBundle(
-    manifest: bytes,
-    signature: sigText(await signatureOf(bytes, key)),
-    modules: moduleFiles,
-    publicKey: (await key.extractPublicKey()).bytes,
-  );
+  return (manifest: utf8.encode(manifestText), modules: moduleFiles);
 }
 
 /// Fixture module [path] and its step [id], as JSON.

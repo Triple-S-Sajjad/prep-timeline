@@ -1,5 +1,5 @@
 # Mutants of lib/src/selection.dart (slice 5b).
-tests: test/bundle_test.dart test/selection_test.dart
+tests: test/bundle_test.dart test/publish_test.dart test/selection_test.dart
 
 find: code.protocolId != manifest.protocolId ||
 replace: false ||
@@ -81,25 +81,9 @@ find: discharge?.stage == SelectedAt.scheduling
 replace: false
 name: scheduling code accepted as the discharge code
 
-find: if (!_inRange(manifest.bookable, appointment)) {
+find: if (!inClockRange(manifest.bookable, appointment)) {
 replace: if (false) {
 name: bookable hours not checked
-
-find: return to < from ? clock >= from || clock < to : from <= clock && clock < to;
-replace: return from <= clock && clock < to;
-name: bookable hours never wrap midnight
-
-find: from <= clock && clock < to;
-replace: from <= clock && clock <= to;
-name: bookable end included
-
-find: ? clock >= from || clock < to
-replace: ? clock > from || clock < to
-name: wrapping bookable start excluded
-
-find: final clock = time.hour * 60 + time.minute;
-replace: final clock = time.hour * 60;
-name: bookable minutes ignored
 
 find: if (!selected.every((s) => appliesAt(s.module.appliesWhen, appointment))) {
 replace: if (!appliesAt(selected.first.module.appliesWhen, appointment)) {
@@ -158,7 +142,7 @@ replace: if (false) {
 name: a base module with parameters accepted
 
 find:   final base = _module(modules, manifest.base.moduleId);
-replace:   if (!_inRange(manifest.bookable, appointment)) return const NeedsNewInstructions(NewInstructionsReason.outsideBookableHours); final base = _module(modules, manifest.base.moduleId);
+replace:   if (!inClockRange(manifest.bookable, appointment)) return const NeedsNewInstructions(NewInstructionsReason.outsideBookableHours); final base = _module(modules, manifest.base.moduleId);
 name: a broken bundle hidden outside bookable hours
 
 find: if (current.appointment.location.name != bundle.manifest.zone.name) {
@@ -182,7 +166,7 @@ replace:
 name: a time not after now judged like any other
 
 find: if (!appointment.isAfter(now)) return const TimeNotAhead();
-replace: if (!appointment.isAfter(now) && _inRange(manifest.bookable, appointment)) return const TimeNotAhead();
+replace: if (!appointment.isAfter(now) && inClockRange(manifest.bookable, appointment)) return const TimeNotAhead();
 name: bookable hours checked before the time
 
 find: if (!appointment.isAfter(now)) return const TimeNotAhead();

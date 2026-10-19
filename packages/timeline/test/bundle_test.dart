@@ -9,9 +9,6 @@ import 'package:timezone/data/latest.dart' as tzdata;
 
 import 'support.dart';
 
-const umms = 'colo-golytely-split-am-umms';
-const uw = 'cardiac-cath-uw';
-
 Files files(String protocol) => filesIn('$protocols/$protocol');
 
 String moduleIdOf(List<int> module) =>

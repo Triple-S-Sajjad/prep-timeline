@@ -1,7 +1,7 @@
 # Mutants of lib/src/protocol.dart (slice 5a). The sha256, group module ID,
 # "minutes ignored", parameter range, unit, chosen-value and "timed by remind
 # instead of timing" mutants survived the first run in MUTATION.md.
-tests: test/bundle_test.dart test/protocol_test.dart test/selection_test.dart
+tests: test/bundle_test.dart test/protocol_test.dart test/publish_test.dart test/selection_test.dart
 
 find: RegExp(r'^[0-9a-f]{64}$')
 replace: RegExp(r'^[0-9a-f]+$')
