@@ -5,7 +5,7 @@ export 'src/duration.dart';
 export 'src/offset.dart';
 export 'src/past_due.dart';
 export 'src/protocol.dart';
-export 'src/reminder.dart' hide storedRemind;
+export 'src/reminder.dart' hide reminderExemptions, storedRemind;
 export 'src/selection.dart';
 export 'src/step.dart';
 export 'src/timing.dart';

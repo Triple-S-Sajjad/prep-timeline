@@ -338,21 +338,11 @@ List<PublishReason> _reminderFailures(
 ) {
   final at = _remindAt(step, anchors);
   final effect = effectOf(step.anchor, step.timing, anchors)!.at;
-  // A day step on any day but day 0 is reminded on the morning of its day:
-  // exempt only on its own local date, before the next day starts.
-  final morningOfItsDay = switch (step.timing) {
-    DayTiming(:final day) =>
-      day != 0 &&
-          at.isBefore(dayStart(anchorTime(step.anchor, anchors)!, day + 1)),
-    _ => false,
-  };
-  // The patient has just tapped "I'm home".
-  final atDischarge =
-      step.anchor == Anchor.discharge &&
-      switch (step.remind) {
-        OffsetRemind(offset: Duration.zero) => true,
-        _ => false,
-      };
+  final (:morningOfItsDay, :atDischarge) = reminderExemptions(
+    step,
+    anchorTime(step.anchor, anchors)!,
+    at,
+  );
   return [
     if (!morningOfItsDay && at.isAfter(effect)) PublishReason.afterEffect,
     if (!step.allowNight && !atDischarge && inClockRange(quiet, at))

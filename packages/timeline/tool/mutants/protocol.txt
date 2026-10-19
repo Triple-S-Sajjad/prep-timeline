@@ -1,6 +1,7 @@
-# Mutants of lib/src/protocol.dart (slice 5a). The sha256, group module ID,
-# "minutes ignored", parameter range, unit, chosen-value and "timed by remind
-# instead of timing" mutants survived the first run in MUTATION.md.
+# Mutants of lib/src/protocol.dart (slice 5a; the parameter range start in
+# slice 7b). The sha256, group module ID, "minutes ignored", parameter range,
+# unit, chosen-value and "timed by remind instead of timing" mutants survived
+# the first run in MUTATION.md.
 tests: test/bundle_test.dart test/protocol_test.dart test/publish_test.dart test/selection_test.dart
 
 find: RegExp(r'^[0-9a-f]{64}$')
@@ -66,6 +67,18 @@ name: parameter unit always days
 find: min: min,
 replace: min: max,
 name: declared min read as max
+
+find: when min >= 1 =>
+replace: when min >= 0 =>
+name: a parameter range starting at 0 accepted
+
+find: when min >= 1 =>
+replace: =>
+name: a parameter range of any start accepted
+
+find: when min >= 1 =>
+replace: when min > 1 =>
+name: a parameter range starting at 1 rejected
 
 find: int day(Object? d) => resolveDay(d, declared, chosen);
 replace: int day(Object? d) => resolveDay(d, declared, const {});

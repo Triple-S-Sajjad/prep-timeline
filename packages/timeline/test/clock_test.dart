@@ -1,5 +1,6 @@
 import 'package:test/test.dart';
 import 'package:timeline/timeline.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 void main() {
   group('valid clock times', () {
@@ -28,5 +29,11 @@ void main() {
         expect(() => parseClockTime(text), throwsFormatException);
       });
     }
+  });
+
+  test('inClockRange takes a zoned time, never a plain DateTime, whose clock '
+      'is UTC or the machine zone rather than the protocol zone', () {
+    expect(inClockRange, isA<bool Function(QuietHours, tz.TZDateTime)>());
+    expect(inClockRange, isNot(isA<bool Function(QuietHours, DateTime)>()));
   });
 }

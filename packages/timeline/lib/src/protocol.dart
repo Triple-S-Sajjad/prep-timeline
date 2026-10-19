@@ -199,12 +199,12 @@ Object? _frozenValue(Object? json) => switch (json) {
   _ => json,
 };
 
+/// A range starting at 1 or more, so a parameter never puts a day step on
+/// day 0.
 ParamRange _param(Object? json) => switch (json) {
-  {'min': final int min, 'max': final int max, 'unit': final String unit} => (
-    min: min,
-    max: max,
-    unit: unit,
-  ),
+  {'min': final int min, 'max': final int max, 'unit': final String unit}
+      when min >= 1 =>
+    (min: min, max: max, unit: unit),
   _ => throw FormatException('Not a parameter declaration', json),
 };
 

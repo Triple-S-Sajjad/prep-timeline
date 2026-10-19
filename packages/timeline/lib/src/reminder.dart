@@ -90,23 +90,11 @@ Reminder? _placed(TimedStep step, Anchors anchors, QuietHours quiet) {
   final effect = effectOf(step.anchor, step.timing, anchors)!.at;
   final moves = <MoveReason>{};
   var at = _wholeMinute(storedRemind(step, from));
-  // A day step on any day but day 0 is reminded on the morning of its day:
-  // exempt only on its own local date, before the next day starts.
-  final morningOfItsDay = switch (step.timing) {
-    DayTiming(:final day) => day != 0 && at.isBefore(dayStart(from, day + 1)),
-    _ => false,
-  };
+  final (:morningOfItsDay, :atDischarge) = reminderExemptions(step, from, at);
   if (!morningOfItsDay && at.isAfter(effect)) {
     at = _wholeMinute(effect);
     moves.add(MoveReason.afterEffect);
   }
-  // The patient has just tapped "I'm home".
-  final atDischarge =
-      step.anchor == Anchor.discharge &&
-      switch (step.remind) {
-        OffsetRemind(offset: Duration.zero) => true,
-        _ => false,
-      };
   if (!step.allowNight && !atDischarge) {
     if (_quietStart(at, quiet) case final start?) {
       at = start.subtract(const Duration(minutes: 1));
@@ -115,6 +103,29 @@ Reminder? _placed(TimedStep step, Anchors anchors, QuietHours quiet) {
   }
   return (at: at, effect: effect, moves: moves);
 }
+
+/// The two exemptions for [step]'s reminder at [at], counted from its anchor
+/// at [from]. The phone and the publish check both read them here.
+({bool morningOfItsDay, bool atDischarge}) reminderExemptions(
+  TimedStep step,
+  tz.TZDateTime from,
+  tz.TZDateTime at,
+) => (
+  // A day step on any day but day 0 is reminded on the morning of its day,
+  // so it may come after its effect: only on its own local date, before the
+  // next day starts.
+  morningOfItsDay: switch (step.timing) {
+    DayTiming(:final day) => day != 0 && at.isBefore(dayStart(from, day + 1)),
+    _ => false,
+  },
+  // The patient has just tapped "I'm home", so it may come in quiet hours.
+  atDischarge:
+      step.anchor == Anchor.discharge &&
+      switch (step.remind) {
+        OffsetRemind(offset: Duration.zero) => true,
+        _ => false,
+      },
+);
 
 /// The instant [step]'s stored remind gives, counted from its anchor at
 /// [from], before any rounding or move.

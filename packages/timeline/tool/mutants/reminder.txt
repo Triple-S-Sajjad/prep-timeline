@@ -1,6 +1,8 @@
 # Mutants of lib/src/reminder.dart (slice 4b). "Heads-up allowed at the
 # quiet start itself" was killed by test 41. The quiet-hours range check
 # moved to inClockRange in clock.dart in slice 7 round 3, with its mutants.
+# The two exemptions moved into reminderExemptions in slice 7b, shared with
+# publish.dart, which keeps only its call-site mutants.
 tests: test/publish_test.dart test/reminder_test.dart
 
 find: return sameDate.isBefore(quietStart)
@@ -96,12 +98,16 @@ replace: !at.isAfter(dayStart(from, day + 1)),
 name: day step exempt at the next day start
 
 find: at.isBefore(dayStart(from, day + 1)),
-replace: at.isBefore(effectOf(step.anchor, step.timing, anchors)!.until!),
+replace: at.isBefore(effectOf(step.anchor, step.timing, (appointment: from, arrival: from, discharge: from))!.until!),
 name: untilAnchor day step exempt until its anchor
 
 find: if (!morningOfItsDay && at.isAfter(effect)) {
 replace: if (!morningOfItsDay && !at.isBefore(effect)) {
 name: reminder exactly at its effect moved
+
+find: if (!morningOfItsDay && at.isAfter(effect)) {
+replace: if (at.isAfter(effect)) {
+name: the day-step exemption ignored on the phone
 
 find: at = _wholeMinute(effect);
 replace: at = effect;
@@ -134,6 +140,10 @@ name: discharge exemption for any offset
 find: if (!step.allowNight && !atDischarge) {
 replace: if (!atDischarge) {
 name: allowNight reminder moved out of quiet hours
+
+find: if (!step.allowNight && !atDischarge) {
+replace: if (!step.allowNight) {
+name: the discharge exemption ignored on the phone
 
 find: ms - ms % Duration.millisecondsPerMinute,
 replace: ms - ms % Duration.millisecondsPerSecond,

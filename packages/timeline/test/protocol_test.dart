@@ -219,6 +219,25 @@ void main() {
       expect(() => parseModule(json), throwsFormatException);
     });
 
+    test('27. a parameter range starting below 1 is rejected, so a parameter '
+        'never puts a day step on day 0', () {
+      expect(
+        () => parseModule(
+          readJson('../../fixtures/invalid/param-min-zero-bmc/p2y12-hold.json'),
+        ),
+        throwsFormatException,
+      );
+      for (final min in const [0, -1]) {
+        final json = fixture('colo-golytely-split-bmc/ticlid-hold.json');
+        (json['parameters']! as Map<String, Object?>)['holdWeeks'] = {
+          'min': min,
+          'max': 2,
+          'unit': 'weeks',
+        };
+        expect(() => parseModule(json), throwsFormatException, reason: '$min');
+      }
+    });
+
     for (final bad in const [<Object?>[], 'holdWeeks', 3, null]) {
       test('24. parameters $bad is a FormatException, not a TypeError', () {
         final json = pm()..['parameters'] = bad;

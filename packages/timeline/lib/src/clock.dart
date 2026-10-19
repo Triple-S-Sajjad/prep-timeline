@@ -1,3 +1,5 @@
+import 'package:timezone/timezone.dart' as tz;
+
 /// The schema's clockTime pattern. "24:00" is allowed there only as the end
 /// of an appointment-time range, never as a time a step happens.
 final _clock = RegExp(r'^([01][0-9]|2[0-3]):([0-5][0-9])$');
@@ -12,8 +14,9 @@ final _clock = RegExp(r'^([01][0-9]|2[0-3]):([0-5][0-9])$');
 
 /// Whether [time]'s local clock time is in [range]: its start included, its
 /// end excluded, wrapping midnight when the end is earlier. Quiet hours,
-/// bookable hours and the publish check all read ranges through this.
-bool inClockRange(QuietHours range, DateTime time) {
+/// bookable hours and the publish check all read ranges through this. Zoned,
+/// because a plain DateTime's clock is UTC or the machine's zone.
+bool inClockRange(QuietHours range, tz.TZDateTime time) {
   final clock = time.hour * 60 + time.minute;
   final from = range.from.hour * 60 + range.from.minute;
   final to = range.to.hour * 60 + range.to.minute;

@@ -1,6 +1,7 @@
 # Mutants of lib/src/publish.dart (slice 7; discharge npo compared in
 # slice 7 round 2; noAllowedSet and the day-step date limit in round 3, when
-# the range check moved to inClockRange in clock.dart with its mutants).
+# the range check moved to inClockRange in clock.dart with its mutants; the
+# exemption mutants moved to reminder.txt in slice 7b).
 tests: test/publish_test.dart
 
 find: if (!appliesAt(byId[base]!.appliesWhen, t)) {
@@ -127,37 +128,25 @@ find: if (s['type'] == 'npo') s['id'],
 replace: if (s['type'] == 'diet') s['id'],
 name: diet steps taken for npo
 
-find:       day != 0 &&
-replace:       true &&
-name: a day 0 step reminded after it starts accepted
-
-find: DayTiming(:final day) =>
-replace: DayTiming(:final day) => false &&
-name: a day step reminded on the morning of its day fails
-
-find:           at.isBefore(dayStart(anchorTime(step.anchor, anchors)!, day + 1)),
-replace:           true,
-name: a day step reminded after its own date accepted
-
-find: at.isBefore(dayStart(anchorTime(step.anchor, anchors)!, day + 1)),
-replace: !at.isAfter(dayStart(anchorTime(step.anchor, anchors)!, day + 1)),
-name: a day step reminded at the next day start accepted
-
-find: at.isBefore(dayStart(anchorTime(step.anchor, anchors)!, day + 1)),
-replace: at.isBefore(effectOf(step.anchor, step.timing, anchors)!.until!),
-name: an untilAnchor day step reminded before its anchor accepted
+find: final scheduling = sets[SelectedAt.scheduling]!;
+replace: if (sets.values.any((s) => s.isEmpty)) continue; final scheduling = sets[SelectedAt.scheduling]!;
+name: a noAllowedSet sample judged no further
 
 find: if (!morningOfItsDay && at.isAfter(effect))
 replace: if (!morningOfItsDay && !at.isBefore(effect))
 name: a reminder at its effect fails
 
-find: OffsetRemind(offset: Duration.zero) => true,
-replace: OffsetRemind(offset: Duration.zero) => false,
-name: reminders at the discharge instant judged for quiet hours
+find: if (!morningOfItsDay && at.isAfter(effect))
+replace: if (at.isAfter(effect))
+name: the day-step exemption ignored at publish
 
-find:       step.anchor == Anchor.discharge &&
-replace:       true &&
-name: every reminder at its anchor exempt from quiet hours
+find: && !atDischarge && inClockRange
+replace: && inClockRange
+name: the discharge exemption ignored at publish
+
+find:     anchorTime(step.anchor, anchors)!,
+replace:     at,
+name: the exemptions counted from the reminder, not the anchor
 
 find: if (!step.allowNight && !atDischarge
 replace: if (!atDischarge

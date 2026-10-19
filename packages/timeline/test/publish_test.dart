@@ -1280,18 +1280,26 @@ void main() {
       expectGrouped(umms, all, 'base,iron-hold', 2, 20);
     });
 
-    test('45. a module stops drinking only if every choice of its parameter '
-        'values does: npo at 18:00 on day -holdDays, holdDays 0 or 1, '
-        'leaves iron-hold npo-free', () {
-      // The validator rejects a range starting at 0; the check doesn't rely
-      // on it.
+    test('45a. invalid/param-min-zero-bmc, a range starting at 0, is a '
+        'FormatException, never judged', () {
+      expect(
+        () => checkFiles(filesIn('$invalid/param-min-zero-bmc')),
+        throwsFormatException,
+      );
+    });
+
+    test('45b. npo at 18:00 on day -holdDays, holdDays 1 or 2: every choice '
+        'stops drinking, so only the base is npo-free and 1 set fails', () {
+      // With a range starting at 1, every choice lands on the same side of
+      // the appointment, so "every choice" and "any choice" can't differ:
+      // see MUTATION.md.
       const day = {'param': 'holdDays', 'before': true};
       final all = check(
         umms,
         modules: {
           'iron-hold': (m) {
             m['parameters'] = {
-              'holdDays': {'min': 0, 'max': 1, 'unit': 'days'},
+              'holdDays': {'min': 1, 'max': 2, 'unit': 'days'},
             };
             stepsTo([
               {
@@ -1308,7 +1316,7 @@ void main() {
           },
         },
       );
-      expectGrouped(umms, all, 'base,iron-hold', 2, 20);
+      expectGrouped(umms, all, 'base', 1, 20);
     });
 
     test('46. Karmanos without its base npo: only modules that apply are '
@@ -1422,6 +1430,41 @@ void main() {
           ),
         );
       });
+
+      test('49. $name: the rest of each such sample is still judged, so a '
+          'base reminder at 23:30 the day before fails there too', () {
+        final all = check(
+          protocol,
+          modules: {
+            ...modules,
+            'base': adding({
+              'id': 'late',
+              'type': 'diet',
+              'anchor': 'appointment',
+              'timing': {'kind': 'dayAt', 'day': -1, 'time': '23:30'},
+              'remind': {
+                'kind': 'dayAt',
+                'day': -1,
+                'time': '23:30',
+                'defaulted': false,
+              },
+              'allowNight': false,
+              'pastDue': 'ignore',
+              'text': 'late',
+            }),
+          },
+        );
+        final none = withReason(all, PublishReason.noAllowedSet);
+        expect(none, isNotEmpty);
+        final quiet = {
+          for (final f in withReason(all, PublishReason.quietHours))
+            if (stepsOf(protocol, f).single == 'base/late')
+              f.sample.appointment,
+        };
+        for (final f in none) {
+          expect(quiet, contains(f.sample.appointment));
+        }
+      });
     }
   });
 
@@ -1533,7 +1576,12 @@ void main() {
     };
     expect(exports, contains('bundle'));
     expect(exports, contains('reminder'));
-    for (final name in ['manifestOf', 'matchModules', 'storedRemind']) {
+    for (final name in [
+      'manifestOf',
+      'matchModules',
+      'storedRemind',
+      'reminderExemptions',
+    ]) {
       final declared = [
         for (final f in Directory('lib/src').listSync().whereType<File>())
           if (RegExp(
@@ -1544,6 +1592,29 @@ void main() {
       ];
       expect(declared, hasLength(1), reason: name);
       expect(exports[declared.single] ?? {name}, contains(name), reason: name);
+    }
+  });
+
+  test('50. the two reminder exemptions are written once, in reminder.dart, '
+      'and the phone and the publish check both call them', () {
+    final sources = {
+      for (final f in Directory('lib/src').listSync().whereType<File>())
+        f.uri.pathSegments.last: f.readAsStringSync(),
+    };
+    List<String> having(String text) => [
+      for (final MapEntry(:key, :value) in sources.entries)
+        if (value.contains(text)) key,
+    ];
+    // The day-step exemption and the discharge-instant exemption.
+    expect(having('day != 0'), ['reminder.dart']);
+    expect(having('OffsetRemind(offset: Duration.zero)'), ['reminder.dart']);
+    // reminder.dart declares it once and calls it from _placed.
+    for (final (file, uses) in [('publish.dart', 1), ('reminder.dart', 2)]) {
+      expect(
+        RegExp(r'\breminderExemptions\(').allMatches(sources[file]!),
+        hasLength(uses),
+        reason: file,
+      );
     }
   });
 }
