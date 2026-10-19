@@ -1288,6 +1288,14 @@ void main() {
       );
     });
 
+    test('45c. invalid/param-range-bmc, a range whose min is above its max, '
+        'is a FormatException, never passed with its steps unjudged', () {
+      expect(
+        () => checkFiles(filesIn('$invalid/param-range-bmc')),
+        throwsFormatException,
+      );
+    });
+
     test('45b. npo at 18:00 on day -holdDays, holdDays 1 or 2: every choice '
         'stops drinking, so only the base is npo-free and 1 set fails', () {
       // With a range starting at 1, every choice lands on the same side of

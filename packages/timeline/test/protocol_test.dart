@@ -238,6 +238,25 @@ void main() {
       }
     });
 
+    test('28. a parameter range whose min is above its max is rejected: it '
+        'allows no value; a range of one value is kept', () {
+      expect(
+        () => parseModule(
+          readJson('../../fixtures/invalid/param-range-bmc/p2y12-hold.json'),
+        ),
+        throwsFormatException,
+      );
+      Map<String, Object?> ticlid(int min, int max) =>
+          fixture('colo-golytely-split-bmc/ticlid-hold.json')
+            ..['parameters'] = {
+              'holdWeeks': {'min': min, 'max': max, 'unit': 'weeks'},
+            };
+      expect(() => parseModule(ticlid(2, 1)), throwsFormatException);
+      expect(parseModule(ticlid(2, 2)).parameters, {
+        'holdWeeks': (min: 2, max: 2, unit: 'weeks'),
+      });
+    });
+
     for (final bad in const [<Object?>[], 'holdWeeks', 3, null]) {
       test('24. parameters $bad is a FormatException, not a TypeError', () {
         final json = pm()..['parameters'] = bad;

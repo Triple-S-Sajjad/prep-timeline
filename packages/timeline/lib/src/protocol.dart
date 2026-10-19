@@ -200,10 +200,11 @@ Object? _frozenValue(Object? json) => switch (json) {
 };
 
 /// A range starting at 1 or more, so a parameter never puts a day step on
-/// day 0.
+/// day 0, and holding a value: with none, a module has no choice of values
+/// and the publish check would judge none of its steps.
 ParamRange _param(Object? json) => switch (json) {
   {'min': final int min, 'max': final int max, 'unit': final String unit}
-      when min >= 1 =>
+      when min >= 1 && min <= max =>
     (min: min, max: max, unit: unit),
   _ => throw FormatException('Not a parameter declaration', json),
 };
