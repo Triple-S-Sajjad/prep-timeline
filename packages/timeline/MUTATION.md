@@ -46,7 +46,7 @@ Mutation runs so far:
   - `publish.dart` 58/1, `reminder.dart` 40/0, `protocol.dart` 56/0, `clock.dart` 19/1, `selection.dart` 53/6, `past_due.dart` 11/2, bundle 28/0, calendar, duration, limits, offset, step and timing: none survive.
 - Slice 7c (a parameter range whose min is above its max rejected in `protocol.dart`). Every source rerun on its own, since `test/protocol_test.dart` and `test/publish_test.dart` changed: 319 mutants, the same 10 survive. The 2 new mutants (min above max accepted; a range of one value rejected) are killed by test 28 in `test/protocol_test.dart`. `protocol.dart` 58/0; the other counts are as in slice 7b.
 
-Each `tool/mutants/<source>.txt` starts with a `tests:` line naming the test files run for its mutants: every file that uses the source directly, through a source that imports it, or through `test/support.dart`. Rerun a source's mutants whenever any test on its `tests:` line changes.
+Each `tool/mutants/<source>.txt` starts with a `tests:` line naming the test files run for its mutants: every file that uses the source directly, through a source that imports it, or through `test/support.dart`. Rerun a source's mutants when its own code changes, or when a test on its `tests:` line is removed or its expected values change. Tests that are only added don't trigger a rerun: they can kill more mutants, never fewer.
 
 The survivors:
 
