@@ -28,6 +28,7 @@ The sheets don't say what happens when a hold starts late. The fixtures set thes
 No source sheet covers this; the rule comes from the timeline calculator and applies to every protocol. It needs the clinical owner to confirm or change it.
 
 - A clock time that doesn't exist because of a spring-forward change resolves to the earlier instant; a time that happens twice resolves to its first occurrence. For cutoffs, earlier is the more restrictive choice. Example: a 2:30 AM prep dose on the night clocks spring forward is due at 1:30 AM; a 1:30 AM cutoff on the night clocks fall back applies at the first 1:30 AM.
+- On the night clocks fall back, 1:30 AM happens twice, and a reminder that says "Due at 1:30 AM" doesn't say which. Example: an appointment at 7:30 AM on 2026-11-01 in New York puts a prep dose 6 hours before, at the second 1:30 AM (after the change). Should the text say which one, for example "1:30 AM (after the clocks go back)", and in what words?
 
 ## Reminder rules to confirm
 
@@ -36,6 +37,7 @@ These come from the app's design, not a source sheet, and apply to every protoco
 - A reminder is never dropped. If it would come during quiet hours (for a step not allowed at night) or after the step has already started, it moves earlier to the nearest allowed time. Its text always gives the real time the step starts.
 - The app never uses the appointment time in place of an arrival time the patient hasn't entered. If a step that counts from arrival is still waiting at the evening reminder time the day before the appointment, the patient gets "Enter your arrival time or call us" instead.
 - A restriction that lasts a set time, like "no driving for 24 hours", is reminded when it starts. No reminder comes when it ends; the app shows the end time.
+- On Android, force-stopping the app (Settings > Apps > Force stop) cancels every reminder until the patient opens the app again. Should onboarding ask patients not to force-stop the app during their prep, and in what words? Draft: "During your prep, don't force-stop this app. If you do, open it again so your reminders come back."
 
 ## Reminders that may fail the publish check
 

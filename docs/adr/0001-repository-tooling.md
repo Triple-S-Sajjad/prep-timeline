@@ -14,7 +14,7 @@ CI installs gitleaks, OSV-Scanner and Vale from their release pages and checks e
 
 Language checks are gated on files existing, so the repo doesn't need every toolchain before it has code in that language.
 
-GitHub Actions are pinned by commit SHA, and npm packages by exact version, each at least two weeks old when added. The Flutter SDK is exempt from the two-week rule: it comes from Flutter's official stable channel, not a package registry.
+GitHub Actions are pinned by commit SHA, and npm packages by exact version, each at least two weeks old when added. The Flutter SDK is exempt from the two-week rule: it comes from Flutter's official stable channel, not a package registry. Packages the SDK pins through `flutter_test` are exempt too, as dev-only dependencies, since pub can't pick another version: accepted on 2026-10-22 for `vm_service` 15.4.0, published 2026-10-15.
 
 ## Packages and tools
 
@@ -38,6 +38,10 @@ GitHub Actions are pinned by commit SHA, and npm packages by exact version, each
 | `timezone` | 0.11.1 | IANA time zones and `TZDateTime` for the calculator, since Dart's `DateTime` knows only UTC and the device's zone. Bundles IANA 2025c (stated in the generated headers of `lib/data/*.dart`); see Known limitations |
 | `crypto` | 3.0.7 | SHA-256 of the raw manifest and module bytes, the same hex digest as `hashlib.sha256` in `schema/validate.py`. Already in the lockfile through `test`; now a pinned direct dependency |
 | `cryptography` | 2.9.0 | Ed25519 verification of `protocol.sig`, in pure Dart on the phone and through Web Crypto in browsers. Adds `ffi` (dart.dev) to the lockfile. `webcrypto` 0.6.1 was rejected because it has no Ed25519 |
+| `flutter_local_notifications` | 22.3.1 | On-device scheduled reminders in the patient app (exact alarms on Android). Adds its platform packages and `dbus`, `xdg_directories`, `xml`, `petitparser` to the app's lockfile |
+| `flutter_local_notifications_linux` | 8.0.1, override | Held below 8.0.2 until that passes the two-week rule; remove the override on 2026-10-27 |
+| `clock` | 1.1.3 | Fixes the time in the patient app's scheduler tests with `withClock`, which the notification plugin reads for its past-date check. Already in the lockfile through `flutter_test`; now a pinned direct dev dependency |
+| `desugar_jdk_libs` | 2.1.4 (Google Maven) | Required by `flutter_local_notifications` for `java.time` on Android 7 (minSdk 24) |
 | `actions/checkout` | v7.0.1 | Check out the repo in CI |
 | `actions/setup-node` | v7.0.0 | Node for npm tools in CI |
 | `actions/setup-python` | v7.0.0 | Python in CI, only once `.py` files exist |

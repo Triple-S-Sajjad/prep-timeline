@@ -72,7 +72,7 @@ With no patient data on the server, the biggest threat shifts from *data theft* 
 | Supply-chain compromise (malicious npm package) | Minimal dependencies, lockfiles, pinned versions, automated dependency updates, vulnerability scanning (e.g., OSV-Scanner), an SBOM for every release, signed build artifacts |
 | Ransomware or data destruction | Immutable, versioned backups in a separate account (e.g., S3 Object Lock). Infrastructure as code so the whole system can be rebuilt. Restore tested quarterly |
 | Outage the night before a procedure | The app caches the patient's protocol offline once downloaded, and reminders are scheduled on the device, so a server outage cannot stop a prep already in progress |
-| Lock-screen leakage | Notifications say "Prep step due" by default, never the procedure name. Patients can opt into detailed text |
+| Lock-screen leakage | Notifications say "Prep step due" by default, never the procedure name. The body states only the step's effect time, worded by timing kind: offset and dayAt "Due at 3:00 AM", deadline "Due by 3:00 AM", window "Starts at 3:00 AM", and a day step "Today", or "Starts tomorrow" when reminded the day before. Days are named on the hospital's clock: none on the reminder's own local day, "tomorrow" on the next, otherwise "Sat, Nov 7" ("Due Sat, Nov 7 at 3:00 AM"). When the device's UTC offset at the effect instant differs from the hospital's, the time gets the hospital's zone abbreviation ("Due at 1:30 AM EST"). Patients can opt into detailed text |
 | Fake app or phishing QR codes | QR codes resolve only to the hospital's own domain; the app always displays that domain. Printed materials tell patients what the real address looks like |
 | Insider misuse | Roles separated (author, approver, admin). Append-only audit log of every change: who, what, when, from where. No PHI in any log |
 
@@ -105,6 +105,10 @@ A nurse should be able to create a correct protocol in under 10 minutes with no 
 - All times are anchored to the hospital's time zone and handle daylight-saving changes. Travel and DST shifts are a classic source of wrong-hour reminders.
 - Include a "confirm your ride home" step. Sedated patients without an escort are a common, avoidable reason for same-day cancellation.
 - Caregiver mode: share the timeline with a family member's phone.
+- Reminders fire within their scheduled minute, never before it. This is the pass bar for the notification spike.
+- Android: if exact alarms are denied, the app never falls back to inexact alarms. It shows a persistent banner "Reminders are off. Turn on Alarms & reminders." with a button to that setting, still shows the full timeline with times, and offers the calendar (.ics) download.
+- Android: on every app open, the app checks the exact-alarm permission. If it is off, the app shows that banner; if it is on, the app runs a scheduling pass. Revoking the permission or force-stopping the app cancels its reminders until the next open.
+- iOS keeps at most 64 pending notifications. The app schedules the earliest 63 reminders; the 64th, at the 63rd's time, says "Open the app to load your next reminders."
 - Large tap targets, screen-reader labels, high contrast and full WCAG 2.1 AA conformance.
 
 **Validate with real users.** Run think-aloud sessions with 3–5 nurses and 5 patients (or proxies) before writing more features. Small samples catch most usability problems.
