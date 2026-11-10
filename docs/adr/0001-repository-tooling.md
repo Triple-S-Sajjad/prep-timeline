@@ -50,6 +50,7 @@ GitHub Actions are pinned by commit SHA, and npm packages by exact version, each
 
 - The calculator's time zone data is IANA 2026e, from `timezone` 0.11.2, while the validator's `tzdata` 2026.4 is IANA 2026d. Fix: move to `tzdata` 2026.5 (IANA 2026e) so the validator and the calculator stay on one release. Building our own database from IANA releases was rejected to avoid maintaining a custom build.
 - The calculator's time zone data ends in 2037: `timezone` compiles it with `zic -b fat`, and after the last transition it keeps the last offset, so summer times in 2038 or later would be an hour off. The calculator rejects any appointment or step time after 2037.
+- `minimatch` 10.2.6 (GHSA-g3hv-75wg-m249, fixed in 11.0.1) is pulled in only by `eslint` and `typescript-eslint`, whose latest releases (10.14.0, 8.72.2) still depend on `^10.x`. Ignored in `osv-scanner.toml` until 2026-11-24 (dev-only lint tool, globs come only from repo config); recheck then.
 
 ## Deferred
 

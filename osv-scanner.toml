@@ -1,0 +1,4 @@
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2026-11-24
+reason = "dev-only lint tool; globs come only from repo config, not attacker input"
