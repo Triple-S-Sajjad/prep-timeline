@@ -35,11 +35,10 @@ GitHub Actions are pinned by commit SHA, and npm packages by exact version, each
 | `types-jsonschema` | 4.26.0.20260518 | Type stubs from typeshed; `jsonschema` ships none, and mypy runs in strict mode |
 | `tzdata` | 2026.4, Windows only | IANA time zone database (release 2026d) for `zoneinfo`, which the validator uses to reject unknown time zones. Windows has no system copy; Linux and macOS use their own |
 | `test` | 1.32.0 | Dart test runner for the timeline calculator; dev only |
-| `timezone` | 0.11.1 | IANA time zones and `TZDateTime` for the calculator, since Dart's `DateTime` knows only UTC and the device's zone. Bundles IANA 2025c (stated in the generated headers of `lib/data/*.dart`); see Known limitations |
+| `timezone` | 0.11.2 | IANA time zones and `TZDateTime` for the calculator, since Dart's `DateTime` knows only UTC and the device's zone. Bundles IANA 2026e (stated in the generated headers of `lib/data/*.dart`); see Known limitations |
 | `crypto` | 3.0.7 | SHA-256 of the raw manifest and module bytes, the same hex digest as `hashlib.sha256` in `schema/validate.py`. Already in the lockfile through `test`; now a pinned direct dependency |
 | `cryptography` | 2.9.0 | Ed25519 verification of `protocol.sig`, in pure Dart on the phone and through Web Crypto in browsers. Adds `ffi` (dart.dev) to the lockfile. `webcrypto` 0.6.1 was rejected because it has no Ed25519 |
-| `flutter_local_notifications` | 22.3.1 | On-device scheduled reminders in the patient app (exact alarms on Android). Adds its platform packages and `dbus`, `xdg_directories`, `xml`, `petitparser` to the app's lockfile |
-| `flutter_local_notifications_linux` | 8.0.1, override | Held below 8.0.2 until that passes the two-week rule; remove the override on 2026-10-27 |
+| `flutter_local_notifications` | 22.3.2 | On-device scheduled reminders in the patient app (exact alarms on Android). Adds its platform packages and `dbus`, `xdg_directories`, `xml`, `petitparser` to the app's lockfile |
 | `clock` | 1.1.3 | Fixes the time in the patient app's scheduler tests with `withClock`, which the notification plugin reads for its past-date check. Already in the lockfile through `flutter_test`; now a pinned direct dev dependency |
 | `desugar_jdk_libs` | 2.1.4 (Google Maven) | Required by `flutter_local_notifications` for `java.time` on Android 7 (minSdk 24) |
 | `actions/checkout` | v7.0.1 | Check out the repo in CI |
@@ -49,7 +48,7 @@ GitHub Actions are pinned by commit SHA, and npm packages by exact version, each
 
 ## Known limitations
 
-- The calculator's time zone data is IANA 2025c, from `timezone` 0.11.1. It misses the 2026 clock changes in Canada (America/Vancouver, America/Edmonton, America/Inuvik, America/Winnipeg) and Morocco, so times in those zones after the changes are wrong. Fix: move to `timezone` 0.11.2 (IANA 2026e) together with `tzdata` 2026.5 (IANA 2026e), once both pass the two-week rule, so the validator and the calculator stay on one release. Building our own database from IANA releases was rejected to avoid maintaining a custom build.
+- The calculator's time zone data is IANA 2026e, from `timezone` 0.11.2, while the validator's `tzdata` 2026.4 is IANA 2026d. Fix: move to `tzdata` 2026.5 (IANA 2026e) so the validator and the calculator stay on one release. Building our own database from IANA releases was rejected to avoid maintaining a custom build.
 - The calculator's time zone data ends in 2037: `timezone` compiles it with `zic -b fat`, and after the last transition it keeps the last offset, so summer times in 2038 or later would be an hour off. The calculator rejects any appointment or step time after 2037.
 
 ## Deferred

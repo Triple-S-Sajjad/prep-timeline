@@ -303,7 +303,6 @@ void main() {
   }
 
   group('2026 Canadian changes', () {
-    const skip = 'needs timezone 0.11.2 (IANA 2026e)';
     test('America/Vancouver on 2026-11-15 12:00 is UTC-7', () {
       final t = tz.TZDateTime(
         tz.getLocation('America/Vancouver'),
@@ -313,7 +312,7 @@ void main() {
         12,
       );
       expect(t.timeZoneOffset, const Duration(hours: -7));
-    }, skip: skip);
+    });
     test('America/Edmonton on 2026-11-15 12:00 is UTC-6', () {
       final t = tz.TZDateTime(
         tz.getLocation('America/Edmonton'),
@@ -323,7 +322,7 @@ void main() {
         12,
       );
       expect(t.timeZoneOffset, const Duration(hours: -6));
-    }, skip: skip);
+    });
   });
 }
 
