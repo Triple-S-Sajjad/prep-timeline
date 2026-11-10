@@ -8,7 +8,7 @@ mypy==2.3.1
 pytest==9.1.1
 jsonschema==4.26.0
 types-jsonschema==4.26.0.20260518
-tzdata==2026.4 ; sys_platform == "win32"
+tzdata==2026.5 ; sys_platform == "win32"
 ast_serialize==0.11.2
 attrs==26.1.0
 colorama==0.4.6 ; sys_platform == "win32"
