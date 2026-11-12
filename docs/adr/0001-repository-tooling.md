@@ -40,6 +40,9 @@ GitHub Actions are pinned by commit SHA, and npm packages by exact version, each
 | `cryptography` | 2.9.0 | Ed25519 verification of `protocol.sig`, in pure Dart on the phone and through Web Crypto in browsers. Adds `ffi` (dart.dev) to the lockfile. `webcrypto` 0.6.1 was rejected because it has no Ed25519 |
 | `flutter_local_notifications` | 22.3.3 | On-device scheduled reminders in the patient app (exact alarms on Android). Adds its platform packages and `dbus`, `xdg_directories`, `xml`, `petitparser` to the app's lockfile |
 | `clock` | 1.1.3 | Fixes the time in the patient app's scheduler tests with `withClock`, which the notification plugin reads for its past-date check. Already in the lockfile through `flutter_test`; now a pinned direct dev dependency |
+| `path_provider` | 2.1.6 | The patient app's support directory: the reminder delivery record now ([ADR 2](0002-reminder-delivery-record.md)), the cached protocol bundle later |
+| `path_provider` transitive chain | as locked | `path_provider_android`, `path_provider_foundation`, `path_provider_linux`, `path_provider_windows`, `path_provider_platform_interface`, `jni`, `jni_flutter`, `jni_util`, `code_assets`, `hooks`, `record_use`, `objective_c`, `package_config`, `pub_semver`, `platform`, `yaml`, `logging`. `path_provider_android` 2.3 calls Android through Dart FFI to JNI (`jni`) instead of a method channel |
+| `jni` | 1.1.1, `dependency_overrides` | Pub picks 1.1.2 (published 2026-11-03), under two weeks old; 1.1.1 (2026-10-27) meets `jni_flutter`'s `^1.1.0`. Remove the override on 2026-11-17 |
 | `desugar_jdk_libs` | 2.1.4 (Google Maven) | Required by `flutter_local_notifications` for `java.time` on Android 7 (minSdk 24) |
 | `actions/checkout` | v7.0.1 | Check out the repo in CI |
 | `actions/setup-node` | v7.0.0 | Node for npm tools in CI |

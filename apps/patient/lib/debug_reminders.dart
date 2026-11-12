@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:timeline/timeline.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -47,8 +50,14 @@ class _DebugRemindersState extends State<DebugReminders> {
         >();
     final notifications = await android?.requestNotificationsPermission();
     final exact = await android?.canScheduleExactNotifications();
+    // An open with exact alarms off forgets what was delivered, so the next
+    // pass shows every late reminder again (ADR 2).
+    if (exact == false) await saveRecord(await _recordFile(), const {});
     setState(() => _log = 'notifications: $notifications, exact: $exact');
   }
+
+  Future<File> _recordFile() async =>
+      File('${(await getApplicationSupportDirectory()).path}/handed.json');
 
   Future<void> _openExactAlarmSetting() async {
     await _plugin
@@ -58,12 +67,21 @@ class _DebugRemindersState extends State<DebugReminders> {
         ?.requestExactAlarmsPermission();
   }
 
-  /// One step per time in [times] (whole minutes, ascending), each taking
-  /// effect and reminded at its time, counted back from an appointment 10
-  /// minutes after the last.
+  // The last times scheduled, kept in a file so "Reopen" works after a
+  // force-stop or reboot.
+  Future<File> _timesFile() async =>
+      File('${(await getApplicationSupportDirectory()).path}/debug_times.txt');
+
+  /// One step per time in [times] (whole minutes, ascending), each reminded
+  /// at its time and taking effect 30 minutes later, so a late reminder still
+  /// has its effect ahead. Counted back from an appointment 10 minutes after
+  /// the last effect.
   Future<void> _schedule(List<tz.TZDateTime> times) async {
+    await (await _timesFile()).writeAsString(
+      times.map((t) => t.millisecondsSinceEpoch).join(','),
+    );
     final now = tz.TZDateTime.now(_ny);
-    final appointment = times.last.add(const Duration(minutes: 10));
+    final appointment = times.last.add(const Duration(minutes: 40));
     final steps = [
       for (final (i, time) in times.indexed)
         {
@@ -72,7 +90,7 @@ class _DebugRemindersState extends State<DebugReminders> {
           'anchor': 'appointment',
           'timing': {
             'kind': 'offset',
-            'offset': '-PT${appointment.difference(time).inMinutes}M',
+            'offset': '-PT${appointment.difference(time).inMinutes - 30}M',
           },
           'remind': {
             'kind': 'offset',
@@ -96,19 +114,32 @@ class _DebugRemindersState extends State<DebugReminders> {
       'steps': steps,
     });
     final anchors = (appointment: appointment, arrival: null, discharge: null);
+    final record = await _recordFile();
     try {
       await scheduleReminders(
         _plugin,
         timelineOf([(module: module, chosen: const {})], anchors),
         anchors,
         defaults: _defaults,
-        now: now,
+        clock: () => tz.TZDateTime.now(_ny),
+        load: () => loadRecord(record),
+        save: (handed) => saveRecord(record, handed),
       );
       final utc = times.map((t) => t.toUtc().toIso8601String()).join('\n');
       setState(() => _log = 'now ${now.toUtc().toIso8601String()}\n$utc');
     } on PlatformException catch (e) {
       setState(() => _log = 'Failed: ${e.code} ${e.message}');
     }
+  }
+
+  /// A new pass for the last appointment at the current time, as an app open
+  /// would run.
+  Future<void> _reopen() async {
+    final saved = await (await _timesFile()).readAsString();
+    await _schedule([
+      for (final ms in saved.split(','))
+        tz.TZDateTime.fromMillisecondsSinceEpoch(_ny, int.parse(ms)),
+    ]);
   }
 
   void _inMinutes() {
@@ -145,6 +176,10 @@ class _DebugRemindersState extends State<DebugReminders> {
           FilledButton(
             onPressed: _inMinutes,
             child: const Text('Schedule 3: next minute +2, +4, +6'),
+          ),
+          FilledButton(
+            onPressed: _reopen,
+            child: const Text('Reopen: last times, new pass'),
           ),
           FilledButton(
             onPressed: () => _schedule([tz.TZDateTime.utc(2026, 11, 1, 6, 5)]),

@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:math';
+
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -165,41 +168,43 @@ const _channel = MethodChannel('dexterous.com/flutter/local_notifications');
 int utc(int y, int mo, int d, int h, [int mi = 0, int s = 0, int ms = 0]) =>
     DateTime.utc(y, mo, d, h, mi, s, ms).millisecondsSinceEpoch;
 
+// Effects of _module's steps for the 2026-11-01 07:30 EST appointment.
+final _clearLiquidsEffect = utc(2026, 10, 31, 4); // Oct 31 00:00 EDT
+final _dose2Effect = utc(2026, 11, 1, 6, 30); // 01:30 EST
+final _stopLiquidsEffect = utc(2026, 11, 1, 10, 30); // 05:30 EST
+
 void main() {
   late tz.Location ny;
   late List<MethodCall> calls;
   late List<int> pendingIds;
   late Object? zonedScheduleError;
+  // The stored record of handed reminders; the fake storage logs each load
+  // and save into [calls], so their order against the plugin calls is
+  // checked too.
+  late Map<int, int> record;
+  late Object? saveError;
+  // Ids of _module's reminders: clear-liquids, dose2 heads-up, dose2 main,
+  // stop-liquids.
+  late int c, dh, dm, s;
 
   setUpAll(() {
     tzdata.initializeTimeZones();
     ny = tz.getLocation('America/New_York');
   });
 
-  setUp(() {
-    calls = [];
-    pendingIds = [];
-    zonedScheduleError = null;
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    AndroidFlutterLocalNotificationsPlugin.registerWith();
-    TestWidgetsFlutterBinding.ensureInitialized();
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(_channel, (call) async {
-          calls.add(call);
-          if (call.method == 'zonedSchedule' && zonedScheduleError != null) {
-            throw zonedScheduleError!;
-          }
-          if (call.method == 'pendingNotificationRequests') {
-            return [
-              for (final id in pendingIds)
-                {'id': id, 'title': 'Prep step due', 'body': '', 'payload': ''},
-            ];
-          }
-          return null;
-        });
-  });
+  tz.TZDateTime appointment() => tz.TZDateTime(ny, 2026, 11, 1, 7, 30);
+  tz.TZDateTime at(int ms) => tz.TZDateTime.fromMillisecondsSinceEpoch(ny, ms);
 
-  tearDown(() => debugDefaultTargetPlatformOverride = null);
+  Future<Map<int, int>> load() async {
+    calls.add(const MethodCall('load'));
+    return {...record};
+  }
+
+  Future<void> save(Map<int, int> next) async {
+    calls.add(MethodCall('save', {...next}));
+    if (saveError case final error?) throw error;
+    record = {...next};
+  }
 
   // The plugin checks for past dates against package:clock, so [clockAt]
   // fixes it; it defaults to [now]. A later [clockAt] is time that passed
@@ -211,6 +216,7 @@ void main() {
     int? clockAt,
     Map<String, Object?> module = _module,
     Duration Function(DateTime)? deviceOffset,
+    tz.TZDateTime Function()? readNow,
   }) {
     final anchors = (appointment: appointment, arrival: null, discharge: null);
     final timeline = timelineOf([
@@ -227,7 +233,9 @@ void main() {
         timeline,
         anchors,
         defaults: _defaults,
-        now: now,
+        clock: readNow ?? () => now,
+        load: load,
+        save: save,
         deviceOffset:
             deviceOffset ?? (at) => tz.TZDateTime.from(at, ny).timeZoneOffset,
       ),
@@ -249,6 +257,16 @@ void main() {
       if (c.method == 'zonedSchedule') args(c)['id'],
   ];
 
+  List<Object?> shownIds() => [
+    for (final c in calls)
+      if (c.method == 'show') args(c)['id'],
+  ];
+
+  List<Object?> saves() => [
+    for (final c in calls)
+      if (c.method == 'save') c.arguments,
+  ];
+
   // The instant the Android side rebuilds: it reads only the wall-clock
   // string and the zone name (FlutterLocalNotificationsPlugin.java:620).
   List<int> scheduledMs() {
@@ -263,8 +281,39 @@ void main() {
     ];
   }
 
+  setUp(() async {
+    calls = [];
+    pendingIds = [];
+    zonedScheduleError = null;
+    record = {};
+    saveError = null;
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    AndroidFlutterLocalNotificationsPlugin.registerWith();
+    TestWidgetsFlutterBinding.ensureInitialized();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_channel, (call) async {
+          calls.add(call);
+          if (call.method == 'zonedSchedule' && zonedScheduleError != null) {
+            throw zonedScheduleError!;
+          }
+          if (call.method == 'pendingNotificationRequests') {
+            return [
+              for (final id in pendingIds)
+                {'id': id, 'title': 'Prep step due', 'body': '', 'payload': ''},
+            ];
+          }
+          return null;
+        });
+    // Learn the ids from a pass with every reminder ahead.
+    await schedule(appointment(), tz.TZDateTime.utc(2026, 10, 1));
+    [c, dh, dm, s] = scheduledIds().cast<int>();
+    calls = [];
+    record = {};
+  });
+
+  tearDown(() => debugDefaultTargetPlatformOverride = null);
+
   group('fall-back day, 2026-11-01, appointment 07:30 EST', () {
-    final appointment = () => tz.TZDateTime(ny, 2026, 11, 1, 7, 30);
     final now = () => tz.TZDateTime.utc(2026, 10, 1);
 
     test(
@@ -285,8 +334,11 @@ void main() {
       () async {
         await schedule(appointment(), now());
         expect(methods(), [
-          ...List.filled(4, 'zonedSchedule'),
+          'load',
           'pendingNotificationRequests',
+          'save',
+          ...List.filled(4, 'zonedSchedule'),
+          'save',
         ]);
         for (final c in calls.where((c) => c.method == 'zonedSchedule')) {
           final a = args(c);
@@ -397,95 +449,375 @@ void main() {
 
   test('ids are stable across reschedules and unique', () async {
     await schedule(
-      tz.TZDateTime(ny, 2026, 11, 1, 7, 30),
-      tz.TZDateTime.utc(2026, 10, 1),
-    );
-    final first = scheduledIds();
-    calls.clear();
-    await schedule(
       tz.TZDateTime(ny, 2027, 3, 14, 7, 30),
       tz.TZDateTime.utc(2027, 3, 1),
     );
-    expect(scheduledIds(), first);
-    expect(first.toSet(), hasLength(4));
+    expect(scheduledIds(), [c, dh, dm, s]);
+    expect({c, dh, dm, s}, hasLength(4));
   });
 
-  test('a late reminder is shown at once, never dropped', () async {
-    // 04:40:00.123 EST: stop-liquids' reminder (22:59 EDT) has passed and its
-    // effect (05:30 EST) is ahead; dose2 and clear-liquids are in effect. The
-    // reminder fires at now; 1 ms passes before the plugin checks it.
-    await schedule(
-      tz.TZDateTime(ny, 2026, 11, 1, 7, 30),
-      tz.TZDateTime.fromMillisecondsSinceEpoch(
-        ny,
-        utc(2026, 11, 1, 9, 40, 0, 123),
-      ),
-      clockAt: utc(2026, 11, 1, 9, 40, 0, 124),
+  group('delivery record', () {
+    // 04:40:00.123 EST on the appointment day: stop-liquids' reminder (22:59
+    // EDT) has passed and its effect (05:30 EST) is ahead; dose2 and
+    // clear-liquids are in effect.
+    final lateNow = utc(2026, 11, 1, 9, 40, 0, 123);
+
+    test(
+      'T1 first computation: a late reminder is shown once and recorded',
+      () async {
+        await schedule(appointment(), at(lateNow), clockAt: lateNow + 1);
+        expect(methods(), [
+          'load',
+          'pendingNotificationRequests',
+          'save',
+          'show',
+          'save',
+        ]);
+        expect(saves(), [
+          <int, int>{},
+          {s: _stopLiquidsEffect},
+        ]);
+        expect(shownIds(), [s]);
+        expect(args(calls[3])['title'], 'Prep step due');
+        expect(bodies(), ['Due at 5:30 AM']);
+      },
     );
-    expect(methods(), ['show', 'pendingNotificationRequests']);
-    expect(args(calls.first)['title'], 'Prep step due');
-    expect(bodies(), ['Due at 5:30 AM']);
-  });
 
-  test(
-    'a reminder that passes between computing and scheduling is shown',
-    () async {
+    test('T2 reopen after the reminder fired: not shown again', () async {
+      record = {s: _stopLiquidsEffect};
+      await schedule(appointment(), at(lateNow));
+      expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'save',
+      ]);
+      expect(saves(), [
+        {s: _stopLiquidsEffect},
+        {s: _stopLiquidsEffect},
+      ]);
+    });
+
+    test('T3 a heads-up that fired is skipped, future ones re-handed, '
+        'expired entries pruned', () async {
+      // 20:30 EDT Oct 31: the heads-up (20:00 EDT) has fired; dose2 and
+      // stop-liquids are ahead; clear-liquids is in effect.
+      record = {
+        c: _clearLiquidsEffect,
+        dh: _dose2Effect,
+        dm: _dose2Effect,
+        s: _stopLiquidsEffect,
+      };
+      pendingIds = [dm, s];
+      await schedule(appointment(), at(utc(2026, 11, 1, 0, 30)));
+      final kept = {dh: _dose2Effect, dm: _dose2Effect, s: _stopLiquidsEffect};
+      expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'zonedSchedule',
+        'zonedSchedule',
+        'save',
+      ]);
+      expect(saves(), [kept, kept]);
+      expect(scheduledIds(), [dm, s]);
+      expect(scheduledMs(), [utc(2026, 11, 1, 6, 30), utc(2026, 11, 1, 2, 59)]);
+    });
+
+    test('T4 force-stopped past the reminder: still pending, so cancelled '
+        'and shown', () async {
+      record = {s: _stopLiquidsEffect};
+      pendingIds = [s];
+      await schedule(appointment(), at(lateNow));
+      expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'cancel',
+        'show',
+        'save',
+      ]);
+      expect(saves(), [
+        <int, int>{},
+        {s: _stopLiquidsEffect},
+      ]);
+      expect(args(calls[3]), {'id': s, 'tag': null});
+      expect(shownIds(), [s]);
+    });
+
+    test('T5 reschedule: a moved effect is a new reminder', () async {
+      // Recorded for the old appointment, 08:30 EST: effect 06:30 EST.
+      record = {s: utc(2026, 11, 1, 11, 30)};
+      await schedule(appointment(), at(lateNow));
+      expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'show',
+        'save',
+      ]);
+      expect(saves(), [
+        {s: utc(2026, 11, 1, 11, 30)},
+        {s: _stopLiquidsEffect},
+      ]);
+      expect(shownIds(), [s]);
+    });
+
+    test('T6 a stale id is removed from the record before it is cancelled; '
+        'current ones kept', () async {
+      const stale = 12345;
+      final all = {
+        c: _clearLiquidsEffect,
+        dh: _dose2Effect,
+        dm: _dose2Effect,
+        s: _stopLiquidsEffect,
+      };
+      record = {...all, stale: utc(2026, 11, 2, 0)};
+      pendingIds = [c, stale, s];
+      await schedule(appointment(), tz.TZDateTime.utc(2026, 10, 1));
+      expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'cancel',
+        ...List.filled(4, 'zonedSchedule'),
+        'save',
+      ]);
+      expect(saves(), [all, all]);
+      expect(args(calls[3]), {'id': stale, 'tag': null});
+      expect(scheduledIds(), [c, dh, dm, s]);
+    });
+
+    test('T7 a reminder that passes between computing and scheduling is '
+        'shown and recorded', () async {
       // now 22:58:59.999 EDT: stop-liquids' reminder (22:59:00.000 EDT) is
       // ahead of now but 1 ms behind the clock when the plugin checks it.
-      // dose2's heads-up has passed, so it fires at now, also behind the clock.
+      // dose2's heads-up has passed, so it fires at now.
       await schedule(
-        tz.TZDateTime(ny, 2026, 11, 1, 7, 30),
-        tz.TZDateTime.fromMillisecondsSinceEpoch(
-          ny,
-          utc(2026, 11, 1, 2, 58, 59, 999),
-        ),
+        appointment(),
+        at(utc(2026, 11, 1, 2, 58, 59, 999)),
         clockAt: utc(2026, 11, 1, 2, 59, 0, 1),
       );
       expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
         'show', // dose2 heads-up
         'zonedSchedule', // dose2
         'show', // stop-liquids
-        'pendingNotificationRequests',
+        'save',
       ]);
+      expect(shownIds(), [dh, s]);
       expect(scheduledMs(), [utc(2026, 11, 1, 6, 30)]);
       expect(bodies(), [
         'Due tomorrow at 1:30 AM',
         'Due at 1:30 AM',
         'Due tomorrow at 5:30 AM',
       ]);
-    },
-  );
+      expect(saves().last, {
+        dh: _dose2Effect,
+        dm: _dose2Effect,
+        s: _stopLiquidsEffect,
+      });
+    });
 
-  test('any other scheduling error propagates, nothing shown', () async {
-    zonedScheduleError = PlatformException(code: 'exact_alarms_not_permitted');
-    await expectLater(
-      schedule(
-        tz.TZDateTime(ny, 2026, 11, 1, 7, 30),
-        tz.TZDateTime.utc(2026, 10, 1),
-      ),
-      throwsA(isA<PlatformException>()),
-    );
-    expect(methods(), ['zonedSchedule']);
+    test('T8 any other scheduling error propagates, no final save', () async {
+      zonedScheduleError = PlatformException(
+        code: 'exact_alarms_not_permitted',
+      );
+      await expectLater(
+        schedule(appointment(), tz.TZDateTime.utc(2026, 10, 1)),
+        throwsA(isA<PlatformException>()),
+      );
+      expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'zonedSchedule',
+      ]);
+    });
+
+    test('T9 a failed save propagates before anything is cancelled or '
+        'handed', () async {
+      saveError = const FileSystemException('disk full');
+      pendingIds = [12345];
+      await expectLater(
+        schedule(appointment(), tz.TZDateTime.utc(2026, 10, 1)),
+        throwsA(isA<FileSystemException>()),
+      );
+      expect(methods(), ['load', 'pendingNotificationRequests', 'save']);
+    });
+
+    test('T10 property, 200 seeds: each reminder is delivered at most once; '
+        'exactly once without a force-stop', () async {
+      for (var seed = 0; seed < 200; seed++) {
+        final random = Random(seed);
+        // A fake phone: the alarms Android holds (id -> fire instant), the
+        // plugin's pending list, and the deliveries per id. One appointment
+        // per seed, so an id stands for one (id, effect).
+        final alarms = <int, int>{};
+        final listed = <int>{};
+        final delivered = <int, int>{};
+        void deliver(int id) =>
+            delivered.update(id, (n) => n + 1, ifAbsent: () => 1);
+        void fireUntil(int ms) {
+          final due = [
+            for (final MapEntry(key: id, value: fireAt) in alarms.entries)
+              if (fireAt <= ms) id,
+          ];
+          for (final id in due) {
+            alarms.remove(id);
+            listed.remove(id);
+            deliver(id);
+          }
+        }
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(_channel, (call) async {
+              calls.add(call);
+              switch (call.method) {
+                case 'zonedSchedule':
+                  final a = args(call);
+                  final id = a['id'] as int;
+                  alarms[id] = DateTime.parse('${a['scheduledDateTime']}Z')
+                      .millisecondsSinceEpoch;
+                  listed.add(id);
+                case 'show':
+                  deliver(args(call)['id'] as int);
+                case 'cancel':
+                  final id = args(call)['id'] as int;
+                  alarms.remove(id);
+                  listed.remove(id);
+                case 'pendingNotificationRequests':
+                  return [
+                    for (final id in listed)
+                      {
+                        'id': id,
+                        'title': 'Prep step due',
+                        'body': '',
+                        'payload': '',
+                      },
+                  ];
+              }
+              return null;
+            });
+        record = {};
+        // Opens between Oct 29 00:00Z and the appointment (12:30Z).
+        final from = utc(2026, 10, 29, 0);
+        final span = utc(2026, 11, 1, 12, 30) - from;
+        final count = 1 + random.nextInt(6);
+        final opens = [
+          for (var i = 0; i < count; i++) from + random.nextInt(span),
+        ]..sort();
+        var forceStopped = false;
+        late Set<Object?> firstHanded;
+        for (final (i, open) in opens.indexed) {
+          if (i > 0 && random.nextInt(4) == 0) {
+            final stop = opens[i - 1] + random.nextInt(open - opens[i - 1] + 1);
+            fireUntil(stop);
+            alarms.clear(); // Android cancels the alarms; the list keeps them.
+            forceStopped = true;
+          }
+          fireUntil(open);
+          calls = [];
+          await schedule(appointment(), at(open));
+          if (i == 0) firstHanded = {...scheduledIds(), ...shownIds()};
+        }
+        fireUntil(utc(2027, 1, 1, 0));
+        final reason = 'seed $seed, opens $opens, delivered $delivered';
+        expect(delivered.values, everyElement(1), reason: reason);
+        if (!forceStopped) {
+          expect(delivered.keys.toSet(), firstHanded, reason: reason);
+        }
+      }
+    });
+
+    test('two overlapping passes run one after the other', () async {
+      final first = schedule(appointment(), at(lateNow));
+      final second = schedule(appointment(), at(lateNow));
+      await Future.wait([first, second]);
+      expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'show',
+        'save',
+        'load', // only after the first pass's final save
+        'pendingNotificationRequests',
+        'save',
+        'save',
+      ]);
+      expect(shownIds(), [s]);
+    });
+
+    test('a queued pass reads the time when it starts, not when it was '
+        'queued', () async {
+      // Queued at Oct 1, when every reminder was ahead; it starts at 04:40
+      // EST, after the first pass has shown stop-liquids.
+      var current = tz.TZDateTime.utc(2026, 10, 1);
+      final first = schedule(appointment(), at(lateNow));
+      final second = schedule(
+        appointment(),
+        at(lateNow),
+        readNow: () => current,
+      );
+      current = at(lateNow);
+      await Future.wait([first, second]);
+      expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'show',
+        'save',
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'save',
+      ]);
+      expect(record, {s: _stopLiquidsEffect});
+    });
+
+    test('a failed pass does not block the next one', () async {
+      saveError = const FileSystemException('disk full');
+      final first = schedule(appointment(), at(lateNow));
+      final second = schedule(appointment(), at(lateNow));
+      await expectLater(first, throwsA(isA<FileSystemException>()));
+      saveError = null;
+      await second;
+      expect(shownIds(), [s]);
+      expect(record, {s: _stopLiquidsEffect});
+    });
   });
 
-  test('stale alarms are cancelled one by one, current ones kept', () async {
-    const stale = 12345;
-    await schedule(
-      tz.TZDateTime(ny, 2026, 11, 1, 7, 30),
-      tz.TZDateTime.utc(2026, 10, 1),
+  group('record file', () {
+    late Directory dir;
+    late File file;
+
+    setUp(() async {
+      dir = await Directory.systemTemp.createTemp('handed');
+      file = File('${dir.path}/handed.json');
+    });
+
+    tearDown(() => dir.delete(recursive: true));
+
+    test(
+      'round trip over an existing file, through a temporary file',
+      () async {
+        await saveRecord(file, {1: 1});
+        await saveRecord(file, {12: utc(2026, 11, 1, 10, 30), 7: 0});
+        expect(await loadRecord(file), {12: utc(2026, 11, 1, 10, 30), 7: 0});
+        expect(dir.listSync().map((e) => e.uri.pathSegments.last), [
+          'handed.json',
+        ]);
+      },
     );
-    final current = scheduledIds();
-    calls.clear();
-    pendingIds = [current[0] as int, stale, current[3] as int];
-    await schedule(
-      tz.TZDateTime(ny, 2026, 11, 1, 7, 30),
-      tz.TZDateTime.utc(2026, 10, 1),
-    );
-    expect(methods(), [
-      ...List.filled(4, 'zonedSchedule'),
-      'pendingNotificationRequests',
-      'cancel',
-    ]);
-    expect(args(calls.last), {'id': stale, 'tag': null});
+
+    test('a missing, unreadable or corrupt file reads as empty', () async {
+      expect(await loadRecord(file), <int, int>{});
+      for (final corrupt in ['', '{', '[]', '{"x": 1}', '{"1": "2"}']) {
+        await file.writeAsString(corrupt);
+        expect(await loadRecord(file), <int, int>{}, reason: corrupt);
+      }
+    });
   });
 }

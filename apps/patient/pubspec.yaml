@@ -10,9 +10,14 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_local_notifications: 22.3.3
+  path_provider: 2.1.6
   timeline:
     path: ../../packages/timeline
   timezone: 0.11.2
+
+# Remove on 2026-11-17
+dependency_overrides:
+  jni: 1.1.1
 
 dev_dependencies:
   clock: 1.1.3

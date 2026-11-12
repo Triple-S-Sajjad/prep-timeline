@@ -2,16 +2,37 @@
 # quiet start itself" was killed by test 41. The quiet-hours range check
 # moved to inClockRange in clock.dart in slice 7 round 3, with its mutants.
 # The two exemptions moved into reminderExemptions in slice 7b, shared with
-# publish.dart, which keeps only its call-site mutants.
+# publish.dart, which keeps only its call-site mutants. Slice 8 added the
+# mutants of the morning-of-its-day reminder after its effect.
 tests: test/publish_test.dart test/reminder_test.dart
 
 find: return sameDate.isBefore(quietStart)
 replace: return !sameDate.isAfter(quietStart)
 name: Heads-up allowed at the quiet start itself
 
-find: if (!placed.effect.isAfter(now)) return const InEffect();
-replace: if (placed.effect.isBefore(now)) return const InEffect();
+find: if (!placed.effect.isAfter(now) &&
+replace: if (placed.effect.isBefore(now) &&
 name: step taking effect right now still reminded
+
+find: !(placed.morningOfItsDay && !placed.at.isBefore(now))) {
+replace: true) {
+name: morning reminder after its effect never given
+
+find: !(placed.morningOfItsDay && !placed.at.isBefore(now))) {
+replace: !(!placed.at.isBefore(now))) {
+name: any step in effect reminded while its reminder is ahead
+
+find: !(placed.morningOfItsDay && !placed.at.isBefore(now))) {
+replace: !(placed.morningOfItsDay)) {
+name: morning reminder given after its minute has passed
+
+find: !(placed.morningOfItsDay && !placed.at.isBefore(now))) {
+replace: !(placed.morningOfItsDay && placed.at.isAfter(now))) {
+name: morning reminder not given at its own minute
+
+find: morningOfItsDay: morningOfItsDay,
+replace: morningOfItsDay: false,
+name: morning-of-its-day flag not passed on
 
 find: final warn = step.allowNight && placed.at.isAfter(now);
 replace: final warn = placed.at.isAfter(now);

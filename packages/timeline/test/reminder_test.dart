@@ -781,6 +781,67 @@ void main() {
       expect(s.headsUp?.millisecondsSinceEpoch, utc(2026, 9, 5, 3, 30));
     });
 
+    group(
+      '44. a day step whose own-day morning reminder is still ahead is '
+      'reminded after its effect (UMMS AM, appointment 2026-11-18 07:00)',
+      () {
+        const umms = 'colo-golytely-split-am-umms/base.json';
+        Anchors anchors() => appointment(local(ny, 2026, 11, 18, 7));
+
+        test('clear-liquids (day -1) at 00:00:15 on day -1: the 07:00 reminder '
+            'is scheduled', () {
+          final s = scheduled(
+            plan(
+              fixtureStep(umms, 'clear-liquids'),
+              anchors(),
+              at: local(ny, 2026, 11, 17, 0, 0, 15),
+            ),
+          );
+          expectReminder(
+            s.main,
+            at: utc(2026, 11, 17, 12), // 07:00 EST
+            effect: utc(2026, 11, 17, 5), // 00:00 EST
+          );
+          expect(s.headsUp, isNull);
+        });
+        test('clear-liquids at exactly 07:00 on day -1: fires at now', () {
+          final s = scheduled(
+            plan(
+              fixtureStep(umms, 'clear-liquids'),
+              anchors(),
+              at: local(ny, 2026, 11, 17, 7),
+            ),
+          );
+          expectReminder(
+            s.main,
+            at: utc(2026, 11, 17, 12),
+            effect: utc(2026, 11, 17, 5),
+          );
+        });
+        test('clear-liquids at 07:01 on day -1: in effect', () {
+          expect(
+            plan(
+              fixtureStep(umms, 'clear-liquids'),
+              anchors(),
+              at: local(ny, 2026, 11, 17, 7, 1),
+            ),
+            isA<InEffect>(),
+          );
+        });
+        test('prep-only (day 0, reminded 20:00 the day before) at 00:00:15 on '
+            'day 0: in effect, unchanged', () {
+          expect(
+            plan(
+              fixtureStep(umms, 'prep-only'),
+              anchors(),
+              at: local(ny, 2026, 11, 18, 0, 0, 15),
+            ),
+            isA<InEffect>(),
+          );
+        });
+      },
+    );
+
     group('arrivalPrompt', () {
       List<TimedStep> steps(String path, List<String> ids) => [
         for (final id in ids) fixtureStep(path, id),

@@ -22,7 +22,9 @@ typedef Reminder = ({
 /// is rounded down to the whole minute, then moved to before the effect if
 /// needed, then moved out of quiet hours if needed; a reminder whose time has
 /// passed fires at [now], to the second, even in quiet hours. A heads-up is
-/// given only while the main reminder is still ahead of [now].
+/// given only while the main reminder is still ahead of [now]. A step that
+/// has taken effect gets no reminder, except a day step whose own-day
+/// morning reminder is still ahead.
 StepReminders remindersOf(
   TimedStep step,
   Anchors anchors, {
@@ -33,7 +35,12 @@ StepReminders remindersOf(
   final placed = _placed(step, anchors, quiet);
   if (placed == null) return const Pending();
   // "Ahead" is strict: a step taking effect right now is already in effect.
-  if (!placed.effect.isAfter(now)) return const InEffect();
+  // A morning-of-its-day reminder comes after its effect, so it is still
+  // given until its minute has passed; at that minute it fires at now.
+  if (!placed.effect.isAfter(now) &&
+      !(placed.morningOfItsDay && !placed.at.isBefore(now))) {
+    return const InEffect();
+  }
   final warn = step.allowNight && placed.at.isAfter(now);
   final quietStart = warn ? _quietStart(placed.at, quiet) : null;
   final headsUp = quietStart == null
@@ -83,8 +90,15 @@ tz.TZDateTime _eveningBefore(
 tz.TZDateTime _notBefore(tz.TZDateTime now, tz.TZDateTime time) =>
     time.isBefore(now) ? tz.TZDateTime.from(now, time.location) : time;
 
-/// The stored remind, rounded down and moved, before any lateness.
-Reminder? _placed(TimedStep step, Anchors anchors, QuietHours quiet) {
+/// The stored remind, rounded down and moved, before any lateness, and
+/// whether it is a day step's morning-of-its-day reminder.
+({
+  tz.TZDateTime at,
+  tz.TZDateTime effect,
+  Set<MoveReason> moves,
+  bool morningOfItsDay,
+})?
+_placed(TimedStep step, Anchors anchors, QuietHours quiet) {
   final from = anchorTime(step.anchor, anchors);
   if (from == null) return null;
   final effect = effectOf(step.anchor, step.timing, anchors)!.at;
@@ -101,7 +115,12 @@ Reminder? _placed(TimedStep step, Anchors anchors, QuietHours quiet) {
       moves.add(MoveReason.quietHours);
     }
   }
-  return (at: at, effect: effect, moves: moves);
+  return (
+    at: at,
+    effect: effect,
+    moves: moves,
+    morningOfItsDay: morningOfItsDay,
+  );
 }
 
 /// The two exemptions for [step]'s reminder at [at], counted from its anchor

@@ -27,6 +27,8 @@ Every piece of data in v1, where it lives and whether the hospital or a vendor h
 
 ## On the patient's device only
 
+Nothing the app stores is backed up to the cloud. A new phone means scanning the code again.
+
 | Data | Where it lives | Held by hospital or vendor? | Notes |
 | --- | --- | --- | --- |
 | Procedure date and time | Patient app or web page | No: stays on the patient's device; still sensitive health information | Entered by the patient |
@@ -34,6 +36,7 @@ Every piece of data in v1, where it lives and whether the hospital or a vendor h
 | Discharge instant ("I'm home") | Patient app | No: stays on the patient's device; still sensitive health information | |
 | Cached protocol bundle | Patient app | No: stays on the patient's device; still sensitive health information | Kept for offline use |
 | Computed timeline and reminders | Patient app; OS notification schedule | No: stays on the patient's device; still sensitive health information | Lock-screen text is "Prep step due" unless the patient opts in |
+| Reminder record: notification ids and effect instants | Patient app (app support directory) | No: stays on the patient's device; still sensitive health information | Which reminders were handed to the phone, so a late one isn't shown twice. An effect instant reveals the appointment time. Entries drop once their step takes effect. See [ADR 2](adr/0002-reminder-delivery-record.md) |
 | Detailed-notification opt-in | Patient app | No: stays on the patient's device; still sensitive health information | |
 | "Done" and "I missed this" taps | OPEN | OPEN: treat as PHI until decided | OPEN: where they are stored and for how long |
 | Calendar (.ics) file | Patient's calendar | No: stays with the patient and their own calendar provider; still sensitive health information | Generated without sending data to the server. OPEN: the patient's calendar may sync to a cloud provider |
