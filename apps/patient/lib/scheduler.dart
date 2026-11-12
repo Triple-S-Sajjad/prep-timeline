@@ -11,6 +11,14 @@ const _details = NotificationDetails(
 
 const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+/// A reminder handed to the phone: its effect instant and the time it was
+/// handed over for, both UTC ms.
+typedef Handed = ({int effect, int at});
+
+// How long after its time a pending reminder of a step still in the timeline
+// may still be firing (docs/adr/0002-reminder-delivery-record.md).
+const _deliveryGrace = Duration(seconds: 60);
+
 // The last scheduling pass started; the next one waits for it.
 Future<void> _passes = Future.value();
 
@@ -19,7 +27,7 @@ Future<void> _passes = Future.value();
 /// reminders that are no longer in the timeline. Lock-screen text is generic.
 ///
 /// [load] and [save] keep the record of reminders handed to the phone:
-/// notification id -> effect instant, UTC ms. A late reminder the phone has
+/// notification id -> effect and reminder time, UTC ms. A late reminder the phone has
 /// already delivered for the same effect is not shown again
 /// (docs/adr/0002-reminder-delivery-record.md). One pass runs at a time: a
 /// call waits for the previous one, so it loads the record that one saved,
@@ -30,8 +38,8 @@ Future<void> scheduleReminders(
   Anchors anchors, {
   required DepartmentDefaults defaults,
   required tz.TZDateTime Function() clock,
-  required Future<Map<int, int>> Function() load,
-  required Future<void> Function(Map<int, int> record) save,
+  required Future<Map<int, Handed>> Function() load,
+  required Future<void> Function(Map<int, Handed> record) save,
   Duration Function(DateTime instant) deviceOffset = _deviceOffset,
 }) {
   final pass = _passes.then((_) async {
@@ -70,7 +78,27 @@ Future<void> scheduleReminders(
     final pending = {
       for (final p in await plugin.pendingNotificationRequests()) p.id,
     };
-    final stale = pending.difference(ids);
+    // Effect of each reminder id in this pass's timeline, Scheduled or not.
+    final timelineEffects = {
+      for (final (:moduleId, :step, :effect) in timeline)
+        for (final kind in ['headsUp', 'main'])
+          _stableId('$moduleId/${step.id}/$kind'):
+              effect?.at.millisecondsSinceEpoch,
+    };
+    final nowMs = now.millisecondsSinceEpoch;
+    // Due within the grace window, for the same effect: its alarm may be
+    // firing now, and cancelling it would drop the reminder.
+    bool firing(int id) {
+      final handed = record[id];
+      return handed != null &&
+          timelineEffects[id] == handed.effect &&
+          handed.at <= nowMs &&
+          nowMs - handed.at <= _deliveryGrace.inMilliseconds;
+    }
+
+    final notHanded = pending.difference(ids);
+    final keep = {...ids, ...notHanded.where(firing)};
+    final stale = notHanded.difference(keep);
     final cancelled = {
       ...stale,
       for (final r in handover)
@@ -79,8 +107,9 @@ Future<void> scheduleReminders(
     // Saved before cancelling, and handovers saved only after they happen:
     // a crash in between then repeats a reminder, never drops one.
     record.removeWhere(
-      (id, effect) =>
-          effect <= now.millisecondsSinceEpoch || cancelled.contains(id),
+      (id, handed) =>
+          (handed.effect <= nowMs && !keep.contains(id)) ||
+          cancelled.contains(id),
     );
     await save(record);
     // Cancelling one by one, not cancelAll, keeps shown notifications.
@@ -121,12 +150,12 @@ Future<void> scheduleReminders(
         // receiver would fire the listed entry again.
         await plugin.cancel(id: id);
         await show();
-      } else if (record[id] == effect) {
+      } else if (record[id]?.effect == effect) {
         continue; // delivered for this effect
       } else {
         await show();
       }
-      record[id] = effect;
+      record[id] = (effect: effect, at: at.millisecondsSinceEpoch);
     }
     await save(record);
   });
@@ -139,7 +168,8 @@ Future<void> scheduleReminders(
 /// Reads the record [saveRecord] wrote. A missing, unreadable or corrupt
 /// file reads as empty, so the risk is a repeated reminder, never a dropped
 /// one.
-Future<Map<int, int>> loadRecord(File file) async {
+/// A file in the earlier `{"<id>": effectMs}` format reads as empty too.
+Future<Map<int, Handed>> loadRecord(File file) async {
   final Object? json;
   try {
     json = jsonDecode(await file.readAsString());
@@ -149,22 +179,27 @@ Future<Map<int, int>> loadRecord(File file) async {
     return {};
   }
   if (json is! Map<String, Object?>) return {};
-  final record = <int, int>{};
+  final record = <int, Handed>{};
   for (final MapEntry(:key, :value) in json.entries) {
     final id = int.tryParse(key);
-    if (id == null || value is! int) return {};
-    record[id] = value;
+    if (id == null) return {};
+    if (value case {'effect': final int effect, 'at': final int at}) {
+      record[id] = (effect: effect, at: at);
+    } else {
+      return {};
+    }
   }
   return record;
 }
 
-/// Writes [record] as `{"<id>": effectMs}` to a temporary file, then renames
+/// Writes [record] as `{"<id>": {"effect": ms, "at": ms}}` to a temporary file, then renames
 /// it over [file], so a crash mid-write leaves the previous record whole.
-Future<void> saveRecord(File file, Map<int, int> record) async {
+Future<void> saveRecord(File file, Map<int, Handed> record) async {
   final tmp = File('${file.path}.tmp');
   await tmp.writeAsString(
     jsonEncode({
-      for (final MapEntry(:key, :value) in record.entries) '$key': value,
+      for (final MapEntry(:key, :value) in record.entries)
+        '$key': {'effect': value.effect, 'at': value.at},
     }),
     flush: true,
   );

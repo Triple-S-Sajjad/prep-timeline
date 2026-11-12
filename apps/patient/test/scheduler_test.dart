@@ -173,6 +173,12 @@ final _clearLiquidsEffect = utc(2026, 10, 31, 4); // Oct 31 00:00 EDT
 final _dose2Effect = utc(2026, 11, 1, 6, 30); // 01:30 EST
 final _stopLiquidsEffect = utc(2026, 11, 1, 10, 30); // 05:30 EST
 
+// Record entries: effect and reminder time handed over.
+final _c = (effect: _clearLiquidsEffect, at: utc(2026, 10, 31, 11)); // 07:00
+final _dh = (effect: _dose2Effect, at: utc(2026, 11, 1, 0)); // 20:00 EDT
+final _dm = (effect: _dose2Effect, at: utc(2026, 11, 1, 6, 30)); // 01:30 EST
+final _s = (effect: _stopLiquidsEffect, at: utc(2026, 11, 1, 2, 59)); // 22:59
+
 void main() {
   late tz.Location ny;
   late List<MethodCall> calls;
@@ -181,7 +187,7 @@ void main() {
   // The stored record of handed reminders; the fake storage logs each load
   // and save into [calls], so their order against the plugin calls is
   // checked too.
-  late Map<int, int> record;
+  late Map<int, Handed> record;
   late Object? saveError;
   // Ids of _module's reminders: clear-liquids, dose2 heads-up, dose2 main,
   // stop-liquids.
@@ -195,12 +201,12 @@ void main() {
   tz.TZDateTime appointment() => tz.TZDateTime(ny, 2026, 11, 1, 7, 30);
   tz.TZDateTime at(int ms) => tz.TZDateTime.fromMillisecondsSinceEpoch(ny, ms);
 
-  Future<Map<int, int>> load() async {
+  Future<Map<int, Handed>> load() async {
     calls.add(const MethodCall('load'));
     return {...record};
   }
 
-  Future<void> save(Map<int, int> next) async {
+  Future<void> save(Map<int, Handed> next) async {
     calls.add(MethodCall('save', {...next}));
     if (saveError case final error?) throw error;
     record = {...next};
@@ -461,6 +467,8 @@ void main() {
     // EDT) has passed and its effect (05:30 EST) is ahead; dose2 and
     // clear-liquids are in effect.
     final lateNow = utc(2026, 11, 1, 9, 40, 0, 123);
+    // A late reminder is handed over at now.
+    final sLate = (effect: _stopLiquidsEffect, at: lateNow);
 
     test(
       'T1 first computation: a late reminder is shown once and recorded',
@@ -474,8 +482,8 @@ void main() {
           'save',
         ]);
         expect(saves(), [
-          <int, int>{},
-          {s: _stopLiquidsEffect},
+          <int, Handed>{},
+          {s: sLate},
         ]);
         expect(shownIds(), [s]);
         expect(args(calls[3])['title'], 'Prep step due');
@@ -484,7 +492,7 @@ void main() {
     );
 
     test('T2 reopen after the reminder fired: not shown again', () async {
-      record = {s: _stopLiquidsEffect};
+      record = {s: _s};
       await schedule(appointment(), at(lateNow));
       expect(methods(), [
         'load',
@@ -493,8 +501,8 @@ void main() {
         'save',
       ]);
       expect(saves(), [
-        {s: _stopLiquidsEffect},
-        {s: _stopLiquidsEffect},
+        {s: _s},
+        {s: _s},
       ]);
     });
 
@@ -502,15 +510,10 @@ void main() {
         'expired entries pruned', () async {
       // 20:30 EDT Oct 31: the heads-up (20:00 EDT) has fired; dose2 and
       // stop-liquids are ahead; clear-liquids is in effect.
-      record = {
-        c: _clearLiquidsEffect,
-        dh: _dose2Effect,
-        dm: _dose2Effect,
-        s: _stopLiquidsEffect,
-      };
+      record = {c: _c, dh: _dh, dm: _dm, s: _s};
       pendingIds = [dm, s];
       await schedule(appointment(), at(utc(2026, 11, 1, 0, 30)));
-      final kept = {dh: _dose2Effect, dm: _dose2Effect, s: _stopLiquidsEffect};
+      final kept = {dh: _dh, dm: _dm, s: _s};
       expect(methods(), [
         'load',
         'pendingNotificationRequests',
@@ -526,7 +529,7 @@ void main() {
 
     test('T4 force-stopped past the reminder: still pending, so cancelled '
         'and shown', () async {
-      record = {s: _stopLiquidsEffect};
+      record = {s: _s};
       pendingIds = [s];
       await schedule(appointment(), at(lateNow));
       expect(methods(), [
@@ -538,8 +541,8 @@ void main() {
         'save',
       ]);
       expect(saves(), [
-        <int, int>{},
-        {s: _stopLiquidsEffect},
+        <int, Handed>{},
+        {s: sLate},
       ]);
       expect(args(calls[3]), {'id': s, 'tag': null});
       expect(shownIds(), [s]);
@@ -547,7 +550,11 @@ void main() {
 
     test('T5 reschedule: a moved effect is a new reminder', () async {
       // Recorded for the old appointment, 08:30 EST: effect 06:30 EST.
-      record = {s: utc(2026, 11, 1, 11, 30)};
+      final old = (
+        effect: utc(2026, 11, 1, 11, 30),
+        at: utc(2026, 11, 1, 3, 59),
+      );
+      record = {s: old};
       await schedule(appointment(), at(lateNow));
       expect(methods(), [
         'load',
@@ -557,8 +564,8 @@ void main() {
         'save',
       ]);
       expect(saves(), [
-        {s: utc(2026, 11, 1, 11, 30)},
-        {s: _stopLiquidsEffect},
+        {s: old},
+        {s: sLate},
       ]);
       expect(shownIds(), [s]);
     });
@@ -566,13 +573,11 @@ void main() {
     test('T6 a stale id is removed from the record before it is cancelled; '
         'current ones kept', () async {
       const stale = 12345;
-      final all = {
-        c: _clearLiquidsEffect,
-        dh: _dose2Effect,
-        dm: _dose2Effect,
-        s: _stopLiquidsEffect,
+      final all = {c: _c, dh: _dh, dm: _dm, s: _s};
+      record = {
+        ...all,
+        stale: (effect: utc(2026, 11, 2, 0), at: utc(2026, 11, 2, 0)),
       };
-      record = {...all, stale: utc(2026, 11, 2, 0)};
       pendingIds = [c, stale, s];
       await schedule(appointment(), tz.TZDateTime.utc(2026, 10, 1));
       expect(methods(), [
@@ -615,9 +620,9 @@ void main() {
         'Due tomorrow at 5:30 AM',
       ]);
       expect(saves().last, {
-        dh: _dose2Effect,
-        dm: _dose2Effect,
-        s: _stopLiquidsEffect,
+        dh: (effect: _dose2Effect, at: utc(2026, 11, 1, 2, 58, 59, 999)),
+        dm: _dm,
+        s: _s,
       });
     });
 
@@ -732,6 +737,118 @@ void main() {
       }
     });
 
+    // 01:30:00.500 EST: dose2 (effect and reminder 01:30 EST) has just taken
+    // effect; its alarm is due but may still be firing. stop-liquids'
+    // reminder has passed and was delivered.
+    final raceNow = utc(2026, 11, 1, 6, 30, 0, 500);
+
+    test('T11 delivery race: a due reminder of a step that just took effect, '
+        'same effect as recorded, stays pending', () async {
+      record = {dh: _dh, dm: _dm, s: _s};
+      pendingIds = [dm];
+      await schedule(appointment(), at(raceNow));
+      expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'save',
+      ]);
+      // dm keeps its entry while it is still pending; dh has passed.
+      final kept = {dm: _dm, s: _s};
+      expect(saves(), [kept, kept]);
+    });
+
+    // dose2's main reminder cancelled as stale, its entry dropped; only
+    // stop-liquids stays recorded.
+    void expectDoseCancelled() {
+      expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'cancel',
+        'save',
+      ]);
+      expect(args(calls[3]), {'id': dm, 'tag': null});
+      expect(saves(), [
+        {s: _s},
+        {s: _s},
+      ]);
+    }
+
+    test('T12 delivery race after a reschedule moved the effect: '
+        'cancelled', () async {
+      // Recorded for the old appointment, 08:30 EST: dose2 at 02:30 EST.
+      record = {
+        dm: (effect: utc(2026, 11, 1, 7, 30), at: utc(2026, 11, 1, 7, 30)),
+        s: _s,
+      };
+      pendingIds = [dm];
+      await schedule(appointment(), at(raceNow));
+      expectDoseCancelled();
+    });
+
+    // clear-liquids takes effect Oct 31 00:00 EDT and is reminded at 07:00
+    // EDT (11:00Z), after its effect. The other three are ahead.
+    Map<int, Handed> allFour() => {c: _c, dh: _dh, dm: _dm, s: _s};
+
+    test('T13 a Scheduled id keeps its entry after its effect: clear-liquids '
+        'at 06:59', () async {
+      record = {c: _c};
+      await schedule(appointment(), at(utc(2026, 10, 31, 10, 59)));
+      expect(saves(), [
+        {c: _c},
+        allFour(),
+      ]);
+      expect(scheduledIds(), [c, dh, dm, s]);
+    });
+
+    test('T14 clear-liquids at exactly 07:00, after its alarm fired: shown '
+        'once, not twice', () async {
+      // The 07:00 alarm fired: c left the pending list, delivered once.
+      record = allFour();
+      pendingIds = [dh, dm, s];
+      await schedule(appointment(), at(utc(2026, 10, 31, 11)));
+      expect(shownIds(), isEmpty, reason: 'the alarm already delivered it');
+      expect(saves(), [allFour(), allFour()]);
+      expect(scheduledIds(), [dh, dm, s]);
+    });
+
+    // dose2's alarm (01:30 EST) still pending, recorded for the same effect.
+    Future<void> raceAt(int nowMs) {
+      calls = [];
+      record = {dh: _dh, dm: _dm, s: _s};
+      pendingIds = [dm];
+      return schedule(appointment(), at(nowMs));
+    }
+
+    test('T15 due 10 s ago, still pending: kept', () async {
+      await raceAt(utc(2026, 11, 1, 6, 30, 10));
+      expect(methods(), [
+        'load',
+        'pendingNotificationRequests',
+        'save',
+        'save',
+      ]);
+      expect(saves(), [
+        {dm: _dm, s: _s},
+        {dm: _dm, s: _s},
+      ]);
+    });
+
+    test('T16 due 5 min ago, still pending (a force-stop): cancelled as '
+        'stale', () async {
+      await raceAt(utc(2026, 11, 1, 6, 35));
+      expectDoseCancelled();
+    });
+
+    test('T18 grace boundary: due exactly 60 s ago kept, 60.001 s ago '
+        'cancelled', () async {
+      await raceAt(utc(2026, 11, 1, 6, 31));
+      expect(methods(), isNot(contains('cancel')), reason: '60 s');
+      await raceAt(utc(2026, 11, 1, 6, 31, 0, 1));
+      expect(methods(), contains('cancel'), reason: '60.001 s');
+    });
+
     test('two overlapping passes run one after the other', () async {
       final first = schedule(appointment(), at(lateNow));
       final second = schedule(appointment(), at(lateNow));
@@ -774,7 +891,7 @@ void main() {
         'save',
         'save',
       ]);
-      expect(record, {s: _stopLiquidsEffect});
+      expect(record, {s: sLate});
     });
 
     test('a failed pass does not block the next one', () async {
@@ -785,7 +902,7 @@ void main() {
       saveError = null;
       await second;
       expect(shownIds(), [s]);
-      expect(record, {s: _stopLiquidsEffect});
+      expect(record, {s: sLate});
     });
   });
 
@@ -803,9 +920,9 @@ void main() {
     test(
       'round trip over an existing file, through a temporary file',
       () async {
-        await saveRecord(file, {1: 1});
-        await saveRecord(file, {12: utc(2026, 11, 1, 10, 30), 7: 0});
-        expect(await loadRecord(file), {12: utc(2026, 11, 1, 10, 30), 7: 0});
+        await saveRecord(file, {1: (effect: 1, at: 1)});
+        await saveRecord(file, {12: _s, 7: (effect: 0, at: -1)});
+        expect(await loadRecord(file), {12: _s, 7: (effect: 0, at: -1)});
         expect(dir.listSync().map((e) => e.uri.pathSegments.last), [
           'handed.json',
         ]);
@@ -813,11 +930,27 @@ void main() {
     );
 
     test('a missing, unreadable or corrupt file reads as empty', () async {
-      expect(await loadRecord(file), <int, int>{});
-      for (final corrupt in ['', '{', '[]', '{"x": 1}', '{"1": "2"}']) {
+      expect(await loadRecord(file), <int, Handed>{});
+      for (final corrupt in [
+        '',
+        '{',
+        '[]',
+        '{"x": {"effect": 1, "at": 1}}',
+        '{"1": "2"}',
+        '{"1": {"effect": 1}}',
+        '{"1": {"effect": 1, "at": "1"}}',
+      ]) {
         await file.writeAsString(corrupt);
-        expect(await loadRecord(file), <int, int>{}, reason: corrupt);
+        expect(await loadRecord(file), <int, Handed>{}, reason: corrupt);
       }
     });
+
+    test(
+      'T17 a file in the old {"<id>": effectMs} format reads as empty',
+      () async {
+        await file.writeAsString('{"12": ${utc(2026, 11, 1, 10, 30)}}');
+        expect(await loadRecord(file), <int, Handed>{});
+      },
+    );
   });
 }
